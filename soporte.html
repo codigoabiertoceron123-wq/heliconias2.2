@@ -1,0 +1,1643 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Centro de Soporte - Heliconias</title>
+     <!-- Incluir Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      // Inicializar Supabase
+      const supabaseUrl = 'https://umncnddwzmjxgmvisvqz.supabase.co';
+      const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtbmNuZGR3em1qeGdtdmlzdnF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NDIyNzksImV4cCI6MjA3ODExODI3OX0.ODvus28cTCTD8gGewQ2sAZ8PcXbEe4CIy_zv6bip8J0';
+      const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    </script>
+    <style>
+      /* soporte.css - Estilos con tema de Heliconias (verde oscuro y blanco) */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background: #f8f9fa;
+        color: #333;
+      }
+
+      /* Header Styles - Mismo del panel anterior */
+      .header {
+        background: linear-gradient(135deg, #27ae60, #2ecc71);
+        color: white;
+        padding: 15px 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      }
+
+      .top-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .logo-img {
+        width: 50px;
+        height: 50px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .logo-img i {
+        font-size: 24px;
+        color: #27ae60;
+      }
+
+      .logo h1 {
+        font-size: 24px;
+        font-weight: 600;
+      }
+
+      .system-date {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 500;
+        background: rgba(255,255,255,0.2);
+        padding: 8px 15px;
+        border-radius: 20px;
+      }
+
+      /* Navigation Styles */
+      .nav-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255,255,255,0.3);
+      }
+
+      .main-nav {
+        display: flex;
+        gap: 5px;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        background: rgba(255,255,255,0.1);
+        position: relative;
+      }
+
+      .nav-item:hover {
+        background: rgba(255,255,255,0.2);
+        transform: translateY(-2px);
+      }
+
+      .nav-item.active {
+        background: rgba(255,255,255,0.25);
+      }
+
+      .user-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+
+      .btn-primary {
+        background: rgba(255,255,255,0.2);
+        color: white;
+      }
+
+      .btn-accent {
+        background: #e74c3c;
+        color: white;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      }
+
+      /* Tooltip Styles */
+      .tooltip {
+        position: relative;
+      }
+
+      .tooltip-text {
+        visibility: hidden;
+        width: 140px;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        text-align: center;
+        border-radius: 6px;
+        padding: 8px;
+        position: absolute;
+        z-index: 1000;
+        bottom: 125%;
+        left: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 0.8rem;
+        font-weight: normal;
+      }
+
+      .tooltip-text::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+      }
+
+      .tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+      }
+
+      /* Botones inferiores VERTICALES */
+      .botones-inferiores {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 1000;
+      }
+
+      .btn-inferior {
+        background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        padding: 12px 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        font-size: 0.85rem;
+        width: auto;
+        justify-content: center;
+      }
+
+      .btn-inferior:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(39, 174, 96, 0.6);
+      }
+
+      .btn-gmail {
+        background: linear-gradient(135deg, #d14836 0%, #ea4335 100%);
+      }
+
+      .btn-whatsapp {
+        background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+      }
+
+      /* Modal para mostrar correo */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 2000;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .modal-contenido {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+        animation: modalAppear 0.3s ease-out;
+      }
+
+      @keyframes modalAppear {
+        from {
+          opacity: 0;
+          transform: scale(0.8) translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+
+      .modal h3 {
+        color: #27ae60;
+        margin-bottom: 15px;
+        font-size: 1.3rem;
+      }
+
+      .correo-display {
+        background: #f8fff8;
+        border: 2px solid #e8f5e8;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 20px 0;
+        font-size: 1.1rem;
+        color: #27ae60;
+        font-weight: 600;
+        word-break: break-all;
+      }
+
+      .botones-modal {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 20px;
+      }
+
+      .btn-modal {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        flex: 1;
+      }
+
+      .btn-enviar {
+        background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        color: white;
+      }
+
+      .btn-cerrar {
+        background: #f8f9fa;
+        color: #6c757d;
+        border: 1px solid #dee2e6;
+      }
+
+      .btn-modal:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Modal de ayuda */
+      .modal-ayuda {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 2000;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .modal-ayuda-contenido {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        max-width: 500px;
+        width: 90%;
+        animation: modalAppear 0.3s ease-out;
+      }
+
+      .modal-ayuda-contenido h3 {
+        color: #27ae60;
+        margin-bottom: 15px;
+        font-size: 1.4rem;
+      }
+
+      .modal-ayuda-contenido p {
+        margin-bottom: 20px;
+        line-height: 1.6;
+        color: #2d3748;
+      }
+
+      .pasos-ayuda {
+        text-align: left;
+        margin: 20px 0;
+      }
+
+      .paso {
+        margin-bottom: 15px;
+        padding: 10px;
+        background: #f8fff8;
+        border-radius: 8px;
+        border-left: 4px solid #2ecc71;
+      }
+
+      .paso strong {
+        color: #27ae60;
+      }
+
+      /* Contenedor principal */
+      .container {
+        max-width: 900px;
+        margin: 40px auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(39, 174, 96, 0.1);
+        overflow: hidden;
+        border: 2px solid #e8f5e8;
+      }
+
+      /* Header estilo heliconia - COMPLETAMENTE BLANCO */
+      .header-soporte {
+        background: white;
+        color: #27ae60;
+        padding: 50px 40px;
+        text-align: center;
+        position: relative;
+        border-bottom: 3px solid #e8f5e8;
+      }
+
+      .header-soporte::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+          radial-gradient(
+            circle at 20% 80%,
+            rgba(46, 204, 113, 0.05) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 20%,
+            rgba(39, 174, 96, 0.05) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 40% 40%,
+            rgba(144, 238, 144, 0.05) 0%,
+            transparent 50%
+          );
+      }
+
+      .icono-soporte {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        color: #2ecc71;
+        position: relative;
+        z-index: 2;
+      }
+
+      .header-soporte h1 {
+        margin: 0 0 12px 0;
+        font-size: 2.8rem;
+        font-weight: 800;
+        position: relative;
+        z-index: 2;
+        color: #27ae60;
+      }
+
+      .subtitulo {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: 400;
+        position: relative;
+        z-index: 2;
+        color: #2d3748;
+      }
+
+      /* Mensaje de éxito estilo heliconia */
+      .mensaje-exito {
+        background: linear-gradient(135deg, #f0fff0 0%, #e8f5e8 100%);
+        color: #27ae60;
+        padding: 20px 25px;
+        margin: 25px;
+        border-radius: 15px;
+        border: 2px solid #90ee90;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 600;
+        animation: slideInUp 0.6s ease-out;
+        box-shadow: 0 8px 25px rgba(144, 238, 144, 0.3);
+      }
+
+      @keyframes slideInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Formulario estilo heliconia */
+      .form-soporte {
+        padding: 40px;
+      }
+
+      .seccion-form {
+        margin-bottom: 35px;
+        padding: 30px;
+        background: #f8fff8;
+        border-radius: 16px;
+        border: 2px solid #e8f5e8;
+        transition: all 0.4s ease;
+        position: relative;
+      }
+
+      .seccion-form:hover {
+        background: white;
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(39, 174, 96, 0.1);
+        border-color: #90ee90;
+      }
+
+      .seccion-form h3 {
+        color: #27ae60;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 1.3rem;
+        font-weight: 700;
+      }
+
+      .seccion-form h3 i {
+        color: #2ecc71;
+        width: 24px;
+      }
+
+      /* Campos de formulario */
+      .grupo-campos {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+      }
+
+      .campo {
+        margin-bottom: 25px;
+        position: relative;
+      }
+
+      .campo label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+        font-weight: 600;
+        color: #2d3748;
+        font-size: 0.95rem;
+      }
+
+      .campo label i {
+        color: #2ecc71;
+        width: 16px;
+      }
+
+      .campo input,
+      .campo select,
+      .campo textarea {
+        width: 100%;
+        padding: 16px 18px;
+        border: 2px solid #e8f5e8;
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+        box-sizing: border-box;
+        font-family: inherit;
+      }
+
+      .campo input:focus,
+      .campo select:focus,
+      .campo textarea:focus {
+        outline: none;
+        border-color: #2ecc71;
+        box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.1);
+        background: #f8fff8;
+      }
+
+      /* Select estilo heliconia */
+      .select-estilizado {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%232ecc71' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 16px center;
+        background-repeat: no-repeat;
+        background-size: 18px;
+        appearance: none;
+        padding-right: 50px;
+        cursor: pointer;
+      }
+
+      /* Área de archivo estilo heliconia */
+      .area-archivo {
+        border: 2px dashed #e8f5e8;
+        border-radius: 12px;
+        padding: 30px;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: #f8fff8;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .area-archivo:hover {
+        border-color: #2ecc71;
+        background: white;
+        transform: scale(1.02);
+      }
+
+      .area-archivo input[type="file"] {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+      }
+
+      .info-archivo p {
+        margin: 8px 0 0 0;
+        color: #27ae60;
+        font-size: 0.9rem;
+      }
+
+      /* Prioridad estilo heliconia */
+      .grupo-prioridad {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+      }
+
+      .opcion-prioridad {
+        flex: 1;
+        min-width: 130px;
+      }
+
+      .opcion-prioridad input {
+        display: none;
+      }
+
+      .opcion-prioridad label {
+        display: block;
+        padding: 18px 15px;
+        text-align: center;
+        border: 2px solid #e8f5e8;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: white;
+        margin: 0;
+        font-weight: 600;
+      }
+
+      .opcion-prioridad label:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(39, 174, 96, 0.15);
+      }
+
+      .opcion-prioridad input:checked + label {
+        border-color: transparent;
+        transform: scale(1.05);
+        box-shadow: 0 12px 30px rgba(39, 174, 96, 0.2);
+        color: white;
+      }
+
+      .prioridad-baja {
+        color: #2ecc71;
+        border-color: #2ecc71 !important;
+      }
+
+      .prioridad-media {
+        color: #ffa500;
+        border-color: #ffa500 !important;
+      }
+
+      .prioridad-alta {
+        color: #dc143c;
+        border-color: #dc143c !important;
+      }
+
+      .opcion-prioridad input:checked + label.prioridad-baja {
+        background: #2ecc71;
+      }
+
+      .opcion-prioridad input:checked + label.prioridad-media {
+        background: #ffa500;
+      }
+
+      .opcion-prioridad input:checked + label.prioridad-alta {
+        background: #dc143c;
+      }
+
+      /* Contador de caracteres */
+      .contador-caracteres {
+        text-align: right;
+        margin-top: 8px;
+        color: #27ae60;
+        font-size: 0.85rem;
+        font-weight: 500;
+      }
+
+      /* Botón de envío estilo heliconia */
+      .seccion-boton {
+        text-align: center;
+        padding: 30px 20px 20px;
+        background: transparent;
+      }
+
+      .btn-reporte {
+        background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        color: white;
+        padding: 20px 45px;
+        border: none;
+        border-radius: 15px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 30px rgba(39, 174, 96, 0.4);
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn-reporte::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.3),
+          transparent
+        );
+        transition: left 0.5s;
+      }
+
+      .btn-reporte:hover::before {
+        left: 100%;
+      }
+
+      .btn-reporte:hover {
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(39, 174, 96, 0.6);
+      }
+
+      .btn-reporte:active {
+        transform: translateY(-1px);
+      }
+
+      .btn-reporte:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .texto-ayuda {
+        margin-top: 18px;
+        color: #27ae60;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      /* Footer eliminado */
+      .footer-soporte {
+        display: none;
+      }
+
+      /* RESPONSIVE - IDÉNTICO AL PANEL ANTERIOR */
+      @media (max-width: 1024px) {
+        .nav-container {
+          flex-direction: column;
+          gap: 15px;
+        }
+        
+        .main-nav {
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .header {
+          padding: 15px;
+        }
+        
+        .top-section {
+          flex-direction: column;
+          gap: 15px;
+          text-align: center;
+        }
+        
+        .content {
+          grid-template-columns: 1fr;
+          padding: 15px;
+        }
+        
+        .main-content {
+          padding: 15px;
+        }
+        
+        .user-actions {
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+        
+        .nav-item {
+          padding: 8px 12px;
+          font-size: 0.9rem;
+        }
+
+        /* Responsive específico del soporte */
+        .grupo-campos {
+          grid-template-columns: 1fr;
+          gap: 15px;
+        }
+
+        .container {
+          margin: 20px;
+          border-radius: 15px;
+        }
+
+        .form-soporte {
+          padding: 25px;
+        }
+
+        .seccion-form {
+          padding: 25px 20px;
+          margin-bottom: 25px;
+        }
+
+        .header-soporte {
+          padding: 40px 25px;
+        }
+
+        .header-soporte h1 {
+          font-size: 2.2rem;
+        }
+
+        .grupo-prioridad {
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .opcion-prioridad {
+          min-width: auto;
+        }
+
+        .btn-reporte {
+          width: 100%;
+          justify-content: center;
+          padding: 18px 30px;
+        }
+
+        .botones-inferiores {
+          position: static;
+          flex-direction: row;
+          justify-content: center;
+          margin: 20px 0;
+          flex-wrap: wrap;
+        }
+
+        .btn-inferior {
+          font-size: 0.75rem;
+          padding: 10px 14px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .form-soporte {
+          padding: 20px 15px;
+        }
+
+        .seccion-form {
+          padding: 20px 15px;
+        }
+
+        .header-soporte {
+          padding: 30px 20px;
+        }
+
+        .header-soporte h1 {
+          font-size: 1.8rem;
+        }
+
+        .subtitulo {
+          font-size: 1.1rem;
+        }
+
+        .botones-inferiores {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .modal-contenido,
+        .modal-ayuda-contenido {
+          padding: 20px;
+        }
+
+        .botones-modal {
+          flex-direction: column;
+        }
+
+        .nav-item {
+          padding: 6px 10px;
+          font-size: 0.8rem;
+        }
+
+        .btn {
+          padding: 6px 12px;
+          font-size: 0.8rem;
+        }
+
+        .logo h1 {
+          font-size: 1.1rem;
+        }
+
+        .logo-img {
+          width: 40px;
+          height: 40px;
+        }
+
+        .system-date {
+          font-size: 0.8rem;
+          padding: 6px 12px;
+        }
+      }
+
+      /* Estados de carga */
+      .btn-reporte.loading {
+        pointer-events: none;
+        opacity: 0.8;
+      }
+
+      .btn-reporte.loading i {
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <!-- Header - Mismo del panel anterior -->
+    <header class="header">
+      <div class="top-section">
+        <div class="logo">
+          <div class="logo-img">
+            <i class="fas fa-leaf"></i>
+          </div>
+          <h1>Heliconias Reports</h1>
+        </div>
+
+        <div class="system-date">
+          <i class="fas fa-clock"></i>
+          <span id="current-date-time">Cargando fecha y hora...</span>
+        </div>
+      </div>
+
+      <!-- Navegación horizontal -->
+      <div class="nav-container">
+        <nav class="main-nav">
+          <a href="principal.html" class="nav-item tooltip">
+            <i class="fas fa-home"></i>
+            <span>Inicio</span>
+            <span class="tooltip-text">Página principal del sistema</span>
+          </a>
+          <a href="eventos.html" class="nav-item tooltip">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Eventos</span>
+            <span class="tooltip-text">Gestión de eventos del parque</span>
+          </a>
+          <a href="actividad.html" class="nav-item active tooltip">
+                    <i class="fas fa-hiking"></i>
+                    <span>Actividades</span>
+                    <span class="tooltip-text">Gestión de actividades del parque</span>
+                </a>
+          
+          <a href="reportes.html" class="nav-item tooltip">
+            <i class="fas fa-chart-line"></i>
+            <span>Reportes</span>
+            <span class="tooltip-text">Generar reportes estadísticos</span>
+          </a>
+          <a href="#" class="nav-item tooltip">
+            <i class="fas fa-history"></i>
+            <span>Historial 🔐</span>
+            <span class="tooltip-text">Historial de visitas y actividades</span>
+          </a>
+          <a href="#" class="nav-item tooltip">
+            <i class="fas fa-cog"></i>
+            <span>Configuración 🔐</span>
+            <span class="tooltip-text">Configuración del sistema</span>
+          </a>
+        </nav>
+
+        <div class="user-actions">
+          <a href="soporte.html" class="btn btn-primary tooltip">
+            <i class="fas fa-headset"></i> Soporte
+            <span class="tooltip-text">Contactar al equipo de soporte técnico</span>
+          </a>
+
+          <button class="btn btn-primary tooltip" id="help-btn">
+            <i class="fas fa-question-circle"></i> Ayuda
+            <span class="tooltip-text">Información y ayuda del sistema</span>
+          </button>
+
+          <button class="btn btn-accent tooltip" id="logout-btn">
+            <i class="fas fa-sign-out-alt"></i> Salir
+            <span class="tooltip-text">Cerrar sesión del sistema</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Contenido principal -->
+    <div class="container">
+      <!-- Header -->
+      <div class="header-soporte">
+        <div class="icono-soporte">
+          <i class="fas fa-seedling"></i>
+        </div>
+        <h1>Centro de Soporte Técnico</h1>
+        <p class="subtitulo">
+          Estamos aquí para ayudarte. Reporta cualquier problema y te
+          atenderemos pronto.
+        </p>
+      </div>
+
+      <!-- Mensaje de confirmación -->
+      <div id="mensajeConfirmacion" class="mensaje-exito" style="display: none;">
+        <i class="fas fa-check-circle"></i>
+        <span id="mensajeTexto">Tu reporte ha sido enviado exitosamente</span>
+      </div>
+
+      <!-- Formulario de soporte -->
+      <form
+        id="formSoporte"
+        method="POST"
+        enctype="multipart/form-data"
+        class="form-soporte"
+      >
+        <!-- Información personal -->
+        <div class="seccion-form">
+          <h3><i class="fas fa-user"></i> Información Personal</h3>
+          <div class="grupo-campos">
+            <div class="campo">
+              <label for="nombre">
+                <i class="fas fa-signature"></i> Nombre completo
+              </label>
+              <input
+                type="text"
+                id="nombre"
+                name="nombre"
+                required
+                placeholder="Ingresa tu nombre completo"
+              />
+            </div>
+            <div class="campo">
+              <label for="email">
+                <i class="fas fa-envelope"></i> Correo electrónico
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                required
+                placeholder="tu@email.com"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Tipo de problema -->
+        <div class="seccion-form">
+          <h3><i class="fas fa-exclamation-triangle"></i> Tipo de Problema</h3>
+          <div class="campo">
+            <label for="tipo">
+              <i class="fas fa-tags"></i> Selecciona el tipo de problema
+            </label>
+            <select id="tipo" name="tipo" class="select-estilizado">
+              <option value="estadisticas">
+                📊 Error en estadísticas y gráficos
+              </option>
+              <option value="carga">⬆️ Problema de carga de datos</option>
+              <option value="base_datos">💾 Error en base de datos</option>
+              <option value="exportacion">📥 Problema con exportación</option>
+              <option value="login">🔐 Error de inicio de sesión</option>
+              <option value="interfaz">🎨 Problema de interfaz visual</option>
+              <option value="rendimiento">
+                ⚡ Bajo rendimiento del sistema
+              </option>
+              <option value="otro">❓ Otro tipo de problema</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Descripción detallada -->
+        <div class="seccion-form">
+          <h3><i class="fas fa-file-alt"></i> Descripción Detallada</h3>
+          <div class="campo">
+            <label for="descripcion">
+              <i class="fas fa-edit"></i> Describe el problema en detalle
+            </label>
+            <textarea
+              id="descripcion"
+              name="descripcion"
+              rows="6"
+              required
+              placeholder="Por favor, describe el problema que estás experimentando, incluyendo los pasos para reproducirlo..."
+            ></textarea>
+            <div class="contador-caracteres">
+              <span id="contador">0</span> caracteres
+            </div>
+          </div>
+        </div>
+
+        <!-- Archivos adjuntos -->
+        <div class="seccion-form">
+          <h3><i class="fas fa-paperclip"></i> Archivos Adjuntos</h3>
+          <div class="campo">
+            <label for="archivo">
+              <i class="fas fa-upload"></i> Adjuntar archivos (opcional)
+            </label>
+            <div class="area-archivo">
+              <input
+                type="file"
+                id="archivo"
+                name="archivo"
+                accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xlsx,.txt"
+              />
+              <div class="info-archivo">
+                <p>
+                  <small
+                    >Formatos permitidos: JPG, PNG, PDF, DOC, XLSX, TXT (Máx.
+                    10MB)</small
+                  >
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Prioridad -->
+        <div class="seccion-form">
+          <h3><i class="fas fa-flag"></i> Prioridad</h3>
+          <div class="grupo-prioridad">
+            <div class="opcion-prioridad">
+              <input
+                type="radio"
+                id="baja"
+                name="prioridad"
+                value="baja"
+                checked
+              />
+              <label for="baja" class="prioridad-baja">
+                <i class="fas fa-info-circle"></i> Baja
+              </label>
+            </div>
+            <div class="opcion-prioridad">
+              <input type="radio" id="media" name="prioridad" value="media" />
+              <label for="media" class="prioridad-media">
+                <i class="fas fa-exclamation-circle"></i> Media
+              </label>
+            </div>
+            <div class="opcion-prioridad">
+              <input type="radio" id="alta" name="prioridad" value="alta" />
+              <label for="alta" class="prioridad-alta">
+                <i class="fas fa-exclamation-triangle"></i> Alta
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botón de envío -->
+        <div class="seccion-boton">
+          <button type="submit" class="btn-reporte">
+            <i class="fas fa-paper-plane"></i> Enviar Reporte de Soporte
+          </button>
+          <p class="texto-ayuda">
+            <i class="fas fa-clock"></i> Te responderemos en un plazo máximo de
+            24 horas
+          </p>
+        </div>
+      </form>
+    </div>
+
+    <!-- Botones inferiores VERTICALES - Solo Gmail y WhatsApp -->
+    <div class="botones-inferiores">
+      <a href="#" class="btn-inferior btn-gmail" id="btnGmail">
+        <i class="fab fa-google"></i> Gmail
+      </a>
+      <a href="#" class="btn-inferior btn-whatsapp" id="btnWhatsapp">
+        <i class="fab fa-whatsapp"></i> WhatsApp
+      </a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+      // Función para actualizar fecha y hora
+      function updateDateTime() {
+        const now = new Date();
+        const dateTimeString = now.toLocaleString("es-ES", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true,
+        });
+
+        const dateTimeElement = document.getElementById("current-date-time");
+        if (dateTimeElement) {
+          dateTimeElement.textContent = dateTimeString;
+        }
+      }
+
+      // Inicializar fecha y hora
+      updateDateTime();
+      setInterval(updateDateTime, 1000);
+
+      // Contador de caracteres para la descripción
+      const descripcion = document.getElementById("descripcion");
+      const contador = document.getElementById("contador");
+
+      descripcion.addEventListener("input", function () {
+        contador.textContent = this.value.length;
+      });
+
+      // Efecto de carga al enviar el formulario
+// VERSIÓN FUNCIONAL - Sin modificar la tabla
+document
+  .getElementById("formSoporte")
+  .addEventListener("submit", async function (e) {
+    e.preventDefault();
+    
+    const boton = this.querySelector(".btn-reporte");
+    boton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+    boton.disabled = true;
+    boton.classList.add("loading");
+
+    try {
+      const nombre = document.getElementById("nombre").value;
+      const email = document.getElementById("email").value;
+      const tipo = document.getElementById("tipo").value;
+      const descripcionTexto = document.getElementById("descripcion").value;
+      const archivo = document.getElementById("archivo").files[0]?.name || null;
+      const prioridad = document.querySelector('input[name="prioridad"]:checked').value;
+
+      // Versión 1: Incluir email en la descripción (RECOMENDADO)
+      const descripcionCompleta = `📧 EMAIL DE CONTACTO: ${email}\n👤 NOMBRE: ${nombre}\n\n📝 DESCRIPCIÓN DEL PROBLEMA:\n${descripcionTexto}`;
+
+      console.log('Enviando reporte...');
+
+      // Intentar insertar CON email si la columna existe
+      const insertData = {
+        id_usuario: 1,
+        tipo: tipo,
+        descripcion: descripcionCompleta,
+        archivo: archivo,
+        prioridad: prioridad,
+        estado: 'pendiente'
+      };
+
+      // Intentar agregar email si la columna existe
+      try {
+        insertData.email = email;
+      } catch (e) {
+        // Si falla, no pasa nada - el email ya está en la descripción
+      }
+
+      const { data, error } = await supabase
+        .from('soporte')
+        .insert([insertData])
+        .select();
+
+      if (error) {
+        // Si el error es por la columna email, intentar sin ella
+        if (error.message.includes('email') && error.message.includes('null')) {
+          console.log('Reintentando sin columna email...');
+          delete insertData.email;
+          
+          const { data: retryData, error: retryError } = await supabase
+            .from('soporte')
+            .insert([insertData])
+            .select();
+            
+          if (retryError) throw retryError;
+          data = retryData;
+        } else {
+          throw error;
+        }
+      }
+
+      console.log('✅ Reporte insertado:', data);
+
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Reporte Enviado!',
+        html: `
+          <div style="text-align: center;">
+            <div style="font-size: 3rem; color: #27ae60; margin-bottom: 15px;">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <p style="margin-bottom: 10px; font-size: 1.1rem; font-weight: 600;">
+              Tu solicitud ha sido registrada exitosamente.
+            </p>
+            <p style="color: #7f8c8d; font-size: 0.9rem;">
+              Número de ticket: <strong>#${data[0].id_soporte}</strong>
+            </p>
+            <p style="color: #27ae60; font-size: 0.8rem; margin-top: 10px;">
+              <i class="fas fa-envelope"></i> Te contactaremos a: ${email}
+            </p>
+            <p style="color: #3498db; font-size: 0.7rem; margin-top: 5px;">
+              <i class="fas fa-info-circle"></i> Tu email fue incluido en la descripción
+            </p>
+          </div>
+        `,
+        confirmButtonColor: '#27ae60',
+        confirmButtonText: 'Aceptar',
+        width: 450
+      });
+
+      this.reset();
+      if (contador) contador.textContent = "0";
+
+    } catch (error) {
+      console.error('❌ Error:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo enviar el reporte: ' + error.message,
+        confirmButtonColor: '#e74c3c'
+      });
+    } finally {
+      boton.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Reporte de Soporte';
+      boton.disabled = false;
+      boton.classList.remove("loading");
+    }
+  });
+  
+      // Función para mostrar SweetAlert de Gmail
+      function mostrarSweetAlertGmail() {
+        Swal.fire({
+          title: '<div style="display: flex; align-items: center; gap: 10px; color: #2c3e50;"><i class="fas fa-envelope" style="color: #21773EFF; font-size: 1.5rem;"></i><span>Contactar por Correo</span></div>',
+          html: `
+            <div style="text-align: center;">
+              <div style="background: linear-gradient(135deg, #35EA9FFF, #36D13EFF); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                <h4 style="margin: 0; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                  <i class="fas fa-question-circle"></i>
+                  ¿Enviar correo a soporte?
+                </h4>
+              </div>
+              
+              <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 2px solid #e8f5e8; margin-bottom: 20px;">
+                <div style="font-size: 1.1rem; font-weight: 600; color: #2c3e50; margin-bottom: 10px;">
+                  <i class="fas fa-at" style="color: #35EA35FF;"></i>
+                  Correo de soporte:
+                </div>
+                <div class="correo-display" style="background: white; padding: 12px; border-radius: 8px; border: 2px dashed #35EA62FF; font-size: 1rem; font-weight: 600; color: #2BA161FF;">
+                  joacoxx2340@gmail.com
+                </div>
+              </div>
+              
+              <p style="color: #7f8c8d; margin-bottom: 20px;">
+                <i class="fas fa-info-circle" style="color: #3498db;"></i>
+                Se abrirá Gmail con los datos de tu reporte prellenados automáticamente.
+              </p>
+            </div>
+          `,
+          showCloseButton: true,
+          showCancelButton: true,
+          confirmButtonColor: '#1FA084FF',
+          cancelButtonColor: '#7f8c8d',
+          confirmButtonText: '<i class="fab fa-google"></i> Abrir Gmail',
+          cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
+          width: 500,
+          background: '#ffffff',
+          customClass: {
+            popup: 'gmail-swal-popup',
+            title: 'gmail-swal-title',
+            htmlContainer: 'gmail-swal-html',
+            confirmButton: 'gmail-swal-confirm-btn',
+            cancelButton: 'gmail-swal-cancel-btn'
+          },
+          showClass: {
+            popup: 'animate__animated animate__fadeInDown'
+          },
+          hideClass: {
+            popup: 'animate__animated animate__fadeOutUp'
+          }
+        }).then((result) => {
+          if (result.isConfirmed) {
+            abrirGmail();
+          }
+        });
+      }
+
+      // Función para abrir Gmail directamente
+      function abrirGmail() {
+        const nombre = document.getElementById("nombre").value || "Usuario";
+        const tipoProblema = document.getElementById("tipo").value;
+        const descripcionTexto =
+          document.getElementById("descripcion").value ||
+          "Por favor describa su problema aquí...";
+
+        const asunto = `Problema con el Sistema Heliconias - ${tipoProblema}`;
+        const cuerpo = `Hola equipo de soporte de Heliconias,\n\nMi nombre es ${nombre}.\n\nTengo el siguiente problema:\n${descripcionTexto}\n\nPor favor contáctenme lo antes posible.\n\nSaludos,\n${nombre}`;
+
+        // Abrir Gmail directamente
+        window.open(
+          `https://mail.google.com/mail/?view=cm&fs=1&to=joacoxx2340@gmail.com&su=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`,
+          "_blank",
+        );
+      }
+
+      // Función para abrir WhatsApp inteligente (app o web)
+      function abrirWhatsApp() {
+        const nombre = document.getElementById("nombre").value || "Usuario";
+        const tipoProblema = document.getElementById("tipo").value;
+        const descripcionTexto =
+          document.getElementById("descripcion").value ||
+          "Tengo un problema con el sistema";
+
+        const mensaje = `Hola, soy ${nombre}. Tengo un problema con Heliconias:\n\n*Tipo de problema:* ${tipoProblema}\n*Descripción:* ${descripcionTexto}\n\nPor favor contáctenme lo antes posible.`;
+
+        // Número completamente oculto y seguro
+        const numeroSeguro = "573189427120";
+
+        // Detectar si es dispositivo móvil
+        const esMovil =
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent,
+          );
+
+        if (esMovil) {
+          // Abrir aplicación de WhatsApp en móviles
+          window.open(
+            `https://api.whatsapp.com/send?phone=${numeroSeguro}&text=${encodeURIComponent(mensaje)}`,
+            "_blank",
+          );
+        } else {
+          // Abrir WhatsApp Web en desktop
+          window.open(
+            `https://web.whatsapp.com/send?phone=${numeroSeguro}&text=${encodeURIComponent(mensaje)}`,
+            "_blank",
+          );
+        }
+      }
+
+      // Asignar la función al botón de Gmail
+      document
+        .getElementById("btnGmail")
+        .addEventListener("click", function (e) {
+          e.preventDefault();
+          mostrarSweetAlertGmail();
+        });
+
+      // Asignar la función al botón de WhatsApp
+      document
+        .getElementById("btnWhatsapp")
+        .addEventListener("click", function (e) {
+          e.preventDefault();
+          abrirWhatsApp();
+        });
+
+      // Botón de ayuda del header con SweetAlert
+      document.getElementById('help-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        Swal.fire({
+          title: '<div style="display: flex; align-items: center; gap: 10px; color: #2c3e50;"><i class="fas fa-life-ring" style="color: #3498db; font-size: 1.5rem;"></i><span>Centro de Ayuda - Soporte</span></div>',
+          html: `
+            <div style="text-align: left;">
+              <div style="background: linear-gradient(135deg, #3498db, #2c3e50); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                <h4 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                  <i class="fas fa-info-circle"></i>
+                  Estamos aquí para ayudarte
+                </h4>
+              </div>
+              
+              <div style="display: grid; gap: 15px; margin-bottom: 20px;">
+                <div style="display: flex; align-items: start; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #3498db;">
+                  <i class="fas fa-list-ol" style="color: #3498db; font-size: 1.2rem; margin-top: 2px;"></i>
+                  <div>
+                    <strong style="color: #2c3e50;">Paso 1:</strong>
+                    <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 0.9rem;">Completa el formulario de soporte con todos los detalles de tu problema</p>
+                  </div>
+                </div>
+                
+                <div style="display: flex; align-items: start; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #27ae60;">
+                  <i class="fas fa-flag" style="color: #27ae60; font-size: 1.2rem; margin-top: 2px;"></i>
+                  <div>
+                    <strong style="color: #2c3e50;">Paso 2:</strong>
+                    <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 0.9rem;">Selecciona la prioridad adecuada para tu reporte</p>
+                  </div>
+                </div>
+                
+                <div style="display: flex; align-items: start; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #f39c12;">
+                  <i class="fas fa-paperclip" style="color: #f39c12; font-size: 1.2rem; margin-top: 2px;"></i>
+                  <div>
+                    <strong style="color: #2c3e50;">Paso 3:</strong>
+                    <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 0.9rem;">Adjunta archivos relevantes (capturas, documentos, etc.)</p>
+                  </div>
+                </div>
+                
+                <div style="display: flex; align-items: start; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #e74c3c;">
+                  <i class="fas fa-paper-plane" style="color: #e74c3c; font-size: 1.2rem; margin-top: 2px;"></i>
+                  <div>
+                    <strong style="color: #2c3e50;">Paso 4:</strong>
+                    <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 0.9rem;">Envía el formulario y recibe confirmación inmediata</p>
+                  </div>
+                </div>
+                
+                <div style="display: flex; align-items: start; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #9b59b6;">
+                  <i class="fas fa-clock" style="color: #9b59b6; font-size: 1.2rem; margin-top: 2px;"></i>
+                  <div>
+                    <strong style="color: #2c3e50;">Paso 5:</strong>
+                    <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 0.9rem;">Te contactaremos en un plazo máximo de 24 horas</p>
+                  </div>
+                </div>
+              </div>
+
+              <div style="background: linear-gradient(135deg, #ffeaa7, #fab1a0); padding: 15px; border-radius: 10px; border-left: 4px solid #e17055;">
+                <h5 style="margin: 0 0 8px 0; color: #2d3436; display: flex; align-items: center; gap: 8px;">
+                  <i class="fas fa-graduation-cap"></i>
+                  Canales de Contacto
+                </h5>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                  <span style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: #2d3436; display: flex; align-items: center; gap: 5px;">
+                    <i class="fab fa-google" style="color: #ea4335;"></i>
+                    Gmail
+                  </span>
+                  <span style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: #2d3436; display: flex; align-items: center; gap: 5px;">
+                    <i class="fab fa-whatsapp" style="color: #25d366;"></i>
+                    WhatsApp
+                  </span>
+                </div>
+              </div>
+            </div>
+          `,
+          showCloseButton: true,
+          confirmButtonColor: '#3498db',
+          confirmButtonText: '<i class="fas fa-check-circle"></i> Entendido',
+          width: 600,
+          background: '#ffffff',
+          customClass: {
+            popup: 'help-swal-popup',
+            title: 'help-swal-title',
+            htmlContainer: 'help-swal-html',
+            confirmButton: 'help-swal-confirm-btn'
+          },
+          showClass: {
+            popup: 'animate__animated animate__fadeInDown'
+          },
+          hideClass: {
+            popup: 'animate__animated animate__fadeOutUp'
+          }
+        });
+      });
+
+      // Botón de salir
+      document.getElementById("logout-btn").addEventListener("click", function() {
+        Swal.fire({
+          title: '¿Estás seguro?',
+          text: "¿Quieres cerrar sesión?",
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#27ae60',
+          cancelButtonColor: '#e74c3c',
+          confirmButtonText: 'Sí, salir',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Mostrar mensaje de "Saliendo..."
+            Swal.fire({
+              title: 'Saliendo...',
+              text: "Cerrando sesión",
+              icon: 'info',
+              showConfirmButton: false,
+              timer: 1500,
+              timerProgressBar: true,
+              didOpen: () => {
+                Swal.showLoading()
+              }
+            }).then(() => {
+              // Redirigir a index.html después de mostrar el mensaje
+              window.location.href = 'index.html';
+            });
+          }
+        });
+      });
+
+      // Agregar estilos CSS para los SweetAlert
+      const sweetAlertStyle = document.createElement('style');
+      sweetAlertStyle.textContent = `
+        .gmail-swal-popup, .help-swal-popup {
+          border-radius: 15px;
+          border: 2px solid #e8f5e8;
+          box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        
+        .gmail-swal-title, .help-swal-title {
+          font-size: 1.4rem !important;
+          font-weight: 700 !important;
+        }
+        
+        .gmail-swal-html, .help-swal-html {
+          font-size: 0.95rem;
+          line-height: 1.5;
+        }
+        
+        .gmail-swal-confirm-btn, .help-swal-confirm-btn {
+          display: flex !important;
+          align-items: center !important;
+          gap: 8px !important;
+          font-weight: 600 !important;
+          padding: 12px 30px !important;
+          border-radius: 8px !important;
+        }
+        
+        .gmail-swal-cancel-btn {
+          display: flex !important;
+          align-items: center !important;
+          gap: 8px !important;
+          font-weight: 600 !important;
+          padding: 12px 30px !important;
+          border-radius: 8px !important;
+        }
+        
+        .swal2-close {
+          color: #7f8c8d !important;
+          font-size: 1.5rem !important;
+          transition: color 0.3s ease !important;
+        }
+        
+        .swal2-close:hover {
+          color: #e74c3c !important;
+        }
+      `;
+      document.head.appendChild(sweetAlertStyle);
+    </script>
+  </body>
+</html>
