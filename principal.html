@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Parque de las Heliconias - Panel de Control</title>
+
+        <!-- CSS -->
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
+        />
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+
+            body {
+                background: #f8f9fa;
+                color: #333;
+            }
+
+            /* Header Styles */
+            .header {
+                background: linear-gradient(135deg, #27ae60, #2ecc71);
+                color: white;
+                padding: 15px 30px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            }
+
+            .top-section {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+            }
+
+            .logo {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }
+
+            .logo-img {
+                width: 50px;
+                height: 50px;
+                background: white;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .logo-img i {
+                font-size: 24px;
+                color: #27ae60;
+            }
+
+            .logo h1 {
+                font-size: 24px;
+                font-weight: 600;
+            }
+
+            .system-date {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-weight: 500;
+                background: rgba(255,255,255,0.2);
+                padding: 8px 15px;
+                border-radius: 20px;
+            }
+
+            /* Navigation Styles */
+            .nav-container {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding-top: 10px;
+                border-top: 1px solid rgba(255,255,255,0.3);
+            }
+
+            .main-nav {
+                display: flex;
+                gap: 5px;
+            }
+
+            .nav-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 20px;
+                color: white;
+                text-decoration: none;
+                border-radius: 6px;
+                transition: all 0.3s ease;
+                background: rgba(255,255,255,0.1);
+                position: relative;
+            }
+
+            .nav-item:hover {
+                background: rgba(255,255,255,0.2);
+                transform: translateY(-2px);
+            }
+
+            .nav-item.active {
+                background: rgba(255,255,255,0.25);
+            }
+
+            .user-actions {
+                display: flex;
+                gap: 10px;
+            }
+
+            .btn {
+                padding: 8px 16px;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: 500;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                transition: all 0.3s ease;
+                position: relative;
+            }
+
+            .btn-primary {
+                background: rgba(255,255,255,0.2);
+                color: white;
+            }
+
+            .btn-accent {
+                background: #e74c3c;
+                color: white;
+            }
+
+            .btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            }
+
+            /* Tooltip Styles */
+            .tooltip {
+                position: relative;
+            }
+
+            .tooltip-text {
+                visibility: hidden;
+                width: 140px;
+                background-color: rgba(0, 0, 0, 0.8);
+                color: white;
+                text-align: center;
+                border-radius: 6px;
+                padding: 8px;
+                position: absolute;
+                z-index: 1000;
+                bottom: 125%;
+                left: 50%;
+                transform: translateX(-50%);
+                opacity: 0;
+                transition: opacity 0.3s;
+                font-size: 0.8rem;
+                font-weight: normal;
+            }
+
+            .tooltip-text::after {
+                content: "";
+                position: absolute;
+                top: 100%;
+                left: 50%;
+                margin-left: -5px;
+                border-width: 5px;
+                border-style: solid;
+                border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+            }
+
+            .tooltip:hover .tooltip-text {
+                visibility: visible;
+                opacity: 1;
+            }
+
+            /* Main Content Styles */
+            .main-content {
+                padding: 30px;
+            }
+
+            .titulo {
+                background: white;
+                padding: 25px 30px;
+                margin-bottom: 25px;
+                font-size: 1.5rem;
+                color: #2c3e50;
+                border-radius: 12px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                border-left: 5px solid #27ae60;
+            }
+
+            .titulo i {
+                color: #27ae60;
+                margin-right: 10px;
+            }
+
+            /* Content Grid */
+            .content {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 25px;
+            }
+
+            .content-section {
+                background: white;
+                border-radius: 12px;
+                padding: 25px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                transition: transform 0.3s ease;
+                border-top: 4px solid #27ae60;
+            }
+
+            .content-section:hover {
+                transform: translateY(-5px);
+            }
+
+            .section-title {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 20px;
+                color: #2c3e50;
+                font-size: 1.2rem;
+            }
+
+            .stat-icon {
+                color: #27ae60;
+                font-size: 1.4rem;
+            }
+
+            .stat-number {
+                font-size: 3rem;
+                font-weight: bold;
+                color: #27ae60;
+                text-align: center;
+                margin: 20px 0;
+            }
+
+            .stats-container {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .stat-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px;
+                background: #f8f9fa;
+                border-radius: 8px;
+                border-left: 4px solid #27ae60;
+            }
+
+            .stat-label {
+                font-weight: 500;
+                color: #2c3e50;
+            }
+
+            .stat-value {
+                font-weight: bold;
+                color: #27ae60;
+                font-size: 1.2rem;
+            }
+
+            .no-data {
+                text-align: center;
+                color: #7f8c8d;
+                font-style: italic;
+                padding: 20px;
+            }
+
+            .section-actions {
+                margin-top: 20px;
+                text-align: center;
+            }
+
+            .btn-details {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 20px;
+                background: #27ae60;
+                color: white;
+                text-decoration: none;
+                border-radius: 6px;
+                font-weight: 500;
+                transition: all 0.3s ease;
+            }
+
+            .btn-details:hover {
+                background: #219653;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+            }
+
+            .btn-details:disabled {
+                background: #bdc3c7;
+                cursor: not-allowed;
+                transform: none;
+                box-shadow: none;
+            }
+
+            /* Responsive */
+            @media (max-width: 1024px) {
+                .nav-container {
+                    flex-direction: column;
+                    gap: 15px;
+                }
+                
+                .main-nav {
+                    flex-wrap: wrap;
+                    justify-content: center;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .header {
+                    padding: 15px;
+                }
+                
+                .top-section {
+                    flex-direction: column;
+                    gap: 15px;
+                    text-align: center;
+                }
+                
+                .content {
+                    grid-template-columns: 1fr;
+                    padding: 15px;
+                }
+                
+                .main-content {
+                    padding: 15px;
+                }
+                
+                .user-actions {
+                    flex-wrap: wrap;
+                    justify-content: center;
+                }
+                
+                .nav-item {
+                    padding: 8px 12px;
+                    font-size: 0.9rem;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Header -->
+        <header class="header">
+            <div class="top-section">
+                <div class="logo">
+                    <div class="logo-img">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <h1>Heliconias Reports</h1>
+                </div>
+
+                <div class="system-date">
+                    <i class="fas fa-clock"></i>
+                    <span id="current-date-time">Cargando fecha y hora...</span>
+                </div>
+            </div>
+
+            <!-- Navegación horizontal -->
+            <div class="nav-container">
+                <nav class="main-nav">
+                    <a href="principal.html" class="nav-item active tooltip">
+                        <i class="fas fa-home"></i>
+                        <span>Inicio</span>
+                        <span class="tooltip-text">Página principal del sistema</span>
+                    </a>
+                    <a href="eventos.html" class="nav-item tooltip">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Eventos</span>
+                        <span class="tooltip-text">Gestión de eventos del parque</span>
+                    </a>
+                    <a href="actividad.html" class="nav-item active tooltip">
+                    <i class="fas fa-hiking"></i>
+                    <span>Actividades</span>
+                    <span class="tooltip-text">Gestión de actividades del parque</span>
+                </a>
+                    <a href="reportes.html" class="nav-item tooltip">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Reportes</span>
+                        <span class="tooltip-text">Generar reportes estadísticos</span>
+                    </a>
+                    <a href="#" class="nav-item tooltip">
+                        <i class="fas fa-history"></i>
+                        <span>Historial🔐</span>
+                        <span class="tooltip-text">Historial de visitas y actividades</span>
+                    </a>
+                    <a href="configuracion.html" class="nav-item tooltip">
+                        <i class="fas fa-cog"></i>
+                        <span>Configuración</span>
+                        <span class="tooltip-text">Configuración del sistema</span>
+                    </a>
+                </nav>
+
+                <div class="user-actions">
+                    <a href="soporte.html" class="btn btn-primary tooltip">
+                        <i class="fas fa-headset"></i> Soporte
+                        <span class="tooltip-text">Contactar al equipo de soporte técnico</span>
+                    </a>
+
+                    <button class="btn btn-primary tooltip" id="help-btn">
+                        <i class="fas fa-question-circle"></i> Ayuda
+                        <span class="tooltip-text">Información y ayuda del sistema</span>
+                    </button>
+
+                    <button class="btn btn-accent tooltip" id="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Salir
+                        <span class="tooltip-text">Cerrar sesión del sistema</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Contenido principal -->
+        <main class="main-content">
+            <h2 class="titulo">
+                <i class="fas fa-chart-pie"></i>Resumen Financiero y Estadísticas de Visitantes
+            </h2>
+
+            <!-- Contenido -->
+            <div class="content">
+                <!-- Total de Visitantes -->
+                <div class="content-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-users stat-icon"></i>Total de visitantes - Mes
+                    </h2>
+                    <div class="stat-number" id="total-visitantes">1,247</div>
+                    <div class="section-actions">
+                        <a href="#" class="btn-details">
+                            <i class="fas fa-chart-pie"></i> Ver Estadísticas 🔐
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Por Género -->
+                <div class="content-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-venus-mars stat-icon"></i>Por género
+                    </h2>
+                    <div class="stats-container">
+                        <div class="stat-item">
+                            <span class="stat-label">Masculino</span>
+                            <span class="stat-value">642</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Femenino</span>
+                            <span class="stat-value">605</span>
+                        </div>
+                    </div>
+                    <div class="section-actions">
+                        <a href="#" class="btn-details">
+                            <i class="fas fa-chart-pie"></i> Ver Detalles🔐
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Por Edad -->
+                <div class="content-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-child stat-icon"></i>Por edad🔐
+                    </h2>
+                    <div class="stats-container">
+                        <div class="stat-item">
+                            <span class="stat-label">Menores de 18</span>
+                            <span class="stat-value">312</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">18 - 60 años</span>
+                            <span class="stat-value">785</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Mayores de 60</span>
+                            <span class="stat-value">150</span>
+                        </div>
+                    </div>
+                    <div class="section-actions">
+                        <a href="#" class="btn-details">
+                            <i class="fas fa-chart-bar"></i> Ver Detalles🔐
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Por Nacionalidad -->
+                <div class="content-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-flag stat-icon"></i>Por nacionalidad
+                    </h2>
+                    <div class="stats-container">
+                        <div class="stat-item">
+                            <span class="stat-label">Colombia</span>
+                            <span class="stat-value">1,100</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Internacional</span>
+                            <span class="stat-value">147</span>
+                        </div>
+                    </div>
+                    <div class="section-actions">
+                        <a href="#" class="btn-details">
+                            <i class="fas fa-chart-bar"></i> Ver Detalles🔐
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Por Ciudad -->
+                <div class="content-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-city stat-icon"></i>Por ciudad
+                    </h2>
+                    <div class="stats-container">
+                        <div class="stat-item">
+                            <span class="stat-label">Bogotá</span>
+                            <span class="stat-value">450</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Medellín</span>
+                            <span class="stat-value">320</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Cali</span>
+                            <span class="stat-value">280</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Otras</span>
+                            <span class="stat-value">197</span>
+                        </div>
+                    </div>
+                    <div class="section-actions">
+                        <a href="#" class="btn-details">
+                            <i class="fas fa-map-marked-alt"></i> Ver Detalles🔐
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Por Institución -->
+                <div class="content-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-school stat-icon"></i>Por institución
+                    </h2>
+                    <div class="stats-container">
+                        <div class="stat-item">
+                            <span class="stat-label">Particular</span>
+                            <span class="stat-value">680</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Escuelas</span>
+                            <span class="stat-value">320</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Universidades</span>
+                            <span class="stat-value">247</span>
+                        </div>
+                    </div>
+                    <div class="section-actions">
+                        <a href="estadisticas_institucion.html" class="btn-details">
+                            <i class="fas fa-university"></i> Ver Detalles
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Gestión Financiera -->
+                <div class="content-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-dollar-sign stat-icon"></i>Gestión Financiera
+                    </h2>
+                    <p class="no-data">Módulo en desarrollo</p>
+                    <div class="section-actions">
+                        <button class="btn-details" disabled>
+                            <i class="fas fa-chart-line"></i> Ver Detalles🔐
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- JS -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        
+        <script>
+            // Función para actualizar fecha y hora
+            function updateDateTime() {
+                const now = new Date();
+                const dateTimeString = now.toLocaleString("es-ES", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    hour12: true,
+                });
+
+                const dateTimeElement = document.getElementById("current-date-time");
+                if (dateTimeElement) {
+                    dateTimeElement.textContent = dateTimeString;
+                }
+            }
+
+            // Inicializar fecha y hora
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+
+            // Botón de ayuda del panel principal - Versión Mejorada
+document.getElementById("help-btn").addEventListener("click", function () {
+    Swal.fire({
+        title: '<div style="display: flex; align-items: center; gap: 10px; color: #2c3e50;"><i class="fas fa-chart-pie" style="color: #3498db; font-size: 1.5rem;"></i><span>Centro de Ayuda - Panel Principal</span></div>',
+        html: `
+            <div style="text-align: left;">
+                <div style="background: linear-gradient(135deg, #3498db, #2c3e50); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                    <h4 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-info-circle"></i>
+                        ¿Qué hace esta interfaz?
+                    </h4>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db; margin-bottom: 20px;">
+                    <p style="margin: 0 0 10px 0; color: #2c3e50; font-size: 0.95rem;">
+                        <i class="fas fa-seedling" style="color: #27ae60; margin-right: 8px;"></i>
+                        En este apartado encontrarás información y tus reportes importantes para tus informes. 
+                        También podrás ver detalladamente el parque con sus datos del pasado y presente.
+                    </p>
+                    <p style="margin: 0; color: #2c3e50; font-size: 0.95rem;">
+                        <i class="fas fa-heart" style="color: #e74c3c; margin-right: 8px;"></i>
+                        Esperamos que sea de tu agrado.
+                    </p>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #27ae60, #229954); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                    <h4 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-star"></i>
+                        Funcionalidades Principales
+                    </h4>
+                </div>
+                
+                <div style="display: grid; gap: 15px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: start; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #3498db;">
+                        <i class="fas fa-chart-bar" style="color: #3498db; font-size: 1.2rem; margin-top: 2px;"></i>
+                        <div>
+                            <strong style="color: #2c3e50;">Visualización de Datos</strong>
+                            <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 0.9rem;">Consulta información detallada y estadísticas en tiempo real del parque</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: start; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #e74c3c;">
+                        <i class="fas fa-history" style="color: #e74c3c; font-size: 1.2rem; margin-top: 2px;"></i>
+                        <div>
+                            <strong style="color: #2c3e50;">Reportes Históricos</strong>
+                            <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 0.9rem;">Accede a datos del pasado y presente para análisis comparativos</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: start; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #f39c12;">
+                        <i class="fas fa-file-alt" style="color: #f39c12; font-size: 1.2rem; margin-top: 2px;"></i>
+                        <div>
+                            <strong style="color: #2c3e50;">Informes Importantes</strong>
+                            <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 0.9rem;">Genera y visualiza tus reportes con información clave del parque</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #ffeaa7, #fab1a0); padding: 15px; border-radius: 10px; border-left: 4px solid #e17055;">
+                    <h5 style="margin: 0 0 8px 0; color: #2d3436; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-graduation-cap"></i>
+                        Datos Disponibles
+                    </h5>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        <span style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: #2d3436; display: flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-users" style="color: #3498db;"></i>
+                            Visitantes
+                        </span>
+                        <span style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: #2d3436; display: flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-venus-mars" style="color: #e74c3c;"></i>
+                            Género
+                        </span>
+                        <span style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: #2d3436; display: flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-child" style="color: #27ae60;"></i>
+                            Edades
+                        </span>
+                        <span style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: #2d3436; display: flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-flag" style="color: #f39c12;"></i>
+                            Nacionalidad
+                        </span>
+                        <span style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: #2d3436; display: flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-city" style="color: #9b59b6;"></i>
+                            Ciudad
+                        </span>
+                        <span style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: #2d3436; display: flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-school" style="color: #1abc9c;"></i>
+                            Institución
+                        </span>
+                    </div>
+                </div>
+            </div>
+        `,
+        showCloseButton: true,
+        confirmButtonColor: '#3498db',
+        confirmButtonText: '<i class="fas fa-check-circle"></i> Entendido',
+        width: 650,
+        background: '#ffffff',
+        customClass: {
+            popup: 'panel-help-popup',
+            title: 'panel-help-title',
+            htmlContainer: 'panel-help-html',
+            confirmButton: 'panel-help-confirm-btn'
+        },
+        showClass: {
+            popup: 'animate__animated animate__fadeInDown'
+        },
+        hideClass: {
+            popup: 'animate__animated animate__fadeOutUp'
+        }
+    });
+});
+
+// Agregar estilos CSS específicos para el panel de ayuda
+const panelHelpStyle = document.createElement('style');
+panelHelpStyle.textContent = `
+    .panel-help-popup {
+        border-radius: 15px;
+        border: 2px solid #e8f5e8;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    
+    .panel-help-title {
+        font-size: 1.4rem !important;
+        font-weight: 700 !important;
+    }
+    
+    .panel-help-html {
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+    
+    .panel-help-confirm-btn {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        font-weight: 600 !important;
+        padding: 12px 30px !important;
+        border-radius: 8px !important;
+        background: linear-gradient(135deg, #3498db, #2980b9) !important;
+        border: none !important;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .panel-help-confirm-btn:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(52, 152, 219, 0.5) !important;
+    }
+    
+    .swal2-close {
+        color: #7f8c8d !important;
+        font-size: 1.5rem !important;
+        transition: color 0.3s ease !important;
+    }
+    
+    .swal2-close:hover {
+        color: #e74c3c !important;
+    }
+`;
+document.head.appendChild(panelHelpStyle);
+            // Botón de salir - Ahora con confirmación
+            document.getElementById("logout-btn").addEventListener("click", function() {
+                Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: "¿Quieres cerrar sesión?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#27ae60',
+                    cancelButtonColor: '#e74c3c',
+                    confirmButtonText: 'Sí, salir',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Mostrar mensaje de "Saliendo..."
+                        Swal.fire({
+                            title: 'Saliendo...',
+                            text: "Cerrando sesión",
+                            icon: 'info',
+                            showConfirmButton: false,
+                            timer: 1500,
+                            timerProgressBar: true,
+                            didOpen: () => {
+                                Swal.showLoading()
+                            }
+                        }).then(() => {
+                            // Redirigir a index.html después de mostrar el mensaje
+                            window.location.href = 'index.html';
+                        });
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>

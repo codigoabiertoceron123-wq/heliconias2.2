@@ -1,0 +1,1979 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heliconias Reports - Eventos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- Incluir Supabase JS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // Inicializar Supabase
+    const supabaseUrl = 'https://umncnddwzmjxgmvisvqz.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtbmNuZGR3em1qeGdtdmlzdnF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NDIyNzksImV4cCI6MjA3ODExODI3OX0.ODvus28cTCTD8gGewQ2sAZ8PcXbEe4CIy_zv6bip8J0';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+</script>
+    
+    <style>
+        /* soporte.css - Estilos con tema de Heliconias (verde oscuro y blanco) */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background: #f8f9fa;
+        color: #333;
+      }
+
+      /* Header Styles - Mismo del panel anterior */
+      .header {
+        background: linear-gradient(135deg, #27ae60, #2ecc71);
+        color: white;
+        padding: 15px 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      }
+
+      .top-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .logo-img {
+        width: 50px;
+        height: 50px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .logo-img i {
+        font-size: 24px;
+        color: #27ae60;
+      }
+
+      .logo h1 {
+        font-size: 24px;
+        font-weight: 600;
+      }
+
+      .system-date {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 500;
+        background: rgba(255,255,255,0.2);
+        padding: 8px 15px;
+        border-radius: 20px;
+      }
+
+      /* Navigation Styles */
+      .nav-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255,255,255,0.3);
+      }
+
+      .main-nav {
+        display: flex;
+        gap: 5px;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        background: rgba(255,255,255,0.1);
+        position: relative;
+      }
+
+      .nav-item:hover {
+        background: rgba(255,255,255,0.2);
+        transform: translateY(-2px);
+      }
+
+      .nav-item.active {
+        background: rgba(255,255,255,0.25);
+      }
+
+      .user-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+
+     
+
+
+      .btn-primary2 {
+        background: rgba(255,255,255,0.2);
+        color: white;
+      }
+      .btn-accent {
+        background: #e74c3c;
+        color: white;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      }
+
+      /* Tooltip Styles */
+      .tooltip {
+        position: relative;
+      }
+
+      .tooltip-text {
+        visibility: hidden;
+        width: 140px;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        text-align: center;
+        border-radius: 6px;
+        padding: 8px;
+        position: absolute;
+        z-index: 1000;
+        bottom: 125%;
+        left: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 0.8rem;
+        font-weight: normal;
+      }
+
+      .tooltip-text::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+      }
+
+      .tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+      }
+        /* Main Content Styles */
+        main {
+            display: flex;
+            gap: 20px;
+            padding: 30px;
+            min-height: calc(100vh - 140px);
+        }
+
+        .history-section {
+    width: 350px;
+    background: #f8f9fa;
+    border-left: 1px solid #e0e0e0;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.history-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: white;
+    border-bottom: 1px solid #e0e0e0;
+    flex-shrink: 0;
+}
+
+.history-header h3 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.history-toggle {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    color: #7f8c8d;
+    padding: 8px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.history-toggle:hover {
+    background: #f0f0f0;
+    color: #e74c3c;
+}
+
+.history-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: 600%;
+}
+
+.history-tabs {
+    display: flex;
+    background: white;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 15px 20px 0;
+    gap: 5px;
+    flex-shrink: 0;
+    
+}
+
+.history-tab {
+    flex: 1;
+    padding: 10px 5px;
+    border: none;
+    background: #f8f9fa;
+    color: #7f8c8d;
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.history-tab.active {
+    background: #27ae60;
+    color: white;
+}
+
+.history-tab:hover:not(.active) {
+    background: #e9ecef;
+    color: #2c3e50;
+}
+
+.events-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background: white;
+}
+
+/* Estados cuando está colapsado */
+.history-section.collapsed {
+    width: 60px;
+}
+
+.history-section.collapsed .history-header {
+    padding: 15px 10px;
+    justify-content: center;
+}
+
+.history-section.collapsed .history-header h3 {
+    display: none;
+}
+
+.history-section.collapsed .history-content {
+    display: none;
+}
+
+.history-section.collapsed .history-toggle {
+    transform: rotate(180deg);
+}
+
+.history-section.collapsed .history-toggle .toggle-icon {
+    content: "›";
+    font-size: 1.5rem;
+}
+
+        .events-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .event-card {
+            background: #f8fff8;
+            border: 2px solid #e8f5e8;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .event-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.2);
+            border-color: #27ae60;
+        }
+
+        .event-card.completed {
+            border-color: #2ecc71;
+            background: #f0fff0;
+        }
+
+        .event-card.in-progress {
+            border-color: #f39c12;
+            background: #fffaf0;
+        }
+
+        .event-date {
+            font-size: 0.9rem;
+            color: #27ae60;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .event-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .event-description {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .event-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-completed {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .status-in-progress {
+            background: #f39c12;
+            color: white;
+        }
+
+        .no-events {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7f8c8d;
+        }
+
+        .no-events h4 {
+            margin-bottom: 10px;
+            color: #27ae60;
+        }
+
+        /* Calendar Section */
+        .calendar-section {
+            flex: 1;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border: 2px solid #e8f5e8;
+        }
+
+        .calendar-section h2 {
+            color: #27ae60;
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+        }
+
+        .calendar-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .calendar-controls label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .calendar-controls select {
+            padding: 8px 12px;
+            border: 2px solid #e8f5e8;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .calendar-container {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        .calendar-header h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: #f8f9fa;
+            border-bottom: 2px solid #e8f5e8;
+        }
+
+        .weekdays div {
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+            color: #2c3e50;
+            border-right: 1px solid #e8f5e8;
+        }
+
+        .weekdays div:last-child {
+            border-right: none;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #e8f5e8;
+        }
+
+        .day {
+            background: white;
+            min-height: 100px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .day:hover {
+            background: #f8fff8;
+            transform: scale(1.02);
+            z-index: 1;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.2);
+        }
+
+        .day.empty {
+            background: #f8f9fa;
+            cursor: default;
+        }
+
+        .day.empty:hover {
+            background: #f8f9fa;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .day.today {
+            background: #e8f5e8;
+            border: 2px solid #27ae60;
+        }
+
+        .day.has-event {
+            background: #f0fff0;
+        }
+
+        .day-number {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .event-indicator {
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            margin-top: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .event-indicator.completed {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .event-indicator.in-progress {
+            background: #f39c12;
+            color: white;
+        }
+
+        
+
+        /* Estilos para SweetAlert personalizado */
+        .swal2-popup.event-modal {
+            border-radius: 15px;
+            padding: 0;
+            overflow: hidden;
+            width: 500px;
+            border: 2px solid #e8f5e8;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .swal2-header.event-modal-header {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 25px 30px 20px;
+            margin: 0;
+            border-radius: 13px 13px 0 0;
+        }
+
+        .swal2-title.event-modal-title {
+            color: white;
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .swal2-html-container.event-modal-content {
+            padding: 25px 30px;
+            margin: 0;
+            text-align: left;
+        }
+
+        .event-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            padding: 12px;
+            border: 2px solid #e8f5e8;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #27ae60;
+            box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .date-change-container {
+            background: #f8fff8;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #e8f5e8;
+            margin-top: 10px;
+        }
+
+        .modal-actions-extended {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e8f5e8;
+        }
+
+        .modal-actions-left {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-actions-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-custom {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #219653;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+        }
+
+        .btn-cancel {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .btn-change-date {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-change-date:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .swal2-actions.event-modal-actions {
+            margin: 0;
+            padding: 0 30px 25px;
+            justify-content: flex-end;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1024px) {
+            .nav-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .main-nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            main {
+                flex-direction: column;
+            }
+
+            .history-section {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+
+            .history-section.collapsed {
+                width: 100%;
+                height: 60px;
+                overflow: hidden;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px;
+            }
+            
+            .top-section {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .user-actions {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .nav-item {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+
+            main {
+                padding: 15px;
+            }
+
+            .calendar-section {
+                padding: 20px;
+            }
+
+            .calendar-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .weekdays div {
+                padding: 10px 5px;
+                font-size: 0.8rem;
+            }
+
+            .day {
+                min-height: 80px;
+                padding: 5px;
+            }
+
+            .event-indicator {
+                font-size: 0.7rem;
+                padding: 2px 4px;
+            }
+
+            .swal2-popup.event-modal {
+                width: 90%;
+                margin: 20px;
+            }
+
+            .modal-actions-extended {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .modal-actions-left,
+            .modal-actions-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-item {
+                padding: 6px 10px;
+                font-size: 0.8rem;
+            }
+
+            .btn {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
+
+            .logo h1 {
+                font-size: 1.1rem;
+            }
+
+            .logo-img {
+                width: 40px;
+                height: 40px;
+            }
+
+            .system-date {
+                font-size: 0.8rem;
+                padding: 6px 12px;
+            }
+
+            .calendar-section h2 {
+                font-size: 1.4rem;
+            }
+
+            .calendar-header {
+                padding: 15px;
+            }
+
+            .calendar-header h3 {
+                font-size: 1.1rem;
+            }
+
+            .weekdays div {
+                padding: 8px 2px;
+                font-size: 0.7rem;
+            }
+
+            .day {
+                min-height: 60px;
+            }
+
+            .day-number {
+                font-size: 0.8rem;
+            }
+
+            .help-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+
+            .swal2-header.event-modal-header {
+                padding: 20px 25px 15px;
+            }
+
+            .swal2-html-container.event-modal-content {
+                padding: 20px 25px;
+            }
+
+            .swal2-actions.event-modal-actions {
+                padding: 0 25px 20px;
+            }
+        }
+        /* Agregar estos estilos al CSS existente */
+.event-card.pendiente {
+    border-color: #f39c12;
+    background: #fffaf0;
+}
+
+.event-card.en_progreso {
+    border-color: #3498db;
+    background: #f0f8ff;
+}
+
+.event-card.completado {
+    border-color: #27ae60;
+    background: #f0fff0;
+}
+
+.status-pendiente {
+    background: #f39c12 !important;
+}
+
+.status-en_progreso {
+    background: #3498db !important;
+}
+
+.status-completado {
+    background: #27ae60 !important;
+}
+    </style>
+</head>
+<body>
+   <!-- Header - Mismo del panel anterior -->
+    <header class="header">
+      <div class="top-section">
+        <div class="logo">
+          <div class="logo-img">
+            <i class="fas fa-leaf"></i>
+          </div>
+          <h1>Heliconias Reports</h1>
+        </div>
+
+        <div class="system-date">
+          <i class="fas fa-clock"></i>
+          <span id="current-date-time">Cargando fecha y hora...</span>
+        </div>
+      </div>
+
+      <!-- Navegación horizontal -->
+      <div class="nav-container">
+        <nav class="main-nav">
+          <a href="principal.html" class="nav-item tooltip">
+            <i class="fas fa-home"></i>
+            <span>Inicio</span>
+            <span class="tooltip-text">Página principal del sistema</span>
+          </a>
+          <a href="eventos.html" class="nav-item tooltip">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Eventos</span>
+            <span class="tooltip-text">Gestión de eventos del parque</span>
+          </a>
+          <a href="actividad.html" class="nav-item active tooltip">
+                    <i class="fas fa-hiking"></i>
+                    <span>Actividades</span>
+                    <span class="tooltip-text">Gestión de actividades del parque</span>
+                </a>
+          <a href="reportes.html" class="nav-item tooltip">
+            <i class="fas fa-chart-line"></i>
+            <span>Reportes</span>
+            <span class="tooltip-text">Generar reportes estadísticos</span>
+          </a>
+          <a href="#" class="nav-item tooltip">
+            <i class="fas fa-history"></i>
+            <span>Historial🔐</span>
+            <span class="tooltip-text">Historial de visitas y actividades</span>
+          </a>
+          <a href="#" class="nav-item tooltip">
+            <i class="fas fa-cog"></i>
+            <span>Configuración🔐</span>
+            <span class="tooltip-text">Configuración del sistema</span>
+          </a>
+        </nav>
+
+        <div class="user-actions">
+          <a href="soporte.html" class="btn btn-primary2 tooltip">
+            <i class="fas fa-headset"></i> Soporte
+            <span class="tooltip-text">Contactar al equipo de soporte técnico</span>
+          </a>
+
+          <button class="btn btn-primary2 tooltip" id="help-btn">
+            <i class="fas fa-question-circle"></i> Ayuda
+            <span class="tooltip-text">Información y ayuda del sistema</span>
+          </button>
+
+          <button class="btn btn-accent tooltip" id="logout-btn">
+            <i class="fas fa-sign-out-alt"></i> Salir
+            <span class="tooltip-text">Cerrar sesión del sistema</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+        <div class="history-section" id="history-section">
+    <div class="history-container">
+        <div class="history-header">
+            <h3>Historial de Eventos</h3>
+            <button class="history-toggle" id="history-toggle">
+                <span class="toggle-icon">✕</span>
+            </button>
+        </div>
+        
+        <div class="history-content">
+            <div class="history-tabs">
+                <button class="history-tab active" data-tab="all">
+                    Todos
+                </button>
+                <button class="history-tab" data-tab="pendiente">
+                    Pendientes
+                </button>
+                <button class="history-tab" data-tab="en_progreso">
+                    En Progreso
+                </button>
+                <button class="history-tab" data-tab="completado">
+                    Completados
+                </button>
+            </div>
+
+            <div class="events-list" id="events-list">
+                <!-- Los eventos se cargan dinámicamente -->
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+        <div class="calendar-section">
+            <h2>Eventos Programados</h2>
+
+            <!-- Selector de mes y año -->
+            <div class="calendar-controls">
+                <label for="month-select">Mes:</label>
+                <select id="month-select">
+                    <option value="0">Enero</option>
+                    <option value="1" selected>Febrero</option>
+                    <option value="2">Marzo</option>
+                    <option value="3">Abril</option>
+                    <option value="4">Mayo</option>
+                    <option value="5">Junio</option>
+                    <option value="6">Julio</option>
+                    <option value="7">Agosto</option>
+                    <option value="8">Septiembre</option>
+                    <option value="9">Octubre</option>
+                    <option value="10">Noviembre</option>
+                    <option value="11">Diciembre</option>
+                </select>
+
+                <label for="year-select">Año:</label>
+                <select id="year-select">
+                    <option value="2025" selected>2025</option>
+                    <option value="2026">2026</option>
+                </select>
+            </div>
+
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    <button id="prev-month" class="nav-btn">←</button>
+                    <h3 id="month-year">Febrero 2025</h3>
+                    <button id="next-month" class="nav-btn">→</button>
+                </div>
+                <div class="weekdays">
+                    <div>Dom</div>
+                    <div>Lun</div>
+                    <div>Mar</div>
+                    <div>Mié</div>
+                    <div>Jue</div>
+                    <div>Vie</div>
+                    <div>Sáb</div>
+                </div>
+                <div class="calendar-grid" id="calendar-grid">
+                    <!-- Los días se generan dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Botón de ayuda flotante -->
+    <button class="help-btn" id="floating-help-btn">
+        <i class="fas fa-question-circle"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+<script>
+// Elementos del DOM
+    const calendarGrid = document.getElementById("calendar-grid");
+    const monthYear = document.getElementById("month-year");
+    const historyToggle = document.getElementById("history-toggle");
+    const historySection = document.getElementById("history-section");
+    const eventsList = document.getElementById("events-list");
+    const historyTabs = document.querySelectorAll(".history-tab");
+    const currentDateTime = document.getElementById("current-date-time");
+    const logoutBtn = document.getElementById("logout-btn");
+    const floatingHelpBtn = document.getElementById("floating-help-btn");
+    const helpBtn = document.getElementById("help-btn");
+
+    // Variables globales
+    const today = new Date();
+    let currentMonth = today.getMonth();
+    let currentYear = today.getFullYear();
+    let selectedDate = null;
+    let events = {};
+    let currentTab = "all";
+    let isEditing = false;
+    let originalDate = null;
+    let editingEventId = null;
+
+// Función para actualizar fecha y hora
+function updateDateTime() {
+    const now = new Date();
+    const dateTimeString = now.toLocaleString("es-ES", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+    });
+
+    currentDateTime.textContent = dateTimeString;
+}
+
+// Inicializar fecha y hora
+updateDateTime();
+setInterval(updateDateTime, 1000);
+
+// Cargar eventos desde Supabase
+async function loadEvents() {
+    try {
+        const { data, error } = await supabase
+            .from('eventos')
+            .select('*')
+            .order('fecha_evento', { ascending: true });
+
+        if (error) throw error;
+
+        // Convertir a formato compatible con el calendario
+        events = {};
+        data.forEach(event => {
+            const dateKey = event.fecha_evento;
+            events[dateKey] = {
+                id: event.id_evento,
+                title: event.titulo,
+                description: event.descripcion,
+                status: event.estado
+            };
+        });
+
+        console.log('Eventos cargados:', events);
+        renderCalendar(currentMonth, currentYear);
+    } catch (error) {
+        console.error('Error cargando eventos:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudieron cargar los eventos',
+            confirmButtonColor: '#e74c3c'
+        });
+    }
+}
+
+// Funciones del calendario
+function renderCalendar(month, year) {
+    calendarGrid.innerHTML = "";
+    monthYear.textContent = `${getMonthName(month)} ${year}`;
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    // Crear días vacíos para alinear el primer día del mes
+    for (let i = 0; i < firstDay; i++) {
+        const emptyDay = document.createElement("div");
+        emptyDay.classList.add("day", "empty");
+        calendarGrid.appendChild(emptyDay);
+    }
+
+    // Crear días del mes
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const event = events[dateKey];
+
+        const dayBox = document.createElement("div");
+        dayBox.classList.add("day");
+
+        if (event) {
+            dayBox.classList.add("has-event");
+        }
+
+        // Agregar número del día
+        const dayNumber = document.createElement("div");
+        dayNumber.className = "day-number";
+        dayNumber.textContent = day;
+        dayBox.appendChild(dayNumber);
+
+        // Agregar evento si existe
+        if (event) {
+            const eventIndicator = document.createElement("div");
+            eventIndicator.className = `event-indicator ${event.status}`;
+            eventIndicator.textContent = event.title;
+            dayBox.appendChild(eventIndicator);
+        }
+
+        // Marcar día actual
+        const today = new Date();
+        if (
+            today.getDate() === day &&
+            today.getMonth() === month &&
+            today.getFullYear() === year
+        ) {
+            dayBox.classList.add("today");
+        }
+
+        dayBox.addEventListener("click", () => openModal(dateKey));
+        calendarGrid.appendChild(dayBox);
+    }
+
+    // Actualiza los selectores
+    document.getElementById("month-select").value = month;
+    document.getElementById("year-select").value = year;
+
+    // Actualizar historial
+    renderHistory();
+}
+
+function getMonthName(monthIndex) {
+    const months = [
+        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+    ];
+    return months[monthIndex];
+}
+
+// Función para abrir el modal con SweetAlert2
+function openModal(dateKey) {
+    selectedDate = dateKey;
+    originalDate = dateKey;
+    const existingEvent = events[dateKey];
+    isEditing = existingEvent !== undefined;
+    editingEventId = existingEvent?.id || null;
+
+    // Formatear la fecha para mostrarla mejor
+    const [year, month, day] = dateKey.split('-');
+    const dateObj = new Date(year, month - 1, day);
+    const formattedDate = dateObj.toLocaleDateString("es-ES", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+    });
+
+    const eventTitle = existingEvent?.title || "";
+    const eventDescription = existingEvent?.description || "";
+    const eventStatus = existingEvent?.status || "pendiente";
+
+    // Crear el contenido del modal
+    const modalContent = document.createElement('div');
+    modalContent.className = 'event-form';
+    
+    modalContent.innerHTML = `
+        <div class="form-group">
+            <label for="swal-event-title">Título del evento:</label>
+            <input
+                type="text"
+                id="swal-event-title"
+                class="form-control"
+                placeholder="Ej: Reporte mensual"
+                value="${eventTitle}"
+            />
+        </div>
+        
+        <div class="form-group">
+            <label for="swal-event-description">Descripción:</label>
+            <textarea
+                id="swal-event-description"
+                class="form-control"
+                rows="4"
+                placeholder="Ej: Preparar informe de visitantes y enviar a dirección."
+            >${eventDescription}</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="swal-event-status">Estado:</label>
+            <select id="swal-event-status" class="form-control">
+                <option value="pendiente" ${eventStatus === "pendiente" ? "selected" : ""}>Pendiente</option>
+                <option value="en_progreso" ${eventStatus === "en_progreso" ? "selected" : ""}>En Progreso</option>
+                <option value="completado" ${eventStatus === "completado" ? "selected" : ""}>Completado</option>
+            </select>
+        </div>
+        
+        <div class="date-change-container" id="swal-date-change-container" style="display: none;">
+            <label for="swal-new-event-date">Cambiar fecha del evento:</label>
+            <input type="date" id="swal-new-event-date" class="form-control">
+            <button id="swal-apply-date-change" class="btn-custom btn-primary" style="margin-top: 10px;">Aplicar cambio de fecha</button>
+        </div>
+        
+        <div class="modal-actions-extended">
+            <div class="modal-actions-left">
+                ${isEditing ? `
+                    <button id="swal-delete-event" class="btn-custom btn-delete">Eliminar Evento</button>
+                    <button id="swal-change-date" class="btn-custom btn-change-date">Cambiar Fecha</button>
+                ` : ''}
+            </div>
+            <div class="modal-actions-right">
+                <button id="swal-cancel-event" class="btn-custom btn-cancel">Cancelar</button>
+                <button id="swal-save-event" class="btn-custom btn-primary">Guardar</button>
+            </div>
+        </div>
+    `;
+
+    Swal.fire({
+        title: `<div style="display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-calendar-plus" style="font-size: 1.5rem; color: #27ae60;"></i>
+            <span style="color: #27ae60;">${isEditing ? 'Editar evento' : 'Agregar evento'} para ${formattedDate}</span>
+        </div>`,
+        html: modalContent,
+        showConfirmButton: false,
+        showCloseButton: true,
+        customClass: {
+            popup: 'event-modal',
+            header: 'event-modal-header',
+            title: 'event-modal-title',
+            htmlContainer: 'event-modal-content',
+            actions: 'event-modal-actions'
+        },
+        width: 500,
+        didOpen: () => {
+            // Configurar eventos para los botones
+            document.getElementById('swal-save-event').addEventListener('click', saveEvent);
+            document.getElementById('swal-cancel-event').addEventListener('click', () => Swal.close());
+            
+            if (isEditing) {
+                document.getElementById('swal-delete-event').addEventListener('click', deleteEvent);
+                document.getElementById('swal-change-date').addEventListener('click', () => {
+                    document.getElementById('swal-date-change-container').style.display = 'block';
+                    document.getElementById('swal-new-event-date').value = selectedDate;
+                });
+            }
+            
+            document.getElementById('swal-apply-date-change').addEventListener('click', applyDateChange);
+        }
+    });
+}
+
+// Función para guardar evento en Supabase
+async function saveEvent() {
+    const title = document.getElementById('swal-event-title').value.trim();
+    const description = document.getElementById('swal-event-description').value.trim();
+    const status = document.getElementById('swal-event-status').value;
+
+    if (title === "") {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Falta información',
+            text: 'Por favor, ingresa un título para el evento',
+            confirmButtonColor: '#f39c12',
+            confirmButtonText: 'Entendido'
+        });
+        return;
+    }
+
+    try {
+        let result;
+
+        if (isEditing && editingEventId) {
+            // Actualizar evento existente
+            const { data, error } = await supabase
+                .from('eventos')
+                .update({
+                    titulo: title,
+                    descripcion: description,
+                    estado: status,
+                    fecha_evento: selectedDate
+                })
+                .eq('id_evento', editingEventId)
+                .select();
+
+            if (error) throw error;
+            result = data[0];
+            
+            // Recargar eventos desde la base de datos
+            await loadEvents();
+
+            // Mostrar confirmación de actualización
+            Swal.fire({
+                icon: 'success',
+                title: '¡Evento Actualizado!',
+                html: `
+                    <div style="text-align: center;">
+                        <div style="font-size: 3rem; color: #27ae60; margin-bottom: 15px;">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <p style="margin-bottom: 10px; font-size: 1.1rem; font-weight: 600;">
+                            El evento se ha actualizado correctamente
+                        </p>
+                        <p style="color: #7f8c8d; font-size: 0.9rem;">
+                            <strong>"${title}"</strong> ha sido actualizado
+                        </p>
+                    </div>
+                `,
+                confirmButtonColor: '#27ae60',
+                confirmButtonText: 'Aceptar',
+                width: 450
+            });
+
+        } else {
+            // Crear nuevo evento
+            const { data, error } = await supabase
+                .from('eventos')
+                .insert([{
+                    titulo: title,
+                    descripcion: description,
+                    estado: status,
+                    fecha_evento: selectedDate,
+                    id_usuario: 1
+                }])
+                .select();
+
+            if (error) throw error;
+            result = data[0];
+            
+            // Recargar eventos desde la base de datos
+            await loadEvents();
+
+            // Formatear fecha para el mensaje
+            const [year, month, day] = selectedDate.split('-');
+            const dateObj = new Date(year, month - 1, day);
+            const formattedDate = dateObj.toLocaleDateString("es-ES", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+            });
+
+            // Mostrar SweetAlert personalizado para nuevo evento
+            Swal.fire({
+                icon: 'success',
+                title: '¡Excelente!',
+                html: `
+                    <div style="text-align: center;">
+                        <div style="font-size: 4rem; color: #27ae60; margin-bottom: 20px;">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <p style="margin-bottom: 15px; font-size: 1.3rem; font-weight: 700; color: #27ae60;">
+                            ¡Has creado un nuevo evento!
+                        </p>
+                        <div style="background: #f8fff8; padding: 15px; border-radius: 10px; border: 2px solid #e8f5e8; margin: 15px 0;">
+                            <p style="margin: 0 0 8px 0; font-size: 1.1rem; font-weight: 600; color: #2c3e50;">
+                                <i class="fas fa-heading"></i> ${title}
+                            </p>
+                            <p style="margin: 0; font-size: 0.95rem; color: #27ae60;">
+                                <i class="fas fa-calendar-day"></i> ${formattedDate}
+                            </p>
+                        </div>
+                        <p style="color: #7f8c8d; font-size: 0.9rem; margin-top: 10px;">
+                            El evento ha sido guardado en la base de datos
+                        </p>
+                    </div>
+                `,
+                confirmButtonColor: '#27ae60',
+                confirmButtonText: '<i class="fas fa-thumbs-up"></i> ¡Perfecto!',
+                width: 500,
+                background: '#ffffff',
+                customClass: {
+                    popup: 'animated-popup',
+                    confirmButton: 'custom-confirm-btn'
+                },
+                showClass: {
+                    popup: 'animate__animated animate__bounceIn'
+                }
+            });
+        }
+
+        Swal.close();
+    } catch (error) {
+        console.error('Error guardando evento:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo guardar el evento: ' + error.message,
+            confirmButtonColor: '#e74c3c'
+        });
+    }
+}
+
+// Función para eliminar evento
+async function deleteEvent() {
+    Swal.fire({
+        title: '¿Eliminar evento?',
+        text: "Esta acción no se puede deshacer",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e74c3c',
+        cancelButtonColor: '#27ae60',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed && editingEventId) {
+            try {
+                const { error } = await supabase
+                    .from('eventos')
+                    .delete()
+                    .eq('id_evento', editingEventId);
+
+                if (error) throw error;
+
+                // Recargar eventos desde la base de datos
+                await loadEvents();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Eliminado',
+                    text: 'El evento ha sido eliminado',
+                    confirmButtonColor: '#27ae60',
+                    timer: 1500
+                });
+
+                Swal.close();
+            } catch (error) {
+                console.error('Error eliminando evento:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo eliminar el evento',
+                    confirmButtonColor: '#e74c3c'
+                });
+            }
+        }
+    });
+}
+
+// Función para aplicar cambio de fecha (ACTUALIZADA para guardar en Supabase)
+async function applyDateChange() {
+    const newDate = document.getElementById('swal-new-event-date').value;
+    if (newDate) {
+        // Verificar si ya existe un evento en la nueva fecha
+        if (events[newDate] && newDate !== originalDate) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Fecha ocupada',
+                text: 'Ya existe un evento en esta fecha. Por favor, elige otra fecha.',
+                confirmButtonColor: '#f39c12',
+                confirmButtonText: 'Entendido'
+            });
+            return;
+        }
+
+        try {
+            // Actualizar la fecha en Supabase
+            const { error } = await supabase
+                .from('eventos')
+                .update({
+                    fecha_evento: newDate
+                })
+                .eq('id_evento', editingEventId);
+
+            if (error) throw error;
+
+            selectedDate = newDate;
+
+            const [year, month, day] = newDate.split('-');
+            const dateObj = new Date(year, month - 1, day);
+            const formattedDate = dateObj.toLocaleDateString("es-ES", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+            });
+
+            // Actualizar el título del modal
+            document.querySelector('.swal2-title').innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-calendar-plus" style="font-size: 1.5rem;"></i>
+                    <span>Editar evento para ${formattedDate}</span>
+                </div>
+            `;
+
+            document.getElementById('swal-date-change-container').style.display = 'none';
+
+            // Recargar eventos para reflejar el cambio
+            await loadEvents();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Fecha cambiada',
+                text: 'La fecha del evento ha sido actualizada en la base de datos',
+                confirmButtonColor: '#27ae60',
+                timer: 1500
+            });
+        } catch (error) {
+            console.error('Error cambiando fecha:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo cambiar la fecha del evento',
+                confirmButtonColor: '#e74c3c'
+            });
+        }
+    }
+}
+
+function renderHistory() {
+    eventsList.innerHTML = "";
+
+    // Obtener todos los eventos y ordenarlos por fecha (más recientes primero)
+    const eventEntries = Object.entries(events).sort(
+        ([dateA], [dateB]) => new Date(dateB) - new Date(dateA),
+    );
+
+    // Filtrar según la pestaña activa
+    const filteredEvents = eventEntries.filter(([date, event]) => {
+        if (currentTab === "all") return true;
+        return event.status === currentTab;
+    });
+
+    if (filteredEvents.length === 0) {
+        eventsList.innerHTML = `
+            <div class="no-events">
+                <h4>No hay eventos</h4>
+                <p>${
+                    currentTab === "all"
+                        ? "No hay eventos registrados"
+                        : currentTab === "pendiente"
+                          ? "No hay eventos pendientes"
+                          : currentTab === "en_progreso"
+                            ? "No hay eventos en progreso"
+                            : "No hay eventos completados"
+                }</p>
+            </div>
+        `;
+        return;
+    }
+
+    filteredEvents.forEach(([date, event]) => {
+        const [year, month, day] = date.split("-");
+        const dateObj = new Date(year, month - 1, day);
+        const formattedDate = dateObj.toLocaleDateString("es-ES", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        });
+
+        // Mapear estados a texto legible
+        const statusText = {
+            'pendiente': 'Pendiente',
+            'en_progreso': 'En Progreso',
+            'completado': 'Completado'
+        };
+
+        // Mapear colores de estado
+        const statusColors = {
+            'pendiente': '#f39c12',
+            'en_progreso': '#3498db',
+            'completado': '#27ae60'
+        };
+
+        const eventCard = document.createElement("div");
+        eventCard.className = `event-card ${event.status}`;
+        eventCard.innerHTML = `
+            <div class="event-date">${formattedDate}</div>
+            <div class="event-title">${event.title}</div>
+            <div class="event-description">${event.description || "Sin descripción"}</div>
+            <div class="event-status status-${event.status}" style="background: ${statusColors[event.status]}">
+                ${statusText[event.status]}
+            </div>
+        `;
+
+        eventCard.addEventListener("click", () => {
+            // Al hacer clic en un evento del historial, abrir el modal para editarlo
+            selectedDate = date;
+            openModal(date);
+        });
+
+        eventsList.appendChild(eventCard);
+    });
+}
+
+// Event Listeners
+document
+    .getElementById("prev-month")
+    .addEventListener("click", () => {
+        currentMonth = (currentMonth - 1 + 12) % 12;
+        if (currentMonth === 11) currentYear--;
+        renderCalendar(currentMonth, currentYear);
+    });
+
+document
+    .getElementById("next-month")
+    .addEventListener("click", () => {
+        currentMonth = (currentMonth + 1) % 12;
+        if (currentMonth === 0) currentYear++;
+        renderCalendar(currentMonth, currentYear);
+    });
+
+const monthSelect = document.getElementById("month-select");
+const yearSelect = document.getElementById("year-select");
+
+// Actualizar los selectores con el año actual y siguiente
+function updateYearSelect() {
+    const currentYear = today.getFullYear();
+    yearSelect.innerHTML = '';
+    yearSelect.innerHTML += `<option value="${currentYear}" selected>${currentYear}</option>`;
+    yearSelect.innerHTML += `<option value="${currentYear + 1}">${currentYear + 1}</option>`;
+}
+
+monthSelect.addEventListener("change", () => {
+    currentMonth = parseInt(monthSelect.value);
+    renderCalendar(currentMonth, currentYear);
+});
+
+yearSelect.addEventListener("change", () => {
+    currentYear = parseInt(yearSelect.value);
+    renderCalendar(currentMonth, currentYear);
+});
+
+// Toggle del historial
+historyToggle.addEventListener("click", () => {
+    historySection.classList.toggle("collapsed");
+    historyToggle.textContent = historySection.classList.contains(
+        "collapsed",
+    )
+        ? ""
+        : "";
+});
+
+// Tabs del historial (ACTUALIZADOS para los nuevos estados)
+historyTabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+        historyTabs.forEach((t) => t.classList.remove("active"));
+        tab.classList.add("active");
+        currentTab = tab.dataset.tab;
+        renderHistory();
+    });
+});
+
+// Botón de ayuda flotante
+floatingHelpBtn.addEventListener('click', function() {
+    Swal.fire({
+        title: '<div style="display: flex; align-items: center; gap: 10px; color: #2c3e50;"><i class="fas fa-calendar-alt" style="color: #27ae60; font-size: 1.5rem;"></i><span>Gestión de Eventos</span></div>',
+        html: `
+            <div style="text-align: left;">
+                <div style="background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                    <h4 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-lightbulb"></i>
+                        ¿Qué puedes hacer aquí?
+                    </h4>
+                </div>
+                
+                <div style="display: grid; gap: 15px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: start; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #27ae60;">
+                        <i class="fas fa-calendar-day" style="color: #27ae60; font-size: 1.2rem; margin-top: 2px;"></i>
+                        <div>
+                            <strong style="color: #2c3e50;">Calendario Interactivo</strong>
+                            <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 0.9rem;">Visualiza y programa eventos en el calendario mensual con navegación intuitiva</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: start; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #e74c3c;">
+                        <i class="fas fa-history" style="color: #e74c3c; font-size: 1.2rem; margin-top: 2px;"></i>
+                        <div>
+                            <strong style="color: #2c3e50;">Historial Organizado</strong>
+                            <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 0.9rem;">Consulta todos los eventos filtrados por estado en el panel lateral</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: start; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #27ae60;">
+                        <i class="fas fa-plus-circle" style="color: #27ae60; font-size: 1.2rem; margin-top: 2px;"></i>
+                        <div>
+                            <strong style="color: #2c3e50;">Agregar Eventos</strong>
+                            <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 0.9rem;">Haz clic en cualquier día del calendario para crear un nuevo evento</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: start; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #f39c12;">
+                        <i class="fas fa-edit" style="color: #f39c12; font-size: 1.2rem; margin-top: 2px;"></i>
+                        <div>
+                            <strong style="color: #2c3e50;">Edición Flexible</strong>
+                            <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 0.9rem;">Modifica eventos existentes, cambia fechas y actualiza estados</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: start; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #9b59b6;">
+                        <i class="fas fa-tasks" style="color: #9b59b6; font-size: 1.2rem; margin-top: 2px;"></i>
+                        <div>
+                            <strong style="color: #2c3e50;">Seguimiento de Estados</strong>
+                            <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 0.9rem;">Marca eventos como "Pendiente", "En Progreso" o "Completados" para mejor organización</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #ffeaa7, #fab1a0); padding: 15px; border-radius: 10px; border-left: 4px solid #e17055;">
+                    <h5 style="margin: 0 0 8px 0; color: #2d3436; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-graduation-cap"></i>
+                        Consejos Prácticos
+                    </h5>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        <span style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: #2d3436; display: flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-mouse-pointer" style="color: #27ae60;"></i>
+                            Clic en días
+                        </span>
+                        <span style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: #2d3436; display: flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-filter" style="color: #e74c3c;"></i>
+                            Filtra por pestañas
+                        </span>
+                        <span style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: #2d3436; display: flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-arrows-alt-h" style="color: #27ae60;"></i>
+                            Ajusta tamaño panel
+                        </span>
+                        <span style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: #2d3436; display: flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-database" style="color: #f39c12;"></i>
+                            Guarda en base de datos
+                        </span>
+                    </div>
+                </div>
+            </div>
+        `,
+        icon: 'info',
+        showCloseButton: true,
+        confirmButtonColor: '#27ae60',
+        confirmButtonText: '<i class="fas fa-check-circle"></i> Entendido',
+        width: 650,
+        background: '#ffffff',
+        customClass: {
+            popup: 'animated-popup',
+            title: 'custom-title',
+            htmlContainer: 'custom-html'
+        },
+        showClass: {
+            popup: 'animate__animated animate__fadeInDown'
+        },
+        hideClass: {
+            popup: 'animate__animated animate__fadeOutUp'
+        }
+    });
+});
+
+
+
+// Botón de ayuda del header
+helpBtn.addEventListener('click', function() {
+    Swal.fire({
+        title: '<div style="display: flex; align-items: center; gap: 10px; color: #2c3e50;"><i class="fas fa-calendar-alt" style="color: #27ae60; font-size: 1.5rem;"></i><span>Centro de Ayuda - Eventos</span></div>',
+        html: `
+            <div style="text-align: left;">
+                <div style="background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                    <h4 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-star"></i>
+                        Funcionalidades Principales
+                    </h4>
+                </div>
+                
+                <div style="display: grid; gap: 15px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: start; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #27ae60;">
+                        <i class="fas fa-calendar-alt" style="color: #27ae60; font-size: 1.2rem; margin-top: 2px;"></i>
+                        <div>
+                            <strong style="color: #2c3e50;">Calendario Interactivo</strong>
+                            <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 0.9rem;">Navega entre meses y visualiza eventos programados de forma intuitiva</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: start; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #27ae60;">
+                        <i class="fas fa-tasks" style="color: #27ae60; font-size: 1.2rem; margin-top: 2px;"></i>
+                        <div>
+                            <strong style="color: #2c3e50;">Gestión de Eventos</strong>
+                            <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 0.9rem;">Crea, edita y elimina eventos fácilmente con interfaz amigable</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: start; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #e74c3c;">
+                        <i class="fas fa-chart-line" style="color: #e74c3c; font-size: 1.2rem; margin-top: 2px;"></i>
+                        <div>
+                            <strong style="color: #2c3e50;">Seguimiento de Estados</strong>
+                            <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 0.9rem;">Marca eventos como "Pendiente", "En Progreso" o "Completados" para mejor organización</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: start; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #9b59b6;">
+                        <i class="fas fa-history" style="color: #9b59b6; font-size: 1.2rem; margin-top: 2px;"></i>
+                        <div>
+                            <strong style="color: #2c3e50;">Historial Organizado</strong>
+                            <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 0.9rem;">Filtra eventos por estado en el panel lateral para acceso rápido</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #ffeaa7, #fab1a0); padding: 15px; border-radius: 10px; border-left: 4px solid #e17055; margin-bottom: 20px;">
+                    <h5 style="margin: 0 0 8px 0; color: #2d3436; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-lightbulb"></i>
+                        Consejos Rápidos
+                    </h5>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        <span style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: #2d3436; display: flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-mouse-pointer" style="color: #27ae60;"></i>
+                            Clic en días
+                        </span>
+                        <span style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: #2d3436; display: flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-filter" style="color: #e74c3c;"></i>
+                            Filtra por pestañas
+                        </span>
+                        <span style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: #2d3436; display: flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-exchange-alt" style="color: #27ae60;"></i>
+                            Cambia fechas
+                        </span>
+                        <span style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: #2d3436; display: flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-database" style="color: #f39c12;"></i>
+                            Guarda en base de datos
+                        </span>
+                    </div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #27ae60, #229954); color: white; padding: 12px; border-radius: 8px; text-align: center;">
+                    <p style="margin: 0; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fas fa-database"></i>
+                        Todos los cambios se guardan automáticamente en la base de datos
+                    </p>
+                </div>
+            </div>
+        `,
+        icon: 'info',
+        showCloseButton: true,
+        confirmButtonColor: '#27ae60',
+        confirmButtonText: '<i class="fas fa-check-circle"></i> Entendido',
+        width: 650,
+        background: '#ffffff',
+        customClass: {
+            popup: 'animated-popup',
+            title: 'custom-title',
+            htmlContainer: 'custom-html',
+            confirmButton: 'custom-confirm-btn'
+        },
+        showClass: {
+            popup: 'animate__animated animate__fadeInDown'
+        },
+        hideClass: {
+            popup: 'animate__animated animate__fadeOutUp'
+        }
+    });
+});
+
+// Botón de salir
+logoutBtn.addEventListener("click", function() {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "¿Quieres cerrar sesión?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#27ae60',
+        cancelButtonColor: '#e74c3c',
+        confirmButtonText: 'Sí, salir',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Mostrar mensaje de "Saliendo..."
+            Swal.fire({
+                title: 'Saliendo...',
+                text: "Cerrando sesión",
+                icon: 'info',
+                showConfirmButton: false,
+                timer: 1500,
+                timerProgressBar: true,
+                didOpen: () => {
+                    Swal.showLoading()
+                }
+            }).then(() => {
+                // Redirigir a index.html después de mostrar el mensaje
+                window.location.href = 'index.html';
+            });
+        }
+    });
+});
+
+// Inicializar calendario e historial
+updateYearSelect(); // Actualizar selector de año
+loadEvents();
+</script>
+</body>
+</html>
