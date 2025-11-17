@@ -205,77 +205,6 @@
         text-decoration: underline;
       }
 
-      /* Success Message Styles */
-      .success-container {
-        text-align: center;
-        padding: 20px;
-      }
-
-      .success-icon {
-        font-size: 80px;
-        color: #27ae60;
-        margin-bottom: 20px;
-      }
-
-      .success-title {
-        font-size: 32px;
-        color: #27ae60;
-        margin-bottom: 20px;
-        font-weight: 600;
-      }
-
-      .user-info {
-        background: #e8f6f3;
-        padding: 20px;
-        border-radius: 10px;
-        margin: 20px 0;
-        text-align: left;
-      }
-
-      .user-info h3 {
-        color: #27ae60;
-        margin-bottom: 15px;
-        font-size: 18px;
-      }
-
-      .user-detail {
-        display: flex;
-        align-items: center;
-        margin-bottom: 10px;
-        padding: 8px 0;
-      }
-
-      .user-detail i {
-        width: 30px;
-        color: #27ae60;
-        font-size: 16px;
-      }
-
-      .email-confirmation {
-        background: #fff3cd;
-        padding: 20px;
-        border-radius: 10px;
-        border-left: 4px solid #ffc107;
-        margin: 20px 0;
-        text-align: left;
-      }
-
-      .email-confirmation h3 {
-        color: #856404;
-        margin-bottom: 10px;
-        font-size: 18px;
-      }
-
-      .confirmation-steps {
-        margin: 15px 0;
-        padding-left: 20px;
-      }
-
-      .confirmation-steps li {
-        margin-bottom: 8px;
-        color: #856404;
-      }
-
       /* Estilos para SweetAlert */
       .swal2-popup {
         background: white !important;
@@ -287,11 +216,6 @@
         background: linear-gradient(135deg, #27ae60, #2ecc71) !important;
         border: none !important;
         border-radius: 8px !important;
-      }
-
-      /* Hidden class */
-      .hidden {
-        display: none;
       }
     </style>
 
@@ -319,180 +243,89 @@
 
     <main class="main-container">
         <section class="register-box">
-            <!-- Formulario de Registro -->
-            <div id="registerFormContainer">
-                <h2>Crear Cuenta</h2>
-                <form id="registerForm">
-                    <div class="form-grid">
-                        <!-- Nombre -->
-                        <div class="form-group">
-                            <label for="nombre">Nombre *</label>
-                            <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" required>
-                        </div>
-
-                        <!-- Apellido -->
-                        <div class="form-group">
-                            <label for="apellido">Apellido *</label>
-                            <input type="text" id="apellido" name="apellido" placeholder="Tu apellido" required>
-                        </div>
-
-                        <!-- Correo -->
-                        <div class="form-group full-width">
-                            <label for="correo">Correo Electrónico *</label>
-                            <input type="email" id="correo" name="correo" placeholder="tu.correo@ejemplo.com" required>
-                        </div>
-
-                        <!-- Documento -->
-                        <div class="form-group">
-                            <label for="documento">Documento *</label>
-                            <input type="text" id="documento" name="documento" placeholder="Número de documento" required>
-                        </div>
-
-                        <!-- Teléfono -->
-                        <div class="form-group">
-                            <label for="telefono">Teléfono</label>
-                            <input type="tel" id="telefono" name="telefono" placeholder="Tu teléfono">
-                        </div>
-
-                        <!-- Género -->
-                        <div class="form-group">
-                            <label for="genero">Género</label>
-                            <select id="genero" name="genero">
-                                <option value="">Seleccionar</option>
-                                <option value="Masculino">Masculino</option>
-                                <option value="Femenino">Femenino</option>
-                                <option value="Otro">Otro</option>
-                                <option value="Prefiero no decir">Prefiero no decir</option>
-                            </select>
-                        </div>
-
-                        <!-- Institución -->
-                        <div class="form-group">
-                            <label for="institucion">Institución</label>
-                            <input type="text" id="institucion" name="institucion" placeholder="Tu institución o empresa">
-                        </div>
-
-                        <!-- Fecha de Nacimiento -->
-                        <div class="form-group">
-                            <label for="fecha_nacimiento">Fecha de Nacimiento</label>
-                            <input type="date" id="fecha_nacimiento" name="fecha_nacimiento">
-                        </div>
-
-                        <!-- Contraseña -->
-                        <div class="form-group">
-                            <label for="contrasena">Contraseña *</label>
-                            <input type="password" id="contrasena" name="contrasena" placeholder="Crea una contraseña" required>
-                        </div>
-
-                        <!-- Confirmar Contraseña -->
-                        <div class="form-group">
-                            <label for="confirmar_contrasena">Confirmar Contraseña *</label>
-                            <input type="password" id="confirmar_contrasena" name="confirmar_contrasena" placeholder="Repite tu contraseña" required>
-                        </div>
+            <h2>Crear Cuenta</h2>
+            <form id="registerForm">
+                <div class="form-grid">
+                    <!-- Nombre -->
+                    <div class="form-group">
+                        <label for="nombre">Nombre *</label>
+                        <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" required>
                     </div>
 
-                    <div class="botones">
-                        <button type="submit" class="btn-register">Registrarse</button>
-                        <button type="button" class="btn-cancel" onclick="window.location.href='index.html'">Cancelar</button>
+                    <!-- Apellido -->
+                    <div class="form-group">
+                        <label for="apellido">Apellido *</label>
+                        <input type="text" id="apellido" name="apellido" placeholder="Tu apellido" required>
                     </div>
 
-                    <p class="login-link">
-                        <a href="index.html">¿Ya tienes cuenta? Inicia sesión aquí</a>
-                    </p>
-                </form>
-            </div>
-
-            <!-- Mensaje de Éxito (oculto inicialmente) -->
-            <div id="successMessage" class="hidden">
-                <div class="success-container">
-                    <div class="success-icon">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    
-                    <h1 class="success-title">¡Registrado Exitosamente! 🎉</h1>
-                    
-                    <div class="user-info">
-                        <h3>📋 Información de tu cuenta:</h3>
-                        <div class="user-detail">
-                            <i class="fas fa-user"></i>
-                            <span><strong>Nombre:</strong> <span id="successNombre"></span></span>
-                        </div>
-                        <div class="user-detail">
-                            <i class="fas fa-envelope"></i>
-                            <span><strong>Correo:</strong> <span id="successCorreo"></span></span>
-                        </div>
-                        <div class="user-detail">
-                            <i class="fas fa-id-card"></i>
-                            <span><strong>Documento:</strong> <span id="successDocumento"></span></span>
-                        </div>
+                    <!-- Correo -->
+                    <div class="form-group full-width">
+                        <label for="correo">Correo Electrónico *</label>
+                        <input type="email" id="correo" name="correo" placeholder="tu.correo@ejemplo.com" required>
                     </div>
 
-                    <div class="email-confirmation">
-                        <h3>📬 ¡Email de Bienvenida Enviado!</h3>
-                        <p>Hemos enviado un mensaje de bienvenida con el botón para confirmar tu correo a:</p>
-                        <p style="text-align: center; font-weight: bold; font-size: 18px; color: #27ae60; margin: 10px 0;" id="confirmationEmail"></p>
-                        
-                        <div class="confirmation-steps">
-                            <p><strong>Por favor sigue estos pasos:</strong></p>
-                            <ol>
-                                <li>Revisa tu bandeja de entrada en <strong id="emailDomain"></strong></li>
-                                <li>Busca el email de <strong>Heliconias Reports</strong></li>
-                                <li>Haz clic en el botón <strong>"Confirmar Correo"</strong></li>
-                                <li>¡Y listo! Tu cuenta estará verificada</li>
-                            </ol>
-                        </div>
-
-                        <p style="color: #856404; font-style: italic; margin-top: 15px;">
-                            💡 <strong>Nota:</strong> Si no encuentras el email, revisa tu carpeta de spam.
-                        </p>
+                    <!-- Documento -->
+                    <div class="form-group">
+                        <label for="documento">Documento *</label>
+                        <input type="text" id="documento" name="documento" placeholder="Número de documento" required>
                     </div>
 
-                    <div class="botones" style="margin-top: 30px;">
-                        <button type="button" class="btn-register" onclick="window.location.href='index.html'">
-                            <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
-                        </button>
-                        <button type="button" class="btn-cancel" onclick="showRegistrationForm()">
-                            <i class="fas fa-user-plus"></i> Registrar Otro
-                        </button>
+                    <!-- Teléfono -->
+                    <div class="form-group">
+                        <label for="telefono">Teléfono</label>
+                        <input type="tel" id="telefono" name="telefono" placeholder="Tu teléfono">
+                    </div>
+
+                    <!-- Género -->
+                    <div class="form-group">
+                        <label for="genero">Género</label>
+                        <select id="genero" name="genero">
+                            <option value="">Seleccionar</option>
+                            <option value="Masculino">Masculino</option>
+                            <option value="Femenino">Femenino</option>
+                            <option value="Otro">Otro</option>
+                            <option value="Prefiero no decir">Prefiero no decir</option>
+                        </select>
+                    </div>
+
+                    <!-- Institución -->
+                    <div class="form-group">
+                        <label for="institucion">Institución</label>
+                        <input type="text" id="institucion" name="institucion" placeholder="Tu institución o empresa">
+                    </div>
+
+                    <!-- Fecha de Nacimiento -->
+                    <div class="form-group">
+                        <label for="fecha_nacimiento">Fecha de Nacimiento</label>
+                        <input type="date" id="fecha_nacimiento" name="fecha_nacimiento">
+                    </div>
+
+                    <!-- Contraseña -->
+                    <div class="form-group">
+                        <label for="contrasena">Contraseña *</label>
+                        <input type="password" id="contrasena" name="contrasena" placeholder="Crea una contraseña" required>
+                    </div>
+
+                    <!-- Confirmar Contraseña -->
+                    <div class="form-group">
+                        <label for="confirmar_contrasena">Confirmar Contraseña *</label>
+                        <input type="password" id="confirmar_contrasena" name="confirmar_contrasena" placeholder="Repite tu contraseña" required>
                     </div>
                 </div>
-            </div>
+
+                <div class="botones">
+                    <button type="submit" class="btn-register">Registrarse</button>
+                    <button type="button" class="btn-cancel" onclick="window.location.href='index.html'">Cancelar</button>
+                </div>
+
+                <p class="login-link">
+                    <a href="index.html">¿Ya tienes cuenta? Inicia sesión aquí</a>
+                </p>
+            </form>
         </section>
     </main>
 
     <script>
-        // Función para mostrar el mensaje de éxito
-        function showSuccessMessage(userData) {
-            const formContainer = document.getElementById('registerFormContainer');
-            const successContainer = document.getElementById('successMessage');
-            
-            // Ocultar formulario y mostrar éxito
-            formContainer.classList.add('hidden');
-            successContainer.classList.remove('hidden');
-            
-            // Llenar datos en el mensaje de éxito
-            document.getElementById('successNombre').textContent = `${userData.nombre} ${userData.apellido}`;
-            document.getElementById('successCorreo').textContent = userData.correo;
-            document.getElementById('successDocumento').textContent = userData.documento;
-            document.getElementById('confirmationEmail').textContent = userData.correo;
-            
-            // Extraer dominio del correo para mostrar ayuda
-            const emailDomain = userData.correo.split('@')[1];
-            document.getElementById('emailDomain').textContent = emailDomain;
-        }
-
-        // Función para volver al formulario de registro
-        function showRegistrationForm() {
-            const formContainer = document.getElementById('registerFormContainer');
-            const successContainer = document.getElementById('successMessage');
-            
-            successContainer.classList.add('hidden');
-            formContainer.classList.remove('hidden');
-            
-            // Limpiar formulario
-            document.getElementById('registerForm').reset();
-        }
-
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
@@ -557,20 +390,20 @@
                     }
                 }
 
-                // SEGUNDO: Crear usuario en Supabase Auth CON EMAIL DE CONFIRMACIÓN
+                // SEGUNDO: Crear usuario en Supabase Auth CON EMAIL DE BIENVENIDA
                 console.log('🛠️ Creando usuario en Auth...');
                 const { data: authData, error: authError } = await supabase.auth.signUp({
                     email: correo,
                     password: contrasena,
                     options: {
                         data: {
-                            name: `${nombre} ${apellido}`,
+                            name: `${nombre} ${apellido}`, // IMPORTANTE: Para el email template
                             nombre: nombre,
                             apellido: apellido,
                             documento: documento
-                        },
-                        // Configurar redirección después de confirmar email
-                        emailRedirectTo: `${window.location.origin}/auth/callback.html`
+                        }
+                        // NOTA: Supabase automáticamente enviará el email de confirmación/bienvenida
+                        // porque está activado en la configuración del proyecto
                     }
                 });
 
@@ -624,13 +457,37 @@
 
                 await Swal.close();
 
-                // MOSTRAR MENSAJE DE ÉXITO EN LA PÁGINA (NO SWEETALERT)
-                showSuccessMessage({
-                    nombre: nombre,
-                    apellido: apellido,
-                    correo: correo,
-                    documento: documento
+                // Mostrar éxito - INFORMAR QUE SE ENVIÓ EMAIL DE BIENVENIDA
+                await Swal.fire({
+                    title: '¡Cuenta creada exitosamente! 🎉',
+                    html: `
+                        <div style="text-align: left;">
+                            <p>✅ Tu cuenta ha sido creada exitosamente.</p>
+                            
+                            <div style="background: #e8f6f3; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                                <strong>📋 Datos de tu cuenta:</strong><br>
+                                👤 Nombre: ${nombre} ${apellido}<br>
+                                📧 Correo: ${correo}<br>
+                                📄 Documento: ${documento}
+                            </div>
+
+                            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107; margin: 15px 0;">
+                                <strong>📬 ¡Email de bienvenida enviado!</strong><br>
+                                Hemos enviado un mensaje de bienvenida a:<br>
+                                <strong>${correo}</strong>
+                            </div>
+
+                            <p style="color: #27ae60; font-weight: 600;">
+                                🚀 ¡Ya puedes iniciar sesión en el sistema!
+                            </p>
+                        </div>
+                    `,
+                    icon: 'success',
+                    confirmButtonText: 'Iniciar Sesión'
                 });
+
+                // Redirigir al login
+                window.location.href = 'index.html';
 
             } catch (error) {
                 await Swal.close();
