@@ -107,7 +107,7 @@
 
       /* Register Box */
       .register-box {
-        background: rgba(255, 255, 255, 0.95);
+        background: rgba(255, 255, 255, 0.902);
         border-radius: 12px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         padding: 40px;
@@ -119,9 +119,9 @@
       .register-box h2 {
         text-align: center;
         margin-bottom: 30px;
-        color: #2c3e50;
+        color: #2e7d32;
         font-size: 28px;
-        font-weight: 600;
+        font-weight: 700;
       }
 
       .form-grid {
@@ -183,12 +183,12 @@
       }
 
       .btn-register {
-        background: linear-gradient(135deg, #27ae60, #2ecc71);
+        background: linear-gradient(135deg, #2e7d32, #2e7d32);
         color: white;
       }
 
       .btn-cancel {
-        background: #95a5a6;
+        background: #c05757;
         color: white;
       }
 
@@ -203,7 +203,7 @@
       }
 
       .login-link a {
-        color: #27ae60;
+        color: #2e7d32;
         text-decoration: none;
         font-weight: 500;
         transition: color 0.3s;
@@ -226,6 +226,27 @@
         border: none !important;
         border-radius: 8px !important;
       }
+
+      .password-container {
+            position: relative;
+       }
+
+      .password-container input {
+            width: 100%;
+            padding-right: 44px;
+       }
+
+       .toggle-password {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(10%);
+        cursor: pointer;
+        font-size: 18px;
+        color: #555;
+       }
+
+
     </style>
 
     <!-- Scripts -->
@@ -310,15 +331,17 @@
                     </div>
 
                     <!-- Contraseña -->
-                    <div class="form-group">
+                    <div class="form-group password-container">
                         <label for="contrasena">Contraseña *</label>
                         <input type="password" id="contrasena" name="contrasena" placeholder="Crea una contraseña" required>
+                        <i class="fa-solid fa-eye toggle-password" data-target="contrasena"></i>
                     </div>
 
                     <!-- Confirmar Contraseña -->
-                    <div class="form-group">
+                    <div class="form-group password-container">
                         <label for="confirmar_contrasena">Confirmar Contraseña *</label>
                         <input type="password" id="confirmar_contrasena" name="confirmar_contrasena" placeholder="Repite tu contraseña" required>
+                        <i class="fa-solid fa-eye toggle-password" data-target="confirmar_contrasena"></i>
                     </div>
                 </div>
 
@@ -549,6 +572,40 @@ window.reenviarConfirmacion = async function(email) {
         });
     }
 };
+
+// Busca todos los iconos con la clase toggle-password
+document.querySelectorAll('.toggle-password').forEach(function(icon) {
+icon.addEventListener('click', function() {
+    const targetId = this.getAttribute('data-target');
+    const input = document.getElementById(targetId);
+    if (!input) return;
+
+    if (input.type === 'password') {
+    input.type = 'text';
+    this.classList.remove('fa-eye');
+    this.classList.add('fa-eye-slash');
+    this.setAttribute('aria-label', 'Ocultar contraseña');
+    this.setAttribute('aria-pressed', 'true');
+    } else {
+    input.type = 'password';
+    this.classList.remove('fa-eye-slash');
+    this.classList.add('fa-eye');
+    this.setAttribute('aria-label', 'Mostrar contraseña');
+    this.setAttribute('aria-pressed', 'false');
+    }
+});
+
+// Soporta teclado (Enter / Space)
+icon.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    this.click();
+    }
+});
+// Hacer el i focusable para accesibilidad
+icon.setAttribute('tabindex', '0');
+});
+
     </script>
 </body>
 </html>
