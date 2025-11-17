@@ -94,16 +94,6 @@
         margin: 0;
       }
 
-      .system-date {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-weight: 500;
-        background: rgba(255,255,255,0.2);
-        padding: 8px 15px;
-        border-radius: 20px;
-      }
-
       /* Navigation Styles */
       .nav-container {
         display: flex;
@@ -439,34 +429,27 @@
           </div>
           <h1>Heliconias Reports</h1>
         </div>
-        <div class="system-date">
-          <i class="fas fa-calendar-alt"></i>
-          <span id="current-date"></span>
-        </div>
-      </div>
-
-      <div class="nav-container">
+        <div class="nav-container">
         <div class="main-nav">
           <!-- Los elementos de navegación se han movido a la derecha -->
         </div>
-        <div class="user-actions">
-          <a href="#" class="nav-item active tooltip">
-            <i class="fas fa-home"></i>
-            <span>Inicio</span>
-            <span class="tooltiptext">Volver a la página principal del sistema</span>
-          </a>
-          <a href="#" class="nav-item tooltip">
-            <i class="fas fa-headset"></i>
-            <span>Soporte</span>
-            <span class="tooltiptext">Contactar al equipo de soporte técnico</span>
-          </a>
-          <button id="help-btn" class="btn btn-help tooltip">
-            <i class="fas fa-question-circle"></i>
-            <span>Ayuda</span>
-            <span class="tooltiptext">Ver información de ayuda sobre el sistema</span>
-          </button>
+          <div class="user-actions">
+            <a href="#" class="nav-item active tooltip">
+              <i class="fas fa-home"></i>
+              <span>Inicio</span>
+            </a>
+            <a href="#" class="nav-item tooltip">
+              <i class="fas fa-headset"></i>
+              <span>Soporte</span>
+            </a>
+            <button id="help-btn" class="btn btn-help tooltip">
+              <i class="fas fa-question-circle"></i>
+              <span>Ayuda</span>
+            </button>
+          </div>
         </div>
       </div>
+    
     </header>
 
     <main class="main-container">
