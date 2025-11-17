@@ -43,7 +43,7 @@
 
       /* Header Styles */
       .header {
-        background: linear-gradient(135deg, #000000, #2ecc71);
+        background: linear-gradient(135deg, #ff0000, #2ecc71);
         color: white;
         padding: 15px 30px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.1);
@@ -390,7 +390,7 @@
             }
         }
 
-        // SEGUNDO: Crear usuario en Supabase Auth CON CONFIRMACIÓN DE EMAIL
+        // SEGUNDO: Crear usuario en Supabase Auth - VERSIÓN CORREGIDA
         console.log('🛠️ Creando usuario en Auth...');
         const { data: authData, error: authError } = await supabase.auth.signUp({
             email: correo,
@@ -401,8 +401,8 @@
                     apellido: apellido,
                     documento: documento
                 },
-                // FORZAR CONFIRMACIÓN POR EMAIL
-                emailRedirectTo: `${window.location.origin}/index.html`
+                // ✅ ESTA LÍNEA ES CLAVE PARA NETLIFY:
+                emailRedirectTo: 'https://heliconias2.netlify.app/index.html'
             }
         });
 
@@ -420,11 +420,6 @@
             }
         }
 
-        // Verificar si el usuario necesita confirmación de email
-        if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
-            throw new Error('Este correo electrónico ya está registrado');
-        }
-
         // TERCERO: Insertar usuario en la tabla usuarios
         console.log('💾 Insertando en tabla usuarios...');
         const { data: userData, error: userError } = await supabase
@@ -440,8 +435,7 @@
                     genero: genero || null,
                     institucion: institucion || null,
                     fecha_nacimiento: fechaNacimiento || null,
-                    id_rol: 2, // Rol por defecto (usuario normal)
-                    // Agregar campo para tracking de confirmación
+                    id_rol: 2,
                     email_confirmado: false,
                     fecha_registro: new Date().toISOString()
                 }
@@ -464,32 +458,34 @@
 
         await Swal.close();
 
-        // MOSTRAR MENSAJE DE CONFIRMACIÓN DE EMAIL
+        // VERIFICAR SI SE ENVIÓ CONFIRMACIÓN
         if (authData.user && !authData.user.email_confirmed_at) {
+            // ✅ CORREO DE CONFIRMACIÓN ENVIADO
             await Swal.fire({
-                title: '¡Cuenta creada!',
+                title: '¡Cuenta creada! 📧',
                 html: `
                     <div style="text-align: left;">
                         <p>Tu cuenta ha sido creada exitosamente.</p>
                         <div style="background: #e8f6f3; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                            <strong>¡Importante!</strong><br>
-                            Hemos enviado un enlace de confirmación a tu correo:<br>
+                            <strong>¡Confirmación requerida!</strong><br><br>
+                            📨 Hemos enviado un enlace de activación a:<br>
                             <strong>${correo}</strong><br><br>
                             <strong>Por favor:</strong>
                             <ul style="text-align: left; margin: 10px 0;">
                                 <li>Revisa tu bandeja de entrada</li>
-                                <li>Busca en la carpeta de spam si no lo encuentras</li>
-                                <li>Haz clic en el enlace de confirmación</li>
-                                <li>Luego podrás iniciar sesión</li>
+                                <li>Busca en la carpeta de SPAM</li>
+                                <li>Haz clic en "Confirmar mi email"</li>
+                                <li>Serás redirigido para iniciar sesión</li>
                             </ul>
                         </div>
                         <p><small>¿No recibiste el correo? <a href="#" onclick="reenviarConfirmacion('${correo}')">Reenviar confirmación</a></small></p>
                     </div>
                 `,
-                icon: 'success',
+                icon: 'info',
                 confirmButtonText: 'Entendido'
             });
         } else {
+            // Caso donde el email ya estaba confirmado (raro)
             await Swal.fire({
                 title: '¡Cuenta creada!',
                 text: 'Tu cuenta ha sido creada exitosamente. Ya puedes iniciar sesión.',
@@ -498,8 +494,10 @@
             });
         }
 
-        // Redirigir al login
-        window.location.href = 'index.html';
+        // Redirigir al login después de 5 segundos
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 5000);
 
     } catch (error) {
         await Swal.close();
@@ -514,24 +512,24 @@
     }
 });
 
-// Función para reenviar confirmación
-async function reenviarConfirmacion(email) {
+// Función para reenviar confirmación - VERSIÓN CORREGIDA
+window.reenviarConfirmacion = async function(email) {
     try {
         const { error } = await supabase.auth.resend({
             type: 'signup',
             email: email,
             options: {
-                emailRedirectTo: `${window.location.origin}/index.html`
+                emailRedirectTo: 'https://heliconias2.netlify.app/index.html'
             }
         });
 
         if (error) throw error;
 
         Swal.fire({
-            title: 'Correo reenviado',
+            title: '📨 Correo reenviado',
             text: 'Hemos enviado nuevamente el enlace de confirmación a tu correo.',
             icon: 'success',
-            confirmButtonText: 'Entendido'
+            confirmButtonText: 'Gracias'
         });
     } catch (error) {
         Swal.fire({
@@ -541,7 +539,7 @@ async function reenviarConfirmacion(email) {
             confirmButtonText: 'Entendido'
         });
     }
-}
+};
     </script>
 </body>
 </html>
