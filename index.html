@@ -94,6 +94,7 @@
         margin: 0;
       }
 
+
       /* Navigation Styles */
       .nav-container {
         display: flex;
@@ -513,11 +514,7 @@
     </main>
 
     <script>
-      // Mostrar fecha actual
-      const currentDateElement = document.getElementById('current-date');
-      const now = new Date();
-      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      currentDateElement.textContent = now.toLocaleDateString('es-ES', options);
+
 
       // Botón de ayuda del header con SweetAlert
       document.getElementById('help-btn').addEventListener('click', function(e) {
