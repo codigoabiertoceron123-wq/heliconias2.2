@@ -176,7 +176,6 @@
       }
 
   
-
       .btn-help {
         background: rgba(255,255,255,0.2);
         color: #2e7d32;
@@ -248,6 +247,28 @@
 
       .password-container {
         position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      
+      .password-container input {
+          width: 100%;
+          padding-right: 40px; /* espacio para el icono */
+      }
+      
+      .toggle-password {
+          position: absolute;
+          right: 12px;
+          top: 50%;               /* lo posiciona en el centro vertical del input */
+          transform: translateY(-90%); /* súbelo un poco */
+          cursor: pointer;
+          font-size: 18px;
+          color: #555;
+      }
+
+      .toggle-password:hover {
+          color: #000;
       }
 
       .botones {
@@ -489,6 +510,7 @@
         class="tooltip"
         title="Ingresa la contraseña que configuraste"
     />
+    <i class="fa-solid fa-eye toggle-password" id="togglePassword"></i>
 </div>
             </div>
 
@@ -810,6 +832,22 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         });
     }
 });
+
+document.getElementById("togglePassword").addEventListener("click", function () {
+    const input = document.getElementById("documento");
+
+    if (input.type === "password") {
+        input.type = "text";
+        this.classList.remove("fa-eye");
+        this.classList.add("fa-eye-slash");
+    } else {
+        input.type = "password";
+        this.classList.remove("fa-eye-slash");
+        this.classList.add("fa-eye");
+    }
+});
+
+
     </script>
   </body>
 </html>
