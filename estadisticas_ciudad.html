@@ -853,6 +853,7 @@
             document.getElementById("current-date-time").textContent = dateTimeString;
         }
 
+        
         // Función para cargar datos REALES de ciudades
         async function cargarDatosCiudades() {
             try {
@@ -867,10 +868,10 @@
 
                 console.log('Consultando datos REALES de ciudades...');
                 
-                // Consultar la tabla de visitantes con campos específicos
+                // CORREGIDO: Consultar solo las columnas que existen en tu tabla
                 const { data: visitantes, error } = await supabase
                     .from('visitantes')
-                    .select('ciudad_origen, fecha_visita, cantidad_personas, tipo_entrada, edad, nacionalidad')
+                    .select('ciudad_origen, fecha_visita, cantidad_personas, tipo_entrada, edad')
                     .order('fecha_visita', { ascending: false });
 
                 if (error) {
@@ -901,6 +902,8 @@
                     mensajeError = 'Error de conexión. Verifica tu conexión a internet.';
                 } else if (error.message.includes('permission')) {
                     mensajeError = 'No tienes permisos para acceder a estos datos.';
+                } else if (error.message.includes('column')) {
+                    mensajeError = 'Error en la estructura de la base de datos. Algunas columnas no existen.';
                 }
                 
                 Swal.fire({
