@@ -671,6 +671,41 @@
                 padding: 6px 12px;
             }
         }
+        /* Estilos para los filtros del modal */
+        .filtro-grupo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filtro-grupo label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .filtro-grupo select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            font-size: 0.85rem;
+            min-width: 180px;
+            cursor: pointer;
+        }
+
+        .filtro-grupo select:focus {
+            outline: none;
+            border-color: #27ae60;
+            box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.2);
+        }
+
+        .btn-limpiar-filtro:hover {
+            background: #7f8c8d !important;
+            transform: translateY(-1px);
+        }
+    
     </style>
 </head>
 <body>
@@ -1378,16 +1413,22 @@ function procesarDatosGeneros(visitantes) {
             });
         }
 
-        // Función para abrir modal
+         // Función para abrir modal (VERSIÓN)
         function abrirModal(tipoGrafica) {
             const modal = document.getElementById("chartModal");
             modal.classList.add("show");
 
+            // Guardar tipo de gráfica en el contenedor
+            document.querySelector('.modal-chart-container').setAttribute('data-tipo-grafica', tipoGrafica);
+
+            // Crear filtros
+            crearFiltrosModal();
+            
             // Crear gráfica inicial
             actualizarGraficaModal(tipoGrafica);
         }
 
-        // Función para actualizar la gráfica del modal
+        // Función para actualizar la gráfica del modal (VERSIÓN NUEVA - COPIAR Y PEGAR)
         function actualizarGraficaModal(tipoGrafica) {
             const ctx = document.getElementById("chartAmpliado").getContext("2d");
             
@@ -1406,7 +1447,8 @@ function procesarDatosGeneros(visitantes) {
             chartAmpliado = new Chart(ctx, {
                 type: tipoGrafica === "bar" ? "bar" : "doughnut",
                 data: {
-                    labels: tipoActual === 'genero' ? labels.map(formatearGenero) : labels,
+                    labels: tipoActual === 'genero' ? labels.map(formatearGenero) : 
+                            tipoActual === 'fecha' ? labels.map(formatearFecha) : labels,
                     datasets: [
                         {
                             label: "Total de Visitantes",
@@ -1489,9 +1531,10 @@ function procesarDatosGeneros(visitantes) {
             tbody.innerHTML = labels
                 .map((l, i) => {
                     const porcentaje = ((values[i] / total) * 100).toFixed(1);
-                    const generoFormateado = tipoActual === 'genero' ? formatearGenero(l) : l;
+                    const labelFormateado = tipoActual === 'genero' ? formatearGenero(l) : 
+                                        tipoActual === 'fecha' ? formatearFecha(l) : l;
                     return `<tr>
-                        <td><strong>${generoFormateado}</strong></td>
+                        <td><strong>${labelFormateado}</strong></td>
                         <td style="text-align: center;"><strong>${values[i].toLocaleString()}</strong></td>
                         <td style="text-align: center; color: #2c3e50; font-weight: bold">${porcentaje}%</td>
                     </tr>`;
@@ -1501,6 +1544,686 @@ function procesarDatosGeneros(visitantes) {
             setTimeout(() => {
                 chartAmpliado.resize();
             }, 200);
+        }
+
+
+        // Función para obtener nombre del mes
+        function obtenerNombreMes(mes) {
+            const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            return meses[mes] || 'Mes desconocido';
+        }
+
+        // Función para verificar si hay datos para una fecha específica - VERSIÓN MEJORADA
+        function hayDatosParaFecha(año, mes, dia = null) {
+            // Validar que existan datos de fecha
+            if (!datosSimulados.fecha || !datosSimulados.fecha.labels) {
+                return false;
+            }
+            
+            const { labels } = datosSimulados.fecha;
+            
+            for (let fechaStr of labels) {
+                try {
+                    const fecha = new Date(fechaStr);
+                    const cumpleAño = fecha.getFullYear() === parseInt(año);
+                    const cumpleMes = fecha.getMonth() === parseInt(mes);
+                    const cumpleDia = dia === null || fecha.getDate() === parseInt(dia);
+                    
+                    if (cumpleAño && cumpleMes && cumpleDia) {
+                        return true;
+                    }
+                } catch (error) {
+                    console.error('Error procesando fecha:', fechaStr, error);
+                }
+            }
+            return false;
+        }
+
+        // Función para verificar si hay datos para un día específico
+        function hayDatosParaDia(diaNumero) {
+            const ahora = new Date();
+            const añoActual = ahora.getFullYear();
+            const mesActual = ahora.getMonth();
+            
+            return hayDatosParaFecha(añoActual, mesActual, diaNumero);
+        }
+
+        // Función para verificar si hay datos para un mes específico
+        function hayDatosParaMes(mesNumero) {
+            const añoActual = new Date().getFullYear();
+            return hayDatosParaFecha(añoActual, mesNumero);
+        }
+
+        // Función para verificar si hay datos para un año específico
+        function hayDatosParaAño(año) {
+            const { labels } = datosSimulados.anio;
+            return labels.includes(año.toString());
+        }
+
+        // Función para mostrar mensaje de no datos
+        function mostrarMensajeSinDatos(mensaje) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Sin datos',
+                text: mensaje,
+                confirmButtonColor: '#27ae60',
+                timer: 3000,
+                timerProgressBar: true
+            });
+        }
+
+        // Funciones para filtros de fecha (las que faltaban)
+        function actualizarMesesFecha() {
+            const añoSeleccionado = document.getElementById('filtroAñoFecha').value;
+            const selectMes = document.getElementById('filtroMesFecha');
+            
+            if (añoSeleccionado === 'todos') {
+                selectMes.value = 'todos';
+                selectMes.disabled = false;
+            } else {
+                // Aquí podrías filtrar meses que realmente tengan datos
+                selectMes.disabled = false;
+            }
+            actualizarDiasFecha();
+        }
+
+        function actualizarDiasFecha() {
+            const añoSeleccionado = document.getElementById('filtroAñoFecha').value;
+            const mesSeleccionado = document.getElementById('filtroMesFecha').value;
+            const selectDia = document.getElementById('filtroDiaFecha');
+            
+            selectDia.innerHTML = '<option value="todos">Todos los días</option>';
+            
+            if (añoSeleccionado !== 'todos' && mesSeleccionado !== 'todos') {
+                const ultimoDia = new Date(parseInt(añoSeleccionado), parseInt(mesSeleccionado) + 1, 0).getDate();
+                
+                for (let dia = 1; dia <= ultimoDia; dia++) {
+                    // Verificar si hay datos para este día antes de agregarlo
+                    if (hayDatosParaFecha(añoSeleccionado, mesSeleccionado, dia)) {
+                        selectDia.innerHTML += `<option value="${dia}">${dia}</option>`;
+                    }
+                }
+                
+                // Si no hay días con datos, mostrar mensaje
+                if (selectDia.options.length === 1) {
+                    selectDia.innerHTML += '<option value="nodatos" disabled>No hay datos para este mes</option>';
+                }
+            }
+        }
+
+        // Funciones de filtrado específicas (las que faltaban)
+        function aplicarFiltroAnioEspecifico() {
+            const añoSeleccionado = document.getElementById('filtroAnioEspecifico').value;
+            
+            if (añoSeleccionado === 'todos') {
+                actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
+                return;
+            }
+            
+            // Validar si hay datos para el año seleccionado
+            if (!hayDatosParaAño(añoSeleccionado)) {
+                mostrarMensajeSinDatos(`No hay datos disponibles para el año ${añoSeleccionado}`);
+                return;
+            }
+            
+            const { labels, values } = datosSimulados.anio;
+            const index = labels.indexOf(añoSeleccionado);
+            
+            if (index !== -1) {
+                const datosFiltrados = {
+                    labels: [labels[index]],
+                    values: [values[index]]
+                };
+                
+                actualizarGraficaConFiltro(datosFiltrados, `Visitantes - Año ${añoSeleccionado}`);
+            }
+        }
+
+        function aplicarFiltroMesEspecifico() {
+            const mesSeleccionado = document.getElementById('filtroMesEspecifico').value;
+            
+            if (mesSeleccionado === 'todos') {
+                actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
+                return;
+            }
+            
+            const añoActual = new Date().getFullYear();
+            const mesNumero = parseInt(mesSeleccionado);
+            const mesNombre = obtenerNombreMes(mesNumero);
+            
+            // Validar si hay datos para el mes seleccionado
+            if (!hayDatosParaMes(mesNumero)) {
+                mostrarMensajeSinDatos(`No hay datos disponibles para ${mesNombre} ${añoActual}`);
+                return;
+            }
+            
+            // Filtrar datos del mes específico
+            const { labels, values } = datosSimulados.fecha;
+            const datosFiltrados = {
+                labels: [],
+                values: []
+            };
+            
+            let totalVisitantes = 0;
+            
+            labels.forEach((fecha, index) => {
+                const fechaObj = new Date(fecha);
+                if (fechaObj.getFullYear() === añoActual && fechaObj.getMonth() === mesNumero) {
+                    datosFiltrados.labels.push(formatearFecha(fecha));
+                    datosFiltrados.values.push(values[index]);
+                    totalVisitantes += values[index];
+                }
+            });
+            
+            if (datosFiltrados.labels.length > 0) {
+                actualizarGraficaConFiltro(datosFiltrados, `Visitantes - ${mesNombre} ${añoActual} (Total: ${totalVisitantes})`);
+            }
+        }
+
+        function aplicarFiltroFechaCompleta() {
+            const año = document.getElementById('filtroAñoFecha').value;
+            const mes = document.getElementById('filtroMesFecha').value;
+            const dia = document.getElementById('filtroDiaFecha').value;
+            
+            if (año === 'todos' && mes === 'todos' && dia === 'todos') {
+                actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
+                return;
+            }
+            
+            // Validar si hay datos para la selección
+            if (dia !== 'todos' && !hayDatosParaFecha(año, mes, dia)) {
+                mostrarMensajeSinDatos(`No hay datos disponibles para la fecha seleccionada`);
+                return;
+            }
+            
+            // Filtrar datos según la selección
+            const { labels, values } = datosSimulados.fecha;
+            const datosFiltrados = {
+                labels: [],
+                values: []
+            };
+            
+            labels.forEach((fecha, index) => {
+                const fechaObj = new Date(fecha);
+                const cumpleAño = año === 'todos' || fechaObj.getFullYear() === parseInt(año);
+                const cumpleMes = mes === 'todos' || fechaObj.getMonth() === parseInt(mes);
+                const cumpleDia = dia === 'todos' || fechaObj.getDate() === parseInt(dia);
+                
+                if (cumpleAño && cumpleMes && cumpleDia) {
+                    datosFiltrados.labels.push(formatearFecha(fecha));
+                    datosFiltrados.values.push(values[index]);
+                }
+            });
+            
+            if (datosFiltrados.labels.length > 0) {
+                let titulo = 'Visitantes - ';
+                if (año !== 'todos') titulo += `${año}`;
+                if (mes !== 'todos') titulo += ` ${obtenerNombreMes(parseInt(mes))}`;
+                if (dia !== 'todos') titulo += ` ${dia}`;
+                
+                actualizarGraficaConFiltro(datosFiltrados, titulo);
+            } else {
+                mostrarMensajeSinDatos('No hay datos disponibles para los criterios seleccionados');
+            }
+        }
+
+        // Función para obtener días con datos del mes actual
+            function obtenerDiasConDatosDelMesActual() {
+                const ahora = new Date();
+                const añoActual = ahora.getFullYear();
+                const mesActual = ahora.getMonth();
+                
+                const diasConDatos = [];
+                const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+                const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                
+                // Buscar en los datos de fecha qué días del mes actual tienen datos
+                if (datosSimulados.fecha && datosSimulados.fecha.labels) {
+                    datosSimulados.fecha.labels.forEach(fechaStr => {
+                        try {
+                            const fecha = new Date(fechaStr);
+                            if (fecha.getFullYear() === añoActual && fecha.getMonth() === mesActual) {
+                                const diaNumero = fecha.getDate();
+                                const diaSemana = diasSemana[fecha.getDay()];
+                                const mesNombre = meses[mesActual];
+                                
+                                // Evitar duplicados
+                                if (!diasConDatos.some(d => d.diaNumero === diaNumero)) {
+                                    diasConDatos.push({
+                                        diaNumero: diaNumero,
+                                        diaSemana: diaSemana,
+                                        mesNombre: mesNombre
+                                    });
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Error procesando fecha:', fechaStr, error);
+                        }
+                    });
+                }
+                
+                // Ordenar por día
+                return diasConDatos.sort((a, b) => a.diaNumero - b.diaNumero);
+            }
+
+            // También agrega esta función que falta para el filtro de día específico
+            function aplicarFiltroDiaEspecifico() {
+                const diaSeleccionado = document.getElementById('filtroDiaEspecifico').value;
+                
+                if (diaSeleccionado === 'todos') {
+                    actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
+                    return;
+                }
+                
+                const diaNumero = parseInt(diaSeleccionado);
+                
+                // Validar si hay datos para el día seleccionado
+                if (!hayDatosParaDia(diaNumero)) {
+                    mostrarMensajeSinDatos(`No hay datos disponibles para el día ${diaNumero}`);
+                    return;
+                }
+                
+                const ahora = new Date();
+                const añoActual = ahora.getFullYear();
+                const mesActual = ahora.getMonth();
+                
+                // Buscar la fecha correspondiente en los datos
+                const { labels, values } = datosSimulados.fecha;
+                
+                for (let i = 0; i < labels.length; i++) {
+                    const fecha = new Date(labels[i]);
+                    if (fecha.getFullYear() === añoActual && 
+                        fecha.getMonth() === mesActual && 
+                        fecha.getDate() === diaNumero) {
+                        
+                        const datosFiltrados = {
+                            labels: [formatearFecha(labels[i])],
+                            values: [values[i]]
+                        };
+                        
+                        const mesNombre = obtenerNombreMes(mesActual);
+                        actualizarGraficaConFiltro(datosFiltrados, `Visitantes - ${diaNumero} ${mesNombre}`);
+                        return;
+                    }
+                }
+            }
+
+        // Función para crear filtros en el modal - VERSIÓN MEJORADA
+        function crearFiltrosModal() {
+            const modalHeader = document.querySelector('.modal-header');
+            
+            // Eliminar filtros anteriores si existen
+            const filtrosAnteriores = document.getElementById('filtrosModal');
+            if (filtrosAnteriores) {
+                filtrosAnteriores.remove();
+            }
+
+            let filtrosHTML = '';
+            const ahora = new Date();
+            const añoActual = ahora.getFullYear();
+            const mesActual = ahora.getMonth();
+            const diaActual = ahora.getDate();
+
+            switch(tipoActual) {
+                case 'genero':
+                    filtrosHTML = `
+                        <div class="filtro-grupo">
+                            <label for="filtroGenero"><i class="fas fa-filter"></i> Filtrar por Género:</label>
+                            <select id="filtroGenero" onchange="aplicarFiltroGenero()">
+                                <option value="todos">Todos los géneros</option>
+                                ${datosSimulados.genero.labels.map(genero => 
+                                    `<option value="${genero}">${formatearGenero(genero)}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                    `;
+                    break;
+                
+                case 'fecha':
+                    // Obtener años únicos de los datos
+                    const añosUnicos = [...new Set(datosSimulados.fecha.labels.map(f => new Date(f).getFullYear()))].sort((a, b) => b - a);
+                    
+                    filtrosHTML = `
+                        <div class="filtro-grupo">
+                            <label for="filtroAñoFecha"><i class="fas fa-calendar-alt"></i> Año:</label>
+                            <select id="filtroAñoFecha" onchange="actualizarMesesFecha()">
+                                <option value="todos">Todos los años</option>
+                                ${añosUnicos.map(año => 
+                                    `<option value="${año}" ${año === añoActual ? 'selected' : ''}>${año}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                        <div class="filtro-grupo">
+                            <label for="filtroMesFecha"><i class="fas fa-calendar-week"></i> Mes:</label>
+                            <select id="filtroMesFecha" onchange="actualizarDiasFecha()">
+                                <option value="todos">Todos los meses</option>
+                                <option value="0">Enero</option>
+                                <option value="1">Febrero</option>
+                                <option value="2">Marzo</option>
+                                <option value="3">Abril</option>
+                                <option value="4">Mayo</option>
+                                <option value="5">Junio</option>
+                                <option value="6">Julio</option>
+                                <option value="7">Agosto</option>
+                                <option value="8">Septiembre</option>
+                                <option value="9">Octubre</option>
+                                <option value="10">Noviembre</option>
+                                <option value="11">Diciembre</option>
+                            </select>
+                        </div>
+                        <div class="filtro-grupo">
+                            <label for="filtroDiaFecha"><i class="fas fa-calendar-day"></i> Día:</label>
+                            <select id="filtroDiaFecha" onchange="aplicarFiltroFechaCompleta()">
+                                <option value="todos">Todos los días</option>
+                            </select>
+                        </div>
+                    `;
+                    break;
+                
+                // dia modificado:
+                case 'dia':
+                    // Para día específico del mes actual - usar datos reales
+                    const diasConDatos = obtenerDiasConDatosDelMesActual();
+                    
+                    filtrosHTML = `
+                        <div class="filtro-grupo">
+                            <label for="filtroDiaEspecifico"><i class="fas fa-calendar-day"></i> Día específico:</label>
+                            <select id="filtroDiaEspecifico" onchange="aplicarFiltroDiaEspecifico()">
+                                <option value="todos">Todos los días</option>
+                                ${diasConDatos.map(diaInfo => 
+                                    `<option value="${diaInfo.diaNumero}">${diaInfo.diaNumero} ${diaInfo.mesNombre} (${diaInfo.diaSemana})</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                    `;
+                    
+                    // Si no hay días con datos, mostrar mensaje
+                    if (diasConDatos.length === 0) {
+                        filtrosHTML += `
+                            <div style="color: #e74c3c; font-size: 0.85rem; margin-top: 5px;">
+                                <i class="fas fa-info-circle"></i> No hay datos para el mes actual
+                            </div>
+                        `;
+                    }
+                    break;
+                
+                case 'mes':
+                    // Para mes específico del año actual
+                    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                    
+                    filtrosHTML = `
+                        <div class="filtro-grupo">
+                            <label for="filtroMesEspecifico"><i class="fas fa-calendar-week"></i> Mes del año:</label>
+                            <select id="filtroMesEspecifico" onchange="aplicarFiltroMesEspecifico()">
+                                <option value="todos">Todos los meses</option>
+                                ${meses.map((mes, index) => 
+                                    `<option value="${index}" ${index === mesActual ? 'selected' : ''}>${mes} ${añoActual}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                    `;
+                    break;
+                
+                case 'anio':
+                    // Para año específico
+                    const añosDisponibles = [...new Set(datosSimulados.anio.labels)].sort((a, b) => b - a);
+                    
+                    filtrosHTML = `
+                        <div class="filtro-grupo">
+                            <label for="filtroAnioEspecifico"><i class="fas fa-calendar-alt"></i> Año específico:</label>
+                            <select id="filtroAnioEspecifico" onchange="aplicarFiltroAnioEspecifico()">
+                                <option value="todos">Todos los años</option>
+                                ${añosDisponibles.map(año => 
+                                    `<option value="${año}" ${año == añoActual ? 'selected' : ''}>${año}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                    `;
+                    break;
+                
+                case 'intereses':
+                    filtrosHTML = `
+                        <div class="filtro-grupo">
+                            <label for="filtroInteres"><i class="fas fa-heart"></i> Filtrar por Interés:</label>
+                            <select id="filtroInteres" onchange="aplicarFiltroInteres()">
+                                <option value="todos">Todos los intereses</option>
+                                ${datosSimulados.intereses.labels.map(interes => 
+                                    `<option value="${interes}">${interes}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                    `;
+                    break;
+                
+                default:
+                    return;
+            }
+
+            const filtrosContainer = document.createElement('div');
+            filtrosContainer.id = 'filtrosModal';
+            filtrosContainer.style.cssText = `
+                margin-bottom: 20px;
+                padding: 15px;
+                background: #f8f9fa;
+                border-radius: 8px;
+                border: 1px solid #e9ecef;
+            `;
+            filtrosContainer.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                    ${filtrosHTML}
+                    <button class="btn-limpiar-filtro" onclick="limpiarFiltro()" style="
+                        background: #95a5a6;
+                        color: white;
+                        border: none;
+                        padding: 8px 12px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 0.85rem;
+                    ">
+                        <i class="fas fa-times"></i> Limpiar Filtro
+                    </button>
+                </div>
+            `;
+
+            // Insertar después del modal-header
+            modalHeader.parentNode.insertBefore(filtrosContainer, modalHeader.nextSibling);
+            
+            // Inicializar selects para fecha si es necesario
+            if (tipoActual === 'fecha') {
+                setTimeout(() => {
+                    actualizarMesesFecha();
+                    actualizarDiasFecha();
+                }, 100);
+            }
+        }
+
+        // Función para formatear fecha
+        function formatearFecha(fechaStr) {
+            const fecha = new Date(fechaStr);
+            return fecha.toLocaleDateString('es-ES', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+
+        // Función para aplicar filtro de género
+        function aplicarFiltroGenero() {
+            const filtro = document.getElementById('filtroGenero').value;
+            
+            if (filtro === 'todos') {
+                actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
+                return;
+            }
+
+            const { labels, values } = datosSimulados.genero;
+            const index = labels.indexOf(filtro);
+            
+            if (index !== -1) {
+                const datosFiltrados = {
+                    labels: [labels[index]],
+                    values: [values[index]]
+                };
+                
+                actualizarGraficaConFiltro(datosFiltrados, `Visitantes - ${formatearGenero(filtro)}`);
+            }
+        }
+
+        // Función para aplicar filtro de fecha
+        function aplicarFiltroFecha() {
+            const filtro = document.getElementById('filtroFecha').value;
+            
+            if (filtro === 'todas') {
+                actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
+                return;
+            }
+
+            const { labels, values } = datosSimulados.fecha;
+            const index = labels.indexOf(filtro);
+            
+            if (index !== -1) {
+                const datosFiltrados = {
+                    labels: [formatearFecha(labels[index])],
+                    values: [values[index]]
+                };
+                
+                actualizarGraficaConFiltro(datosFiltrados, `Visitantes - ${formatearFecha(filtro)}`);
+            }
+        }
+
+        // Función para aplicar filtro de intereses
+        function aplicarFiltroInteres() {
+            const filtro = document.getElementById('filtroInteres').value;
+            
+            if (filtro === 'todos') {
+                actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
+                return;
+            }
+
+            const { labels, values } = datosSimulados.intereses;
+            const index = labels.indexOf(filtro);
+            
+            if (index !== -1) {
+                const datosFiltrados = {
+                    labels: [labels[index]],
+                    values: [values[index]]
+                };
+                
+                actualizarGraficaConFiltro(datosFiltrados, `Visitantes - ${filtro}`);
+            }
+        }
+
+        // Función para actualizar gráfica con datos filtrados
+        function actualizarGraficaConFiltro(datosFiltrados, tituloPersonalizado) {
+            const ctx = document.getElementById("chartAmpliado").getContext("2d");
+            const tipoGrafica = document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica');
+            const colors = generarColores(tipoActual, datosFiltrados.labels);
+
+            if (chartAmpliado) chartAmpliado.destroy();
+
+            // Actualizar título del modal
+            const modalTitle = document.getElementById("modalTitle");
+            modalTitle.innerHTML = `<i class="fas fa-expand"></i> ${tituloPersonalizado}`;
+
+            chartAmpliado = new Chart(ctx, {
+                type: tipoGrafica === "bar" ? "bar" : "doughnut",
+                data: {
+                    labels: datosFiltrados.labels,
+                    datasets: [
+                        {
+                            label: "Total de Visitantes",
+                            data: datosFiltrados.values,
+                            backgroundColor: colors,
+                            borderRadius: tipoGrafica === "bar" ? 6 : 0,
+                            borderWidth: tipoGrafica === "bar" ? 0 : 2,
+                            borderColor: tipoGrafica === "bar" ? 'transparent' : '#fff',
+                            barThickness: tipoGrafica === "bar" ? 18 : undefined,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: tipoGrafica === "bar" ? 'top' : 'right',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                font: { size: 13 }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: tituloPersonalizado,
+                            font: { size: 18, weight: 'bold' },
+                            padding: 25
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.7)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 14 },
+                            padding: 12,
+                            cornerRadius: 8,
+                        }
+                    },
+                    scales: tipoGrafica === "bar" ? {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            title: {
+                                display: true,
+                                text: 'Cantidad de Visitantes',
+                                font: { weight: 'bold', size: 14 }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            title: {
+                                display: true,
+                                text: obtenerEtiquetaDescriptiva(tipoActual),
+                                font: { weight: 'bold', size: 14 }
+                            }
+                        }
+                    } : {},
+                    cutout: tipoGrafica === "bar" ? '0%' : '40%'
+                },
+            });
+
+            // Actualizar tabla con datos filtrados
+            const tbody = document.querySelector("#tablaDatos tbody");
+            const total = datosFiltrados.values.reduce((a, b) => a + b, 0);
+            
+            tbody.innerHTML = datosFiltrados.labels
+                .map((l, i) => {
+                    const porcentaje = total > 0 ? ((datosFiltrados.values[i] / total) * 100).toFixed(1) : 0;
+                    return `<tr>
+                        <td><strong>${l}</strong></td>
+                        <td style="text-align: center;"><strong>${datosFiltrados.values[i].toLocaleString()}</strong></td>
+                        <td style="text-align: center; color: #2c3e50; font-weight: bold">${porcentaje}%</td>
+                    </tr>`;
+                })
+                .join("");
+        }
+
+        // Función para limpiar filtro - VERSIÓN MEJORADA
+        function limpiarFiltro() {
+            // Resetear todos los selects posibles
+            const selects = [
+                'filtroGenero', 'filtroAñoFecha', 'filtroMesFecha', 'filtroDiaFecha',
+                'filtroDiaEspecifico', 'filtroMesEspecifico', 'filtroAnioEspecifico', 'filtroInteres'
+            ];
+            
+            selects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (select) {
+                    select.value = 'todos';
+                }
+            });
+            
+            // Recargar gráfica original
+            actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
         }
 
         // Función para cerrar modal
