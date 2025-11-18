@@ -23,16 +23,41 @@
             }
 
             body {
-                background: #f8f9fa;
-                color: #333;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                position: relative;
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+            
+            body::before {
+                content: '';
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-image: 
+                    linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+                    url("img/fongo.JPG");
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                z-index: -1;
             }
 
             /* Header Styles */
+            /* Header Styles */
             .header {
-                background: linear-gradient(135deg, #27ae60, #2ecc71);
-                color: white;
+                background: linear-gradient(135deg, #ffffff, #ffffff);
+                color: #2e7d32;
                 padding: 15px 30px;
                 box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                position: sticky;
+                top: 0;
+                z-index: 100;
             }
 
             .top-section {
@@ -43,29 +68,37 @@
             }
 
             .logo {
-                display: flex;
-                align-items: center;
-                gap: 15px;
+                display: flex;           /* Activar flexbox */
+                align-items: center;     /* Centrar verticalmente el contenido */
+                gap: 15px;               /* Espacio entre logo y título */
             }
 
             .logo-img {
                 width: 50px;
                 height: 50px;
-                background: white;
                 border-radius: 50%;
+                background: white;
                 display: flex;
                 align-items: center;
                 justify-content: center;
             }
 
             .logo-img i {
-                font-size: 24px;
-                color: #27ae60;
+                display: block;
+                width: 100%;
+                height: 100%;
+                background-image: url("img/logo.png"); /* Tu logo real */
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+                font-size: 0; /* Oculta el ícono de fontawesome */
+                color: transparent;
             }
 
             .logo h1 {
                 font-size: 24px;
-                font-weight: 600;
+                font-weight: 700;
+                margin: 0;
             }
 
             .system-date {
@@ -73,9 +106,12 @@
                 align-items: center;
                 gap: 10px;
                 font-weight: 500;
-                background: rgba(255,255,255,0.2);
+                color: white; /* letra blanca */
+                background: rgba(0, 0, 0, 0.4); /* fondo semitransparente más elegante */
                 padding: 8px 15px;
                 border-radius: 20px;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* sombra suave */
+                font-size: 14px; /* tamaño de letra más legible */
             }
 
             /* Navigation Styles */
@@ -90,6 +126,7 @@
             .main-nav {
                 display: flex;
                 gap: 5px;
+                left: 50px;/* ajusta el valor para mover más a la izquierda o derecha */
             }
 
             .nav-item {
@@ -97,26 +134,36 @@
                 align-items: center;
                 gap: 8px;
                 padding: 10px 20px;
-                color: white;
+                color: #2e7d32;
                 text-decoration: none;
                 border-radius: 6px;
-                transition: all 0.3s ease;
-                background: rgba(255,255,255,0.1);
                 position: relative;
+                background: transparent; /* quitar fondo */
+                transition: all 0.3s ease;
             }
 
-            .nav-item:hover {
-                background: rgba(255,255,255,0.2);
-                transform: translateY(-2px);
+            /* Línea inferior al pasar el mouse */
+            .nav-item::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 10%;           /* margen izquierdo de la línea */
+                width: 80%;          /* ancho de la línea */
+                height: 2px;         /* grosor de la línea */
+                background-color: #2e7d32; /* color de la línea */
+                transform: scaleX(0); /* inicialmente invisible */
+                transition: transform 0.3s ease;
+                transform-origin: center;
             }
 
-            .nav-item.active {
-                background: rgba(255,255,255,0.25);
+            .nav-item:hover::after {
+                transform: scaleX(1); /* línea aparece */
             }
 
             .user-actions {
-                display: flex;
-                gap: 10px;
+                display: flex;        /* ya estaba flex */
+                justify-content: flex-end;  /* esto los lleva a la derecha */
+                gap: 10px; 
             }
 
             .btn {
@@ -131,12 +178,14 @@
                 gap: 6px;
                 transition: all 0.3s ease;
                 position: relative;
+                left: -20px; /* mueve cada botón 20px hacia la izquierda */
             }
 
             .btn-primary {
-                background: rgba(255,255,255,0.2);
+                background: linear-gradient(135deg, #2e7d32, #4caf50); /* verde degradado */
                 color: white;
             }
+
 
             .btn-accent {
                 background: #e74c3c;
@@ -157,7 +206,7 @@
                 visibility: hidden;
                 width: 140px;
                 background-color: rgba(0, 0, 0, 0.8);
-                color: white;
+                color: #2e7d32;
                 text-align: center;
                 border-radius: 6px;
                 padding: 8px;
@@ -201,11 +250,11 @@
                 color: #2c3e50;
                 border-radius: 12px;
                 box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-                border-left: 5px solid #27ae60;
+                border-left: 5px solid #2e7d32;
             }
 
             .titulo i {
-                color: #27ae60;
+                color: #2e7d32;
                 margin-right: 10px;
             }
 
@@ -222,7 +271,7 @@
                 padding: 25px;
                 box-shadow: 0 4px 15px rgba(0,0,0,0.1);
                 transition: transform 0.3s ease;
-                border-top: 4px solid #27ae60;
+                border-top: 4px solid #2e7d32;
             }
 
             .content-section:hover {
@@ -239,14 +288,14 @@
             }
 
             .stat-icon {
-                color: #27ae60;
+                color: #2e7d32;
                 font-size: 1.4rem;
             }
 
             .stat-number {
                 font-size: 3rem;
                 font-weight: bold;
-                color: #27ae60;
+                color: #2e7d32;
                 text-align: center;
                 margin: 20px 0;
             }
@@ -264,7 +313,7 @@
                 padding: 12px;
                 background: #f8f9fa;
                 border-radius: 8px;
-                border-left: 4px solid #27ae60;
+                border-left: 4px solid #2e7d32;
             }
 
             .stat-label {
@@ -274,7 +323,7 @@
 
             .stat-value {
                 font-weight: bold;
-                color: #27ae60;
+                color: #2e7d32;
                 font-size: 1.2rem;
             }
 
@@ -295,7 +344,7 @@
                 align-items: center;
                 gap: 8px;
                 padding: 10px 20px;
-                background: #27ae60;
+                background: #2e7d32;
                 color: white;
                 text-decoration: none;
                 border-radius: 6px;
@@ -304,7 +353,7 @@
             }
 
             .btn-details:hover {
-                background: #219653;
+                background: #2e7d32;
                 transform: translateY(-2px);
                 box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
             }
@@ -351,7 +400,8 @@
                 
                 .user-actions {
                     flex-wrap: wrap;
-                    justify-content: center;
+                    justify-content: flex-end; /* alineación a la derecha */
+                    gap: 10px; /* espacio entre botones */
                 }
                 
                 .nav-item {
@@ -371,68 +421,53 @@
                     </div>
                     <h1>Heliconias Reports</h1>
                 </div>
-
-                <div class="system-date">
-                    <i class="fas fa-clock"></i>
-                    <span id="current-date-time">Cargando fecha y hora...</span>
-                </div>
-            </div>
-
-            <!-- Navegación horizontal -->
-            <div class="nav-container">
+                    <!-- Navegación horizontal -->
                 <nav class="main-nav">
                     <a href="principal.html" class="nav-item active tooltip">
                         <i class="fas fa-home"></i>
                         <span>Inicio</span>
-                        <span class="tooltip-text">Página principal del sistema</span>
                     </a>
                     <a href="eventos.html" class="nav-item tooltip">
                         <i class="fas fa-calendar-alt"></i>
                         <span>Eventos</span>
-                        <span class="tooltip-text">Gestión de eventos del parque</span>
                     </a>
-                    <a href="actividad.html" class="nav-item active tooltip">
-                    <i class="fas fa-hiking"></i>
-                    <span>Actividades</span>
-                    <span class="tooltip-text">Gestión de actividades del parque</span>
-                </a>
+                    <a href="actividad.html" class="nav-item tooltip">
+                        <i class="fas fa-hiking"></i>
+                        <span>Actividades</span>
+                    </a>
                     <a href="reportes.html" class="nav-item tooltip">
                         <i class="fas fa-chart-line"></i>
                         <span>Reportes</span>
-                        <span class="tooltip-text">Generar reportes estadísticos</span>
                     </a>
                     <a href="#" class="nav-item tooltip">
                         <i class="fas fa-history"></i>
-                        <span>Historial🔐</span>
-                        <span class="tooltip-text">Historial de visitas y actividades</span>
+                        <span>Historial</span>
                     </a>
                     <a href="configuracion.html" class="nav-item tooltip">
                         <i class="fas fa-cog"></i>
                         <span>Configuración</span>
-                        <span class="tooltip-text">Configuración del sistema</span>
                     </a>
                 </nav>
-
-                <div class="user-actions">
-                    <a href="soporte.html" class="btn btn-primary tooltip">
-                        <i class="fas fa-headset"></i> Soporte
-                        <span class="tooltip-text">Contactar al equipo de soporte técnico</span>
-                    </a>
-
-                    <button class="btn btn-primary tooltip" id="help-btn">
-                        <i class="fas fa-question-circle"></i> Ayuda
-                        <span class="tooltip-text">Información y ayuda del sistema</span>
-                    </button>
-
-                    <button class="btn btn-accent tooltip" id="logout-btn">
-                        <i class="fas fa-sign-out-alt"></i> Salir
-                        <span class="tooltip-text">Cerrar sesión del sistema</span>
-                    </button>
-                </div>
             </div>
         </header>
 
-        <!-- Contenido principal -->
+        <div class="system-date">
+            <i class="fas fa-clock"></i>
+            <span id="current-date-time">Cargando fecha y hora...</span>
+        </div>
+        <div class="user-actions">
+            <a href="soporte.html" class="btn btn-primary tooltip">
+                <i class="fas fa-headset"></i> Soporte
+            </a>
+
+            <button class="btn btn-primary tooltip" id="help-btn">
+                <i class="fas fa-question-circle"></i> Ayuda
+            </button>
+
+            <button class="btn btn-accent tooltip" id="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Salir
+            </button>
+        </div>
         <main class="main-content">
             <h2 class="titulo">
                 <i class="fas fa-chart-pie"></i>Resumen Financiero y Estadísticas de Visitantes
