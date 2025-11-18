@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estadísticas por Género - Parque Heliconias</title>
+    <title>Estadísticas Generales de Visitantes - Parque Heliconias</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -401,7 +401,7 @@
             background: #f8f9fa;
         }
 
-        .gender-badge {
+        .badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -411,26 +411,12 @@
             font-weight: 500;
         }
 
-        .masculino { background: #e3f2fd; color: #1976d2; }
-        .femenino { background: #fce4ec; color: #c2185b; }
-        .otro { background: #e8f5e8; color: #388e3c; }
-        .prefiero-no-decir { background: #f3e5f5; color: #7b1fa2; }
-
-        .interest-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .observacion { background: #e8f5e8; color: #27ae60; }
-        .fotografia { background: #e3f2fd; color: #1976d2; }
-        .investigacion { background: #fff3e0; color: #f57c00; }
-        .educacion { background: #f3e5f5; color: #7b1fa2; }
-        .recreacion { background: #fce4ec; color: #c2185b; }
+        .badge-success { background: #e8f5e8; color: #27ae60; }
+        .badge-primary { background: #e3f2fd; color: #1976d2; }
+        .badge-warning { background: #fff3e0; color: #f57c00; }
+        .badge-info { background: #e3f2fd; color: #1976d2; }
+        .badge-danger { background: #fce4ec; color: #c2185b; }
+        .badge-secondary { background: #f3e5f5; color: #7b1fa2; }
 
         .modal {
             display: none;
@@ -581,6 +567,46 @@
             display: block;
         }
 
+        .filter-section {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 12px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            background: white;
+            font-size: 0.9rem;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #27ae60;
+        }
+
         /* Responsive */
         @media (max-width: 1024px) {
             .nav-container {
@@ -643,6 +669,10 @@
             .chart-type-buttons {
                 width: 100%;
                 justify-content: center;
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -757,17 +787,77 @@
                 <div class="stat-card">
                     <h3><i class="fas fa-users"></i> Total de Visitantes</h3>
                     <div class="stat-number" id="total-visitantes">0</div>
-                    <p class="stat-description">Visitantes con género registrado</p>
+                    <p class="stat-description">Visitantes registrados en total</p>
                 </div>
                 <div class="stat-card">
-                    <h3><i class="fas fa-venus-mars"></i> Distribución por Género</h3>
-                    <div class="stat-number" id="distribucion-genero">0%</div>
-                    <p class="stat-description">Proporción entre géneros</p>
+                    <h3><i class="fas fa-money-bill-wave"></i> Gasto Promedio</h3>
+                    <div class="stat-number" id="gasto-promedio">$0</div>
+                    <p class="stat-description">Gasto promedio por visitante</p>
                 </div>
                 <div class="stat-card">
-                    <h3><i class="fas fa-chart-pie"></i> Géneros Registrados</h3>
-                    <div class="stat-number" id="total-generos">0</div>
-                    <p class="stat-description">Tipos de género diferentes</p>
+                    <h3><i class="fas fa-clock"></i> Tiempo Promedio</h3>
+                    <div class="stat-number" id="tiempo-promedio">0h</div>
+                    <p class="stat-description">Tiempo promedio de estancia</p>
+                </div>
+                <div class="stat-card">
+                    <h3><i class="fas fa-star"></i> Satisfacción</h3>
+                    <div class="stat-number" id="satisfaccion-promedio">0/5</div>
+                    <p class="stat-description">Nivel promedio de satisfacción</p>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="filter-section">
+                <h3 style="margin: 0 0 12px 0; display: flex; align-items: center; gap: 6px">
+                    <i class="fas fa-filter"></i> Filtros Avanzados
+                </h3>
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label class="filter-label">Tipo de Entrada</label>
+                        <select class="filter-select" id="filtro-tipo-entrada">
+                            <option value="">Todos los tipos</option>
+                            <option value="Adulto">Adulto</option>
+                            <option value="Niño">Niño</option>
+                            <option value="Estudiante">Estudiante</option>
+                            <option value="Adulto Mayor">Adulto Mayor</option>
+                            <option value="Grupo">Grupo</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Temporada</label>
+                        <select class="filter-select" id="filtro-temporada">
+                            <option value="">Todas las temporadas</option>
+                            <option value="Baja">Baja</option>
+                            <option value="Media">Media</option>
+                            <option value="Alta">Alta</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Actividad</label>
+                        <select class="filter-select" id="filtro-actividad">
+                            <option value="">Todas las actividades</option>
+                            <option value="Recorrido Guiado">Recorrido Guiado</option>
+                            <option value="Auto-guiado">Auto-guiado</option>
+                            <option value="Taller">Taller</option>
+                            <option value="Investigación">Investigación</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Guía Turístico</label>
+                        <select class="filter-select" id="filtro-guia">
+                            <option value="">Todos</option>
+                            <option value="true">Con guía</option>
+                            <option value="false">Sin guía</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="aplicarFiltros()">
+                        <i class="fas fa-check"></i> Aplicar Filtros
+                    </button>
+                    <button class="btn" onclick="limpiarFiltros()" style="background: #95a5a6; color: white;">
+                        <i class="fas fa-times"></i> Limpiar Filtros
+                    </button>
                 </div>
             </div>
 
@@ -804,7 +894,7 @@
                         <table class="table" id="tablaDatos">
                             <thead>
                                 <tr>
-                                    <th>Género</th>
+                                    <th>Categoría</th>
                                     <th>Total Visitantes</th>
                                     <th>Porcentaje</th>
                                 </tr>
@@ -821,38 +911,23 @@
     <script>
         // Variables globales
         let chartBar, chartPie, chartAmpliado;
-        let tipoActual = "genero";
-        let datosGeneros = [];
+        let tipoActual = "tipo_entrada";
+        let datosVisitantes = [];
         let datosSimulados = {};
+        let filtrosActivos = {};
 
-        // Paletas de colores por género
-        const coloresPorGenero = {
-            'masculino': '#3498db',    // Azul - Masculino
-            'femenino': '#e74c3c',     // Rojo - Femenino
-            'otro': '#27ae60',         // Verde - Otro
-            'prefiero-no-decir': '#f39c12' // Amarillo - Prefiero no decir
-        };
-
-        // Paletas de colores para otros tipos
+        // Paletas de colores
         const colorPalettes = {
-            fecha: [
-                '#3498db', '#e67e22', '#9b59b6', '#1abc9c', '#e74c3c',
-                '#f1c40f', '#34495e', '#d35400', '#8e44ad', '#16a085'
-            ],
-            dia: [
-                '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
-                '#DDA0DD', '#98D8C8'
-            ],
-            mes: [
-                '#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6',
-                '#1abc9c', '#d35400', '#34495e'
-            ],
-            anio: [
-                '#3498db', '#e67e22', '#2ecc71', '#9b59b6', '#f1c40f'
-            ],
-            intereses: [
-                '#27ae60', '#3498db', '#f39c12', '#9b59b6', '#e74c3c'
-            ]
+            tipo_entrada: ['#3498db', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c'],
+            temporada: ['#27ae60', '#f39c12', '#e74c3c'],
+            actividad: ['#3498db', '#e67e22', '#9b59b6', '#2ecc71'],
+            transporte: ['#e74c3c', '#3498db', '#f39c12', '#27ae60'],
+            intereses: ['#27ae60', '#3498db', '#f39c12', '#9b59b6', '#e74c3c'],
+            satisfaccion: ['#e74c3c', '#e67e22', '#f39c12', '#2ecc71', '#27ae60'],
+            fecha: ['#3498db', '#e67e22', '#9b59b6', '#1abc9c', '#e74c3c'],
+            dia: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'],
+            mes: ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6'],
+            anio: ['#3498db', '#e67e22', '#2ecc71', '#9b59b6', '#f1c40f']
         };
 
         // Función para actualizar fecha y hora
@@ -872,192 +947,214 @@
             document.getElementById("current-date-time").textContent = dateTimeString;
         }
 
-        // Función para cargar datos de géneros
-// Función para cargar datos de géneros
-async function cargarDatosGeneros() {
-    try {
-        Swal.fire({
-            title: 'Cargando datos...',
-            text: 'Obteniendo información de géneros',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
+        // Función para cargar datos de visitantes
+        async function cargarDatosVisitantes() {
+            try {
+                Swal.fire({
+                    title: 'Cargando datos...',
+                    text: 'Obteniendo información completa de visitantes',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                console.log('Consultando datos completos de visitantes...');
+                
+                // Consultar todos los campos de la tabla visitantes
+                const { data: visitantes, error } = await supabase
+                    .from('visitantes')
+                    .select(`
+                        *,
+                        pais: pais_id (*)
+                    `)
+                    .order('fecha_visita', { ascending: false });
+
+                if (error) {
+                    console.error('Error en consulta:', error);
+                    throw new Error(`Error de base de datos: ${error.message}`);
+                }
+
+                console.log('Datos de visitantes recibidos:', visitantes);
+
+                if (visitantes && visitantes.length > 0) {
+                    procesarDatosCompletos(visitantes);
+                    mostrarDatos();
+                } else {
+                    console.log('No se encontraron visitantes');
+                    mostrarDatosDemo();
+                }
+
+                Swal.close();
+                
+            } catch (error) {
+                console.error('Error cargando visitantes:', error);
+                Swal.close();
+                
+                let mensajeError = 'No se pudieron cargar los datos de visitantes';
+                if (error.message.includes('JWT')) {
+                    mensajeError = 'Error de autenticación. Verifica la configuración de Supabase.';
+                } else if (error.message.includes('network') || error.message.includes('fetch')) {
+                    mensajeError = 'Error de conexión. Verifica tu conexión a internet.';
+                } else if (error.message.includes('permission')) {
+                    mensajeError = 'No tienes permisos para acceder a estos datos.';
+                }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: mensajeError,
+                    confirmButtonColor: '#e74c3c'
+                }).then(() => {
+                    mostrarDatosDemo();
+                });
             }
-        });
-
-        console.log('Consultando datos de géneros...');
-        
-        // Consultar la tabla de visitantes con los campos específicos
-        const { data: visitantes, error } = await supabase
-            .from('visitantes')
-            .select('genero, ciudad_origen, fecha_visita, intereses_heliconias')
-            .not('genero', 'is', null)
-            .order('fecha_visita', { ascending: false });
-
-        if (error) {
-            console.error('Error en consulta:', error);
-            throw new Error(`Error de base de datos: ${error.message}`);
         }
 
-        console.log('Datos de géneros recibidos:', visitantes);
-
-        if (visitantes && visitantes.length > 0) {
-            procesarDatosGeneros(visitantes);
-            mostrarDatos();
-        } else {
-            console.log('No se encontraron visitantes con género registrado');
-            // Mostrar datos de demostración para probar las gráficas
-            mostrarDatosDemo();
-        }
-
-        Swal.close();
-        
-    } catch (error) {
-        console.error('Error cargando géneros:', error);
-        Swal.close();
-        
-        let mensajeError = 'No se pudieron cargar los datos de géneros';
-        if (error.message.includes('JWT')) {
-            mensajeError = 'Error de autenticación. Verifica la configuración de Supabase.';
-        } else if (error.message.includes('network') || error.message.includes('fetch')) {
-            mensajeError = 'Error de conexión. Verifica tu conexión a internet.';
-        } else if (error.message.includes('permission')) {
-            mensajeError = 'No tienes permisos para acceder a estos datos.';
-        }
-        
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: mensajeError,
-            confirmButtonColor: '#e74c3c'
-        }).then(() => {
-            // Mostrar datos de demostración
-            mostrarDatosDemo();
-        });
-    }
-}
-
-// Función para mostrar datos de demostración
-function mostrarDatosDemo() {
-    console.log('Mostrando datos de demostración para género');
-    
-    // Datos de demostración
-    datosSimulados = {
-        genero: {
-            labels: ['masculino', 'femenino', 'otro', 'prefiero-no-decir'],
-            values: [45, 52, 8, 5]
-        },
-        fecha: {
-            labels: ['2024-01-15', '2024-01-16', '2024-01-17', '2024-01-18', '2024-01-19'],
-            values: [12, 18, 15, 22, 19]
-        },
-        dia: {
-            labels: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
-            values: [25, 30, 28, 32, 40, 55, 48]
-        },
-        mes: {
-            labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'],
-            values: [120, 135, 110, 125, 140, 155]
-        },
-        anio: {
-            labels: ['2020', '2021', '2022', '2023', '2024'],
-            values: [450, 520, 480, 610, 280]
-        },
-        intereses: {
-            labels: ['Observación', 'Fotografía', 'Investigación', 'Educación', 'Recreación'],
-            values: [35, 42, 18, 28, 32]
-        }
-    };
-
-    // Actualizar estadísticas
-    const totalConGenero = datosSimulados.genero.values.reduce((a, b) => a + b, 0);
-    const maxGenero = Math.max(...datosSimulados.genero.values);
-    const distribucion = Math.round((maxGenero / totalConGenero) * 100);
-    const totalGeneros = datosSimulados.genero.labels.length;
-
-    document.getElementById('total-visitantes').textContent = totalConGenero.toLocaleString();
-    document.getElementById('distribucion-genero').textContent = distribucion + '%';
-    document.getElementById('total-generos').textContent = totalGeneros;
-
-    mostrarDatos();
-}
-
-// Función para procesar datos de géneros - VERSIÓN COMPLETAMENTE CORREGIDA
-function procesarDatosGeneros(visitantes) {
-    console.log('Procesando datos de géneros...', visitantes);
-    
-    // Agrupar por género - manejar los valores reales que vienen de la BD
-    const generos = {
-        'masculino': 0,
-        'femenino': 0,
-        'otro': 0,
-        'prefiero-no-decir': 0
-    };
-
-    visitantes.forEach(visita => {
-        if (visita.genero) {
-            console.log('Género crudo:', visita.genero, 'Tipo:', typeof visita.genero);
+        // Función para procesar todos los datos
+        function procesarDatosCompletos(visitantes) {
+            console.log('Procesando datos completos de visitantes...');
             
-            // CONVERTIR los valores de la BD a los que espera el código
-            const mapeoGeneros = {
-                'M': 'masculino',
-                'F': 'femenino', 
-                'OTRO': 'otro',
-                'PREFIERO-NO-DECIR': 'prefiero-no-decir'
+            datosVisitantes = visitantes;
+
+            // Calcular estadísticas generales
+            const totalVisitantes = visitantes.length;
+            const gastoTotal = visitantes.reduce((sum, visita) => sum + (visita.gasto_aproximado || 0), 0);
+            const gastoPromedio = totalVisitantes > 0 ? gastoTotal / totalVisitantes : 0;
+            
+            const tiempoTotal = visitantes.reduce((sum, visita) => sum + (visita.tiempo_estancia || 0), 0);
+            const tiempoPromedio = totalVisitantes > 0 ? tiempoTotal / totalVisitantes : 0;
+            
+            const satisfaccionTotal = visitantes.reduce((sum, visita) => sum + (visita.satisfaccion || 0), 0);
+            const satisfaccionPromedio = totalVisitantes > 0 ? satisfaccionTotal / totalVisitantes : 0;
+
+            // Actualizar estadísticas
+            document.getElementById('total-visitantes').textContent = totalVisitantes.toLocaleString();
+            document.getElementById('gasto-promedio').textContent = '$' + gastoPromedio.toFixed(2);
+            document.getElementById('tiempo-promedio').textContent = tiempoPromedio.toFixed(1) + 'h';
+            document.getElementById('satisfaccion-promedio').textContent = satisfaccionPromedio.toFixed(1) + '/5';
+
+            // Procesar datos por categorías
+            procesarDatosPorCategorias(visitantes);
+        }
+
+        // Función para procesar datos por categorías
+        function procesarDatosPorCategorias(visitantes) {
+            // Tipo de entrada
+            const tipoEntrada = {
+                'Adulto': 0, 'Niño': 0, 'Estudiante': 0, 'Adulto Mayor': 0, 'Grupo': 0
             };
-            
-            const generoNormalizado = visita.genero.toUpperCase();
-            const genero = mapeoGeneros[generoNormalizado] || 'otro';
-            
-            console.log(`Género convertido: ${visita.genero} -> ${genero}`);
-            
-            if (generos.hasOwnProperty(genero)) {
-                generos[genero]++;
-                console.log(`✅ Género '${genero}' contado correctamente`);
-            } else {
-                console.warn(`❌ Género '${genero}' no reconocido, contando como 'otro'`);
-                generos['otro']++;
-            }
-        } else {
-            console.log('Visita sin género:', visita.id);
+
+            // Temporada
+            const temporada = {
+                'Baja': 0, 'Media': 0, 'Alta': 0
+            };
+
+            // Actividad realizada
+            const actividad = {
+                'Recorrido Guiado': 0, 'Auto-guiado': 0, 'Taller': 0, 'Investigación': 0
+            };
+
+            // Transporte
+            const transporte = {
+                'Privado': 0, 'Tour': 0, 'Público': 0, 'Caminando': 0
+            };
+
+            // Intereses
+            const intereses = {
+                'Observación': 0, 'Fotografía': 0, 'Investigación': 0, 'Educación': 0, 'Recreación': 0
+            };
+
+            // Satisfacción
+            const satisfaccion = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 };
+
+            // Género
+            const genero = {
+                'masculino': 0, 'femenino': 0, 'otro': 0, 'prefiero-no-decir': 0
+            };
+
+            // Procesar cada visitante
+            visitantes.forEach(visita => {
+                // Tipo de entrada
+                if (visita.tipo_entrada && tipoEntrada.hasOwnProperty(visita.tipo_entrada)) {
+                    tipoEntrada[visita.tipo_entrada]++;
+                }
+
+                // Temporada
+                if (visita.temporada && temporada.hasOwnProperty(visita.temporada)) {
+                    temporada[visita.temporada]++;
+                }
+
+                // Actividad
+                if (visita.actividad_realizada && actividad.hasOwnProperty(visita.actividad_realizada)) {
+                    actividad[visita.actividad_realizada]++;
+                }
+
+                // Transporte
+                if (visita.transporte_parque && transporte.hasOwnProperty(visita.transporte_parque)) {
+                    transporte[visita.transporte_parque]++;
+                }
+
+                // Intereses
+                if (visita.intereses_heliconias && intereses.hasOwnProperty(visita.intereses_heliconias)) {
+                    intereses[visita.intereses_heliconias]++;
+                }
+
+                // Satisfacción
+                if (visita.satisfaccion && satisfaccion.hasOwnProperty(visita.satisfaccion.toString())) {
+                    satisfaccion[visita.satisfaccion.toString()]++;
+                }
+
+                // Género
+                if (visita.genero) {
+                    const generoStr = visita.genero.toString().toLowerCase();
+                    if (genero.hasOwnProperty(generoStr)) {
+                        genero[generoStr]++;
+                    }
+                }
+            });
+
+            // Procesar datos por tiempo
+            const datosTiempo = procesarDatosPorTiempo(visitantes);
+
+            // Preparar datos para gráficas
+            datosSimulados = {
+                tipo_entrada: {
+                    labels: Object.keys(tipoEntrada),
+                    values: Object.values(tipoEntrada)
+                },
+                temporada: {
+                    labels: Object.keys(temporada),
+                    values: Object.values(temporada)
+                },
+                actividad: {
+                    labels: Object.keys(actividad),
+                    values: Object.values(actividad)
+                },
+                transporte: {
+                    labels: Object.keys(transporte),
+                    values: Object.values(transporte)
+                },
+                intereses: {
+                    labels: Object.keys(intereses),
+                    values: Object.values(intereses)
+                },
+                satisfaccion: {
+                    labels: ['1 ★', '2 ★', '3 ★', '4 ★', '5 ★'],
+                    values: Object.values(satisfaccion)
+                },
+                genero: {
+                    labels: Object.keys(genero),
+                    values: Object.values(genero)
+                },
+                fecha: datosTiempo.fecha,
+                dia: datosTiempo.dia,
+                mes: datosTiempo.mes,
+                anio: datosTiempo.anio
+            };
+
+            console.log('Datos completos procesados:', datosSimulados);
         }
-    });
-
-    console.log('Conteo final de géneros:', generos);
-
-    const labelsGenero = Object.keys(generos);
-    const valuesGenero = Object.values(generos);
-    const totalConGenero = valuesGenero.reduce((a, b) => a + b, 0);
-    const totalGeneros = Object.keys(generos).filter(genero => generos[genero] > 0).length;
-    
-    // Calcular distribución (porcentaje del género mayoritario)
-    const maxGenero = Math.max(...valuesGenero);
-    const distribucion = totalConGenero > 0 ? Math.round((maxGenero / totalConGenero) * 100) : 0;
-
-    // Actualizar estadísticas
-    document.getElementById('total-visitantes').textContent = totalConGenero.toLocaleString();
-    document.getElementById('distribucion-genero').textContent = distribucion + '%';
-    document.getElementById('total-generos').textContent = totalGeneros;
-
-    // Procesar datos por fecha, día, mes, año e intereses
-    const datosTiempo = procesarDatosPorTiempo(visitantes);
-    const datosIntereses = procesarDatosPorIntereses(visitantes);
-
-    // Preparar datos para gráficas
-    datosSimulados = {
-        genero: {
-            labels: labelsGenero,
-            values: valuesGenero
-        },
-        fecha: datosTiempo.fecha,
-        dia: datosTiempo.dia,
-        mes: datosTiempo.mes,
-        anio: datosTiempo.anio,
-        intereses: datosIntereses
-    };
-
-    console.log('Datos procesados para gráficas:', datosSimulados);
-}
 
         // Función para procesar datos por tiempo
         function procesarDatosPorTiempo(visitantes) {
@@ -1109,7 +1206,7 @@ function procesarDatosGeneros(visitantes) {
 
             return {
                 fecha: {
-                    labels: Object.keys(visitasPorFecha).slice(0, 10), // Últimas 10 fechas
+                    labels: Object.keys(visitasPorFecha).slice(0, 10),
                     values: Object.values(visitasPorFecha).slice(0, 10)
                 },
                 dia: {
@@ -1127,37 +1224,80 @@ function procesarDatosGeneros(visitantes) {
             };
         }
 
-        // Función para procesar datos por intereses
-        function procesarDatosPorIntereses(visitantes) {
-            const intereses = {
-                'Observación': 0,
-                'Fotografía': 0,
-                'Investigación': 0,
-                'Educación': 0,
-                'Recreación': 0
-            };
-
-            visitantes.forEach(visita => {
-                if (visita.intereses_heliconias && intereses.hasOwnProperty(visita.intereses_heliconias)) {
-                    intereses[visita.intereses_heliconias]++;
+        // Función para mostrar datos de demostración
+        function mostrarDatosDemo() {
+            console.log('Mostrando datos de demostración');
+            
+            datosSimulados = {
+                tipo_entrada: {
+                    labels: ['Adulto', 'Niño', 'Estudiante', 'Adulto Mayor', 'Grupo'],
+                    values: [45, 32, 28, 15, 25]
+                },
+                temporada: {
+                    labels: ['Baja', 'Media', 'Alta'],
+                    values: [35, 60, 50]
+                },
+                actividad: {
+                    labels: ['Recorrido Guiado', 'Auto-guiado', 'Taller', 'Investigación'],
+                    values: [55, 40, 25, 15]
+                },
+                transporte: {
+                    labels: ['Privado', 'Tour', 'Público', 'Caminando'],
+                    values: [40, 35, 45, 25]
+                },
+                intereses: {
+                    labels: ['Observación', 'Fotografía', 'Investigación', 'Educación', 'Recreación'],
+                    values: [35, 42, 18, 28, 32]
+                },
+                satisfaccion: {
+                    labels: ['1 ★', '2 ★', '3 ★', '4 ★', '5 ★'],
+                    values: [5, 12, 35, 45, 28]
+                },
+                genero: {
+                    labels: ['masculino', 'femenino', 'otro', 'prefiero-no-decir'],
+                    values: [65, 70, 8, 7]
+                },
+                fecha: {
+                    labels: ['2024-01-15', '2024-01-16', '2024-01-17', '2024-01-18', '2024-01-19'],
+                    values: [12, 18, 15, 22, 19]
+                },
+                dia: {
+                    labels: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
+                    values: [25, 30, 28, 32, 40, 55, 48]
+                },
+                mes: {
+                    labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'],
+                    values: [120, 135, 110, 125, 140, 155]
+                },
+                anio: {
+                    labels: ['2020', '2021', '2022', '2023', '2024'],
+                    values: [450, 520, 480, 610, 280]
                 }
-            });
-
-            return {
-                labels: Object.keys(intereses),
-                values: Object.values(intereses)
             };
+
+            // Actualizar estadísticas de demostración
+            document.getElementById('total-visitantes').textContent = '145';
+            document.getElementById('gasto-promedio').textContent = '$45.50';
+            document.getElementById('tiempo-promedio').textContent = '3.2h';
+            document.getElementById('satisfaccion-promedio').textContent = '4.1/5';
+
+            mostrarDatos();
         }
 
         // Función para obtener etiqueta descriptiva
         function obtenerEtiquetaDescriptiva(tipo) {
             const etiquetas = {
+                tipo_entrada: 'Tipo de Entrada',
+                temporada: 'Temporada',
+                actividad: 'Actividad Realizada',
+                transporte: 'Transporte al Parque',
+                intereses: 'Interés Principal',
+                satisfaccion: 'Nivel de Satisfacción',
                 genero: 'Género',
                 fecha: 'Fecha de Visita',
                 dia: 'Día de la Semana',
                 mes: 'Mes del Año',
-                anio: 'Año',
-                intereses: 'Interés Principal'
+                anio: 'Año'
             };
             return etiquetas[tipo] || 'Categoría';
         }
@@ -1165,40 +1305,22 @@ function procesarDatosGeneros(visitantes) {
         // Función para obtener título descriptivo
         function obtenerTituloDescriptivo(tipo) {
             const titulos = {
+                tipo_entrada: 'Visitantes por Tipo de Entrada',
+                temporada: 'Visitantes por Temporada',
+                actividad: 'Visitantes por Actividad Realizada',
+                transporte: 'Visitantes por Tipo de Transporte',
+                intereses: 'Visitantes por Interés en Heliconias',
+                satisfaccion: 'Niveles de Satisfacción de Visitantes',
                 genero: 'Visitantes por Género',
                 fecha: 'Visitantes por Fecha',
                 dia: 'Visitantes por Día de la Semana',
                 mes: 'Visitantes por Mes',
-                anio: 'Visitantes por Año',
-                intereses: 'Visitantes por Interés en Heliconias'
+                anio: 'Visitantes por Año'
             };
             return titulos[tipo] || 'Distribución de Visitantes';
         }
 
-        // Función para obtener clase CSS por género
-        function obtenerClaseGenero(genero) {
-            const clases = {
-                'masculino': 'masculino',
-                'femenino': 'femenino',
-                'otro': 'otro',
-                'prefiero-no-decir': 'prefiero-no-decir'
-            };
-            return clases[genero] || 'masculino';
-        }
-
-        // Función para obtener clase CSS por interés
-        function obtenerClaseInteres(interes) {
-            const clases = {
-                'Observación': 'observacion',
-                'Fotografía': 'fotografia',
-                'Investigación': 'investigacion',
-                'Educación': 'educacion',
-                'Recreación': 'recreacion'
-            };
-            return clases[interes] || 'observacion';
-        }
-
-        // Función para formatear texto de género
+        // Función para formatear género
         function formatearGenero(genero) {
             const formatos = {
                 'masculino': 'Masculino',
@@ -1209,27 +1331,14 @@ function procesarDatosGeneros(visitantes) {
             return formatos[genero] || genero;
         }
 
-        // Función para generar colores según el tipo
+        // Función para generar colores
         function generarColores(tipo, labels) {
-            if (tipo === 'genero') {
-                return labels.map(label => coloresPorGenero[label] || '#95a5a6');
-            } else if (tipo === 'intereses') {
-                const coloresIntereses = {
-                    'Observación': '#27ae60',
-                    'Fotografía': '#3498db',
-                    'Investigación': '#f39c12',
-                    'Educación': '#9b59b6',
-                    'Recreación': '#e74c3c'
-                };
-                return labels.map(label => coloresIntereses[label] || '#95a5a6');
-            } else {
-                const palette = colorPalettes[tipo] || colorPalettes.fecha;
-                const cols = [];
-                for(let i = 0; i < labels.length; i++) {
-                    cols.push(palette[i % palette.length]);
-                }
-                return cols;
+            const palette = colorPalettes[tipo] || colorPalettes.tipo_entrada;
+            const cols = [];
+            for(let i = 0; i < labels.length; i++) {
+                cols.push(palette[i % palette.length]);
             }
+            return cols;
         }
 
         // Función para mostrar gráficas
@@ -1245,12 +1354,12 @@ function procesarDatosGeneros(visitantes) {
             const etiquetaDescriptiva = obtenerEtiquetaDescriptiva(tipo);
             const tituloDescriptivo = obtenerTituloDescriptivo(tipo);
 
+            // Formatear labels para género
+            const labelsParaGrafica = tipo === 'genero' ? labels.map(formatearGenero) : labels;
+
             // Configurar barras
             const ctxBar = document.getElementById("chartBar").getContext("2d");
             if (chartBar) chartBar.destroy();
-            
-            // Para género, usar labels formateados
-            const labelsParaGrafica = tipo === 'genero' ? labels.map(formatearGenero) : labels;
             
             chartBar = new Chart(ctxBar, {
                 type: "bar",
@@ -1403,10 +1512,13 @@ function procesarDatosGeneros(visitantes) {
             const modalTitle = document.getElementById("modalTitle");
             modalTitle.innerHTML = `<i class="fas fa-expand"></i> ${tituloDescriptivo}`;
 
+            // Formatear labels para género
+            const labelsParaGrafica = tipoActual === 'genero' ? labels.map(formatearGenero) : labels;
+
             chartAmpliado = new Chart(ctx, {
                 type: tipoGrafica === "bar" ? "bar" : "doughnut",
                 data: {
-                    labels: tipoActual === 'genero' ? labels.map(formatearGenero) : labels,
+                    labels: labelsParaGrafica,
                     datasets: [
                         {
                             label: "Total de Visitantes",
@@ -1486,12 +1598,11 @@ function procesarDatosGeneros(visitantes) {
 
             // Llenar tabla con porcentajes
             const tbody = document.querySelector("#tablaDatos tbody");
-            tbody.innerHTML = labels
+            tbody.innerHTML = labelsParaGrafica
                 .map((l, i) => {
                     const porcentaje = ((values[i] / total) * 100).toFixed(1);
-                    const generoFormateado = tipoActual === 'genero' ? formatearGenero(l) : l;
                     return `<tr>
-                        <td><strong>${generoFormateado}</strong></td>
+                        <td><strong>${l}</strong></td>
                         <td style="text-align: center;"><strong>${values[i].toLocaleString()}</strong></td>
                         <td style="text-align: center; color: #2c3e50; font-weight: bold">${porcentaje}%</td>
                     </tr>`;
@@ -1529,21 +1640,6 @@ function procesarDatosGeneros(visitantes) {
             XLSX.writeFile(wb, `datos_${tipoActual}.xlsx`);
         }
 
-        function descargarExcelTabla(tipo) {
-            let tableId = 'tabla-genero-contenido';
-            if(tipo === 'fecha') tableId = 'tabla-fecha-contenido';
-            if(tipo === 'mes') tableId = 'tabla-mes-contenido';
-            if(tipo === 'dia') tableId = 'tabla-dia-contenido';
-            if(tipo === 'anio') tableId = 'tabla-anio-contenido';
-            if(tipo === 'intereses') tableId = 'tabla-intereses-contenido';
-
-            const table = document.getElementById(tableId);
-            if(!table) return;
-
-            const wb = XLSX.utils.table_to_book(table, {sheet:'Datos'});
-            XLSX.writeFile(wb, `estadisticas_${tipo}.xlsx`);
-        }
-
         function descargarGraficoPrincipal() {
             const link = document.createElement("a");
             link.download = "grafica_principal.png";
@@ -1551,31 +1647,32 @@ function procesarDatosGeneros(visitantes) {
             link.click();
         }
 
-        // Llenar tabla de géneros
-        function llenarTablaGenero() {
-            const tbody = document.getElementById('tabla-genero-body');
-            const totalVisitantes = datosSimulados.genero.values.reduce((a, b) => a + b, 0);
+        // Funciones de filtros
+        function aplicarFiltros() {
+            const tipoEntrada = document.getElementById('filtro-tipo-entrada').value;
+            const temporada = document.getElementById('filtro-temporada').value;
+            const actividad = document.getElementById('filtro-actividad').value;
+            const guia = document.getElementById('filtro-guia').value;
+
+            filtrosActivos = {
+                tipo_entrada: tipoEntrada,
+                temporada: temporada,
+                actividad_realizada: actividad,
+                guia_turistico: guia
+            };
+
+            // Recargar datos con filtros
+            cargarDatosVisitantes();
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('filtro-tipo-entrada').value = '';
+            document.getElementById('filtro-temporada').value = '';
+            document.getElementById('filtro-actividad').value = '';
+            document.getElementById('filtro-guia').value = '';
             
-            tbody.innerHTML = datosSimulados.genero.labels.map((genero, index) => {
-                const cantidad = datosSimulados.genero.values[index];
-                const porcentaje = totalVisitantes > 0 ? ((cantidad / totalVisitantes) * 100).toFixed(1) : 0;
-                const claseGenero = obtenerClaseGenero(genero);
-                const generoFormateado = formatearGenero(genero);
-                
-                return `
-                    <tr>
-                        <td style="font-weight: bold; color: #000; width: 50px;">${index + 1}</td>
-                        <td style="min-width: 150px;">
-                            <span class="gender-badge ${claseGenero}">
-                                <i class="fas ${genero === 'masculino' ? 'fa-mars' : genero === 'femenino' ? 'fa-venus' : 'fa-genderless'}"></i>
-                                ${generoFormateado}
-                            </span>
-                        </td>
-                        <td style="width: 120px; text-align: center;"><strong>${cantidad.toLocaleString()}</strong></td>
-                        <td style="width: 100px; text-align: center; color: #000; font-weight: bold">${porcentaje}%</td>
-                    </tr>
-                `;
-            }).join('');
+            filtrosActivos = {};
+            cargarDatosVisitantes();
         }
 
         // Mostrar datos en la interfaz
@@ -1585,7 +1682,7 @@ function procesarDatosGeneros(visitantes) {
                 <div class="chart-controls">
                     <div class="chart-header">
                         <h3 style="margin: 0; display: flex; align-items: center; gap: 6px">
-                            <i class="fas fa-chart-bar"></i> Selecciona el Tipo de Visualización
+                            <i class="fas fa-chart-bar"></i> Selecciona la Categoría de Análisis
                         </h3>
                         <button class="download-btn" id="downloadChartBtn">
                             <i class="fas fa-download"></i> Descargar Gráfico (PNG)
@@ -1593,23 +1690,38 @@ function procesarDatosGeneros(visitantes) {
                     </div>
 
                     <div class="chart-type-buttons btn-group" style="margin-top: 12px">
-                        <button class="chart-btn active" data-type="genero">
-                            <i class="fas fa-venus-mars"></i> Por Género
+                        <button class="chart-btn active" data-type="tipo_entrada">
+                            <i class="fas fa-ticket-alt"></i> Tipo Entrada
                         </button>
-                        <button class="chart-btn" data-type="fecha">
-                            <i class="fas fa-calendar-day"></i> Por Fecha
+                        <button class="chart-btn" data-type="temporada">
+                            <i class="fas fa-calendar"></i> Temporada
                         </button>
-                        <button class="chart-btn" data-type="dia">
-                            <i class="fas fa-calendar"></i> Por Día
+                        <button class="chart-btn" data-type="actividad">
+                            <i class="fas fa-hiking"></i> Actividad
                         </button>
-                        <button class="chart-btn" data-type="mes">
-                            <i class="fas fa-calendar-week"></i> Por Mes
-                        </button>
-                        <button class="chart-btn" data-type="anio">
-                            <i class="fas fa-calendar-alt"></i> Por Año
+                        <button class="chart-btn" data-type="transporte">
+                            <i class="fas fa-bus"></i> Transporte
                         </button>
                         <button class="chart-btn" data-type="intereses">
-                            <i class="fas fa-heart"></i> Por Intereses
+                            <i class="fas fa-heart"></i> Intereses
+                        </button>
+                        <button class="chart-btn" data-type="satisfaccion">
+                            <i class="fas fa-star"></i> Satisfacción
+                        </button>
+                        <button class="chart-btn" data-type="genero">
+                            <i class="fas fa-venus-mars"></i> Género
+                        </button>
+                        <button class="chart-btn" data-type="fecha">
+                            <i class="fas fa-calendar-day"></i> Fecha
+                        </button>
+                        <button class="chart-btn" data-type="dia">
+                            <i class="fas fa-calendar"></i> Día
+                        </button>
+                        <button class="chart-btn" data-type="mes">
+                            <i class="fas fa-calendar-week"></i> Mes
+                        </button>
+                        <button class="chart-btn" data-type="anio">
+                            <i class="fas fa-calendar-alt"></i> Año
                         </button>
                     </div>
                 </div>
@@ -1640,40 +1752,10 @@ function procesarDatosGeneros(visitantes) {
                         </div>
                     </div>
                 </div>
-
-                <!-- Tablas de datos -->
-                <div class="table-section active" id="tablaGenero" style="margin-top: 20px">
-                    <div class="data-table">
-                        <div class="chart-header">
-                            <h3 style="margin: 0; display: flex; align-items: center; gap: 6px">
-                                <i class="fas fa-venus-mars"></i> Distribución por Género
-                            </h3>
-                            <button class="download-btn" onclick="descargarExcelTabla('genero')">
-                                <i class="fas fa-file-excel"></i> Descargar Excel
-                            </button>
-                        </div>
-                        <div style="overflow-x: auto;">
-                            <table class="table" id="tabla-genero-contenido" style="margin-top: 12px; min-width: 600px;">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 50px;">#</th>
-                                        <th style="min-width: 150px;">Género</th>
-                                        <th style="width: 120px;">Total Visitantes</th>
-                                        <th style="width: 100px;">Porcentaje</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabla-genero-body">
-                                    <!-- Los datos se llenarán dinámicamente -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
             `;
 
             // Inicializar gráficas
-            mostrarGraficas("genero");
-            llenarTablaGenero();
+            mostrarGraficas("tipo_entrada");
 
             // Configurar eventos
             configurarEventos();
@@ -1699,9 +1781,9 @@ function procesarDatosGeneros(visitantes) {
             const container = document.getElementById('data-container');
             container.innerHTML = `
                 <div class="no-data">
-                    <i class="fas fa-venus-mars"></i>
-                    <h3>No hay datos de géneros disponibles</h3>
-                    <p>No se encontraron visitantes con género registrado en la base de datos.</p>
+                    <i class="fas fa-users"></i>
+                    <h3>No hay datos de visitantes disponibles</h3>
+                    <p>No se encontraron visitantes registrados en la base de datos.</p>
                 </div>
             `;
         }
@@ -1710,7 +1792,7 @@ function procesarDatosGeneros(visitantes) {
         document.addEventListener('DOMContentLoaded', function() {
             updateDateTime();
             setInterval(updateDateTime, 1000);
-            cargarDatosGeneros();
+            cargarDatosVisitantes();
         });
     </script>
 </body>
