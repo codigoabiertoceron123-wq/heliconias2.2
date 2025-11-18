@@ -1344,8 +1344,8 @@ function openModal(dateKey) {
 
     Swal.fire({
         title: `<div style="display: flex; align-items: center; gap: 10px;">
-            <i class="fas fa-calendar-plus" style="font-size: 1.5rem; color: #2e7d32;"></i>
-            <span style="color: #2e7d32;">${isEditing ? 'Editar evento' : 'Agregar evento'} para ${formattedDate}</span>
+            <i class="fas fa-calendar-plus" style="font-size: 1.5rem; color: #27ae60;"></i>
+            <span style="color: #27ae60;">${isEditing ? 'Editar evento' : 'Agregar evento'} para ${formattedDate}</span>
         </div>`,
         html: modalContent,
         showConfirmButton: false,
@@ -1394,6 +1394,53 @@ async function saveEvent() {
     }
 
     try {
+        // 1. Obtener el usuario actual de Supabase Auth
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user) {
+            throw new Error("No se pudo obtener el usuario. Por favor, inicia sesión nuevamente.");
+        }
+
+        // 2. Buscar o crear el usuario en tu tabla 'usuarios'
+        let idUsuarioParaEvento;
+        
+        // Primero buscar por email (más confiable)
+        const { data: usuarioExistente, error: searchError } = await supabase
+            .from('usuarios')
+            .select('id_usuario')
+            .eq('correo', user.email)
+            .single();
+
+        if (searchError || !usuarioExistente) {
+            // Si no existe, crear el usuario en tu tabla
+            console.log("Creando nuevo usuario en la tabla...");
+            const { data: nuevoUsuario, error: createError } = await supabase
+                .from('usuarios')
+                .insert([
+                    {
+                        nombre: user.user_metadata?.name || 'Usuario',
+                        apellido: user.user_metadata?.last_name || 'Auth',
+                        correo: user.email,
+                        contrasena: 'auth_provider', // No se usa para login real
+                        auth_id: user.id // Vincular con Supabase Auth
+                    }
+                ])
+                .select('id_usuario')
+                .single();
+
+            if (createError) {
+                console.error("Error creando usuario:", createError);
+                // Si falla la creación, intentar usar un usuario por defecto
+                idUsuarioParaEvento = 1;
+            } else {
+                idUsuarioParaEvento = nuevoUsuario.id_usuario;
+            }
+        } else {
+            idUsuarioParaEvento = usuarioExistente.id_usuario;
+        }
+
+        console.log("ID Usuario para evento:", idUsuarioParaEvento);
+
         let result;
 
         if (isEditing && editingEventId) {
@@ -1404,7 +1451,8 @@ async function saveEvent() {
                     titulo: title,
                     descripcion: description,
                     estado: status,
-                    fecha_evento: selectedDate
+                    fecha_evento: selectedDate,
+                    id_usuario: idUsuarioParaEvento
                 })
                 .eq('id_evento', editingEventId)
                 .select();
@@ -1446,7 +1494,7 @@ async function saveEvent() {
                     descripcion: description,
                     estado: status,
                     fecha_evento: selectedDate,
-                    id_usuario: 1
+                    id_usuario: idUsuarioParaEvento // ← Usar el ID correcto
                 }])
                 .select();
 
@@ -1516,7 +1564,6 @@ async function saveEvent() {
         });
     }
 }
-
 // Función para eliminar evento
 async function deleteEvent() {
     Swal.fire({
