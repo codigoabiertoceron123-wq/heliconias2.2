@@ -1129,7 +1129,7 @@
             }, 500);
         }
 
-        // Función para cargar datos desde participantes_reserva - VERSIÓN DIAGNÓSTICO
+     
         async function cargarDatosDesdeParticipantes(generos) {
             try {
                 console.log('=== DIAGNÓSTICO: Consultando participantes_reserva ===');
@@ -1203,15 +1203,17 @@
                 if (totalVisitantes === 0) {
                     console.warn('⚠️  No se encontraron participantes con género en la base de datos');
                     // Usar datos de ejemplo como fallback
-                    const datosEjemplo = generos.map((genero, index) => ({
-                        genero: genero.genero,
-                        count: [10, 15, 5, 3][index] || 0
-                    }));
-                    procesarDatosGeneros(datosEjemplo);
-                    await cargarDatosEjemploFechas();
+                    await usarDatosEjemplo(generos);
                 } else {
                     procesarDatosGeneros(datosCombinados);
-                    await cargarDatosAdicionalesReales(participantes, fechasVisitas, generos);
+                    
+                    // ⬇⬇⬇ VERIFICACIÓN CRÍTICA: Si no hay fechas, usar datos de ejemplo ⬇⬇⬇
+                    if (fechasVisitas.length === 0) {
+                        console.warn('⚠️  No se encontraron fechas de visita, usando datos de ejemplo para gráficas de fecha');
+                        cargarDatosEjemploFechas();
+                    } else {
+                        await cargarDatosAdicionalesReales(participantes, fechasVisitas, generos);
+                    }
                 }
 
             } catch (error) {
@@ -1219,6 +1221,106 @@
                 // Fallback a datos de ejemplo
                 await usarDatosEjemplo(generos);
             }
+        }
+
+
+        // Función de diagnóstico para fechas - AGREGAR ESTA FUNCIÓN
+        async function diagnosticarFechas() {
+            try {
+                console.log('=== DIAGNÓSTICO DE FECHAS ===');
+                
+                // Consultar directamente las reservas para ver qué datos hay
+                const { data: reservasDirectas, error } = await supabase
+                    .from('reservas')
+                    .select('id_reserva, fecha_visita, estado')
+                    .limit(10);
+
+                if (error) {
+                    console.error('Error en consulta directa de reservas:', error);
+                    return;
+                }
+
+                console.log('📅 Reservas directas (primeras 10):', reservasDirectas);
+                console.log('¿Hay fechas?', reservasDirectas && reservasDirectas.length > 0);
+                
+                if (reservasDirectas && reservasDirectas.length > 0) {
+                    console.log('Ejemplo de fecha_visita:', reservasDirectas[0].fecha_visita);
+                    console.log('Tipo de fecha_visita:', typeof reservasDirectas[0].fecha_visita);
+                }
+
+            } catch (error) {
+                console.error('Error en diagnóstico:', error);
+            }
+        }
+
+        // Función para cargar datos de ejemplo de fechas - NUEVA FUNCIÓN  BORRARRARARARARRARARARRARRARARRA
+        function cargarDatosEjemploFechas() {
+            console.log('Cargando datos de ejemplo para fechas...');
+            
+            try {
+                // Generar datos de ejemplo basados en los géneros reales
+                const hoy = new Date();
+                
+                // Para "Por Fecha" - usar los mismos géneros que ya tenemos, pero con valores de ejemplo
+                // que simulan un filtro por rango de fechas
+                datosSimulados.fecha = {
+                    labels: datosSimulados.genero.labels, // Usar los géneros reales
+                    values: datosSimulados.genero.values.map(valor => 
+                        Math.max(1, Math.floor(valor * (0.7 + Math.random() * 0.6))) // Variar los valores entre 70%-130%
+                    )
+                };
+                
+                // Datos para otros tipos de gráficas
+                datosSimulados.dia = {
+                    labels: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
+                    values: [45, 52, 38, 61, 55, 70, 65]
+                };
+                
+                datosSimulados.mes = {
+                    labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+                    values: [450, 520, 480, 510, 590, 610, 580, 630, 600, 550, 520, 490]
+                };
+                
+                datosSimulados.anio = {
+                    labels: ['2020', '2021', '2022', '2023', '2024'],
+                    values: [1200, 1500, 1800, 2100, 950]
+                };
+                
+                datosSimulados.intereses = {
+                    labels: ['Observación', 'Fotografía', 'Investigación', 'Educación', 'Recreación'],
+                    values: [45, 30, 15, 25, 35]
+                };
+
+                datosOriginales = JSON.parse(JSON.stringify(datosSimulados));
+                
+                console.log('✅ Datos de ejemplo cargados exitosamente');
+                console.log('Datos de fecha (géneros con valores variados):', datosSimulados.fecha);
+                
+            } catch (error) {
+                console.error('Error cargando datos de ejemplo:', error);
+                
+                // Fallback mínimo si hay error
+                datosSimulados.fecha = {
+                    labels: ['Masculino', 'Femenino', 'Otro', 'Prefiero no decir'],
+                    values: [25, 30, 8, 5]
+                };
+            }
+        }
+
+
+        // Función para usar datos de ejemplo (desarrollo) - NUEVA FUNCIÓN BORARARRAARRARRARRA
+        async function usarDatosEjemplo(generos) {
+            console.log('Usando datos de ejemplo para desarrollo...');
+            
+            // Datos de ejemplo realistas
+            const datosEjemplo = generos.map((genero, index) => ({
+                genero: genero.genero,
+                count: Math.floor(Math.random() * 100) + 10 // Números entre 10-110
+            }));
+
+            console.log('Datos de ejemplo:', datosEjemplo);
+            procesarDatosGeneros(datosEjemplo);
+            cargarDatosEjemploFechas();
         }
 
         // Agregar esta función de diagnóstico
@@ -1244,7 +1346,7 @@
         }
                     
 
-       // Función para cargar datos adicionales REALES
+        // Función para cargar datos adicionales REALES - VERSIÓN CORREGIDA
         async function cargarDatosAdicionalesReales(participantes, fechasVisitas, generos) {
             try {
                 console.log('Procesando datos REALES adicionales...');
@@ -1252,10 +1354,12 @@
                 // Procesar datos por tiempo desde las fechas REALES de visita
                 const datosTiempo = procesarDatosPorTiempoDesdeFechasReales(fechasVisitas, generos);
                 
-                // Cargar intereses REALES (puedes ajustar según tu esquema)
+                // Cargar intereses REALES
                 const datosIntereses = await cargarDatosInteresesReales();
 
-                datosSimulados.fecha = datosTiempo.fecha;
+                // ⬇⬇⬇ CORRECCIÓN: NO usar validarYLimpiarDatosFecha para datos de género ⬇⬇⬇
+                datosSimulados.fecha = datosTiempo.fecha; // Ya contiene géneros, no fechas
+                datosSimulados.genero = datosTiempo.genero;
                 datosSimulados.dia = datosTiempo.dia;
                 datosSimulados.mes = datosTiempo.mes;
                 datosSimulados.anio = datosTiempo.anio;
@@ -1267,31 +1371,11 @@
                 
             } catch (error) {
                 console.error('Error cargando datos adicionales REALES:', error);
-                // Si hay error, usar datos de ejemplo simples
-                datosSimulados.fecha = {
-                    labels: ['Masculino', 'Femenino', 'Otro', 'Prefiero no decir'],
-                    values: [25, 30, 8, 5]
-                };
-                datosSimulados.dia = {
-                    labels: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
-                    values: [45, 52, 38, 61, 55, 70, 65]
-                };
-                datosSimulados.mes = {
-                    labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'],
-                    values: [450, 520, 480, 510, 590, 610]
-                };
-                datosSimulados.anio = {
-                    labels: ['2020', '2021', '2022', '2023', '2024'],
-                    values: [1200, 1500, 1800, 2100, 950]
-                };
-                datosSimulados.intereses = {
-                    labels: ['Observación', 'Fotografía', 'Investigación', 'Educación', 'Recreación'],
-                    values: [45, 30, 15, 25, 35]
-                };
+                // Simplemente mostrar error, los datos se mantendrán como estaban
             }
         }
 
-        // Función para procesar datos REALES por tiempo - REEMPLAZAR COMPLETA
+        // Función para procesar datos REALES por tiempo - VERSIÓN MÁS CLARA
         function procesarDatosPorTiempoDesdeFechasReales(fechasVisitas, generos) {
             console.log('Procesando fechas REALES:', fechasVisitas);
             
@@ -1301,15 +1385,12 @@
                 mapaGeneros[genero.id_genero] = genero.genero;
             });
 
-            // Contar por género para el total (no por fecha)
+            // Contar por género (usando todas las fechas disponibles)
             const conteoPorGenero = {};
             
             fechasVisitas.forEach(item => {
-                if (!item.fecha) return;
-                
                 const generoNombre = mapaGeneros[item.generoId];
                 
-                // Contar por género (total general)
                 if (generoNombre) {
                     conteoPorGenero[generoNombre] = (conteoPorGenero[generoNombre] || 0) + 1;
                 }
@@ -1317,7 +1398,7 @@
 
             console.log('Conteo REAL por género:', conteoPorGenero);
 
-            // Crear estructura SIMPLE para fecha (total por género)
+            // Crear datos por género - SIEMPRE los 4 géneros
             const datosPorGenero = generos.map(genero => ({
                 genero: genero.genero,
                 count: conteoPorGenero[genero.genero] || 0
@@ -1326,26 +1407,34 @@
             console.log('Datos por género para fecha:', datosPorGenero);
 
             return {
+                // ⬇⬇⬇ "Por Fecha" muestra GÉNEROS (no fechas)
                 fecha: {
+                    labels: datosPorGenero.map(item => item.genero), // Géneros, no fechas
+                    values: datosPorGenero.map(item => item.count)   // Cantidades por género
+                },
+                // ⬇⬇⬇ "Por Género" también muestra géneros
+                genero: {
                     labels: datosPorGenero.map(item => item.genero),
                     values: datosPorGenero.map(item => item.count)
                 },
+                // Datos para otros gráficos (puedes mantenerlos como ejemplo por ahora)
                 dia: {
                     labels: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
-                    values: [45, 52, 38, 61, 55, 70, 65] // Datos de ejemplo por ahora
+                    values: [45, 52, 38, 61, 55, 70, 65]
                 },
                 mes: {
                     labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'],
-                    values: [450, 520, 480, 510, 590, 610] // Datos de ejemplo por ahora
+                    values: [450, 520, 480, 510, 590, 610]
                 },
                 anio: {
                     labels: ['2020', '2021', '2022', '2023', '2024'],
-                    values: [1200, 1500, 1800, 2100, 950] // Datos de ejemplo por ahora
+                    values: [1200, 1500, 1800, 2100, 950]
                 }
             };
         }
+
               
-        // Actualizar la función cargarDatosGeneroPorTiempo para el caso 'fecha'
+        // Función para cargar datos de género filtrados por fecha
         async function cargarDatosGeneroPorTiempo(tipo, parametros = {}) {
             try {
                 let query = supabase
@@ -1358,7 +1447,7 @@
                     `)
                     .not('id_genero', 'is', null);
 
-                // Aplicar filtros según el tipo
+                // Aplicar filtro de rango de fechas
                 if (tipo === 'fecha' && parametros.fechaInicial && parametros.fechaFinal) {
                     query = query.gte('reservas.fecha_visita', parametros.fechaInicial)
                                 .lte('reservas.fecha_visita', parametros.fechaFinal);
@@ -1368,12 +1457,12 @@
 
                 if (error) throw error;
 
-                // Obtener géneros
+                // Obtener TODOS los géneros (siempre los 4)
                 const { data: generos } = await supabase
                     .from('genero')
                     .select('id_genero, genero');
 
-                // Contar por género
+                // Contar por género dentro del rango de fechas
                 const conteoPorGenero = {};
                 participantes.forEach(participante => {
                     if (participante.id_genero) {
@@ -1382,24 +1471,23 @@
                     }
                 });
 
-                // Combinar con nombres de géneros
+                // Combinar con nombres de géneros - SIEMPRE incluir los 4 géneros
                 const datosCombinados = generos.map(genero => ({
                     genero: genero.genero,
-                    count: conteoPorGenero[genero.id_genero] || 0
+                    count: conteoPorGenero[genero.id_genero] || 0  // 0 si no hay datos
                 }));
 
+                console.log('Datos filtrados por fecha:', datosCombinados);
+
                 return {
-                    labels: datosCombinados.map(item => item.genero),
-                    values: datosCombinados.map(item => item.count)
+                    labels: datosCombinados.map(item => item.genero),  // Siempre 4 géneros
+                    values: datosCombinados.map(item => item.count)    // Cantidades según filtro
                 };
 
             } catch (error) {
                 console.error(`Error cargando datos de género por ${tipo}:`, error);
-                // Datos de ejemplo como fallback
-                return {
-                    labels: ['Masculino', 'Femenino', 'Otro', 'Prefiero no decir'],
-                    values: [45, 52, 12, 8]
-                };
+                // Fallback a datos existentes (que también tienen los 4 géneros)
+                return datosSimulados.genero;
             }
         }
                     
@@ -2058,7 +2146,7 @@ async function cargarDatosDesdeUsuarios(generos) {
         function obtenerEtiquetaDescriptiva(tipo) {
             const etiquetas = {
                 genero: 'Género',
-                fecha: 'Fecha de Visita',
+                fecha: 'Género',
                 dia: 'Día de la Semana',
                 mes: 'Mes del Año',
                 anio: 'Año',
@@ -2071,7 +2159,7 @@ async function cargarDatosDesdeUsuarios(generos) {
         function obtenerTituloDescriptivo(tipo) {
             const titulos = {
                 genero: 'Visitantes por Género',
-                fecha: 'Visitantes por Fecha',
+                fecha: 'Visitantes por Género (Filtrado por Fecha)',
                 dia: 'Visitantes por Día de la Semana',
                 mes: 'Visitantes por Mes',
                 anio: 'Visitantes por Año',
@@ -2137,7 +2225,7 @@ async function cargarDatosDesdeUsuarios(generos) {
             }
         }
 
-        // Función para mostrar gráficas - ACTUALIZAR
+        // En la función mostrarGraficas, actualiza el caso 'fecha':
         async function mostrarGraficas(tipo) {
             tipoActual = tipo;
             
@@ -2147,90 +2235,55 @@ async function cargarDatosDesdeUsuarios(generos) {
                 return;
             }
 
-            // Para otros tipos, cargar datos específicos
-            try {
-                Swal.fire({
-                    title: 'Cargando datos...',
-                    text: `Obteniendo información por ${obtenerEtiquetaDescriptiva(tipo)}`,
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-
-                let datosFiltrados;
-                
-                switch(tipo) {
-                    // En la función mostrarGraficas, actualizar el caso 'fecha':
-                    case 'fecha':
-                        // Para fecha, cargar datos de los últimos 30 días por defecto
-                        const fechaFinal = new Date();
-                        const fechaInicial = new Date();
-                        fechaInicial.setDate(fechaInicial.getDate() - 30);
-                        
-                        try {
-                            datosFiltrados = await cargarDatosGeneroPorTiempo('fecha', {
-                                fechaInicial: fechaInicial.toISOString().split('T')[0],
-                                fechaFinal: fechaFinal.toISOString().split('T')[0]
-                            });
-                        } catch (error) {
-                            console.error('Error cargando datos de fecha:', error);
-                            // Si hay error, usar datos de ejemplo
-                            datosFiltrados = {
-                                labels: ['Masculino', 'Femenino', 'Otro', 'Prefiero no decir'],
-                                values: [45, 52, 12, 8]
-                            };
+            // Si es fecha, cargar datos con filtro por defecto (últimos 30 días)
+            if (tipo === 'fecha') {
+                try {
+                    Swal.fire({
+                        title: 'Cargando datos...',
+                        text: 'Filtrando por rango de fechas',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
                         }
-                        break;
-                        
-                    case 'mes':
-                        // Cargar datos del mes actual
-                        const ahora = new Date();
-                        datosFiltrados = await cargarDatosGeneroPorTiempo('mes', {
-                            mes: ahora.getMonth() + 1,
-                            anio: ahora.getFullYear()
-                        });
-                        break;
-                        
-                    case 'anio':
-                        // Cargar datos del año actual
-                        datosFiltrados = await cargarDatosGeneroPorTiempo('anio', {
-                            anio: new Date().getFullYear()
-                        });
-                        break;
-                        
-                    case 'dia':
-                        // Para día, usar datos del mes actual agrupados por día de semana
-                        datosFiltrados = await cargarDatosPorDiaSemana();
-                        break;
-                        
-                    default:
-                        datosFiltrados = datosSimulados.genero;
-                }
+                    });
 
-                // Actualizar datos simulados temporalmente
-                datosSimulados[tipo] = datosFiltrados;
-                
-                Swal.close();
-                crearGraficas(tipo);
-                
-            } catch (error) {
-                console.error(`Error cargando datos para ${tipo}:`, error);
-                Swal.close();
-                
-                // En caso de error, mostrar datos de ejemplo
-                if (!datosSimulados[tipo] || datosSimulados[tipo].labels.length === 0) {
-                    mostrarMensajeSinDatos(`No se pudieron cargar los datos para ${obtenerTituloDescriptivo(tipo)}`);
-                } else {
+                    // Fechas por defecto: últimos 30 días
+                    const fechaFinal = new Date();
+                    const fechaInicial = new Date();
+                    fechaInicial.setDate(fechaInicial.getDate() - 30);
+                    
+                    console.log('Filtrando por fechas:', fechaInicial, 'a', fechaFinal);
+                    
+                    // Cargar datos filtrados por fecha
+                    const datosFiltrados = await cargarDatosGeneroPorTiempo('fecha', {
+                        fechaInicial: fechaInicial.toISOString().split('T')[0],
+                        fechaFinal: fechaFinal.toISOString().split('T')[0]
+                    });
+
+                    console.log('Datos filtrados obtenidos:', datosFiltrados);
+
+                    // Actualizar datos temporalmente
+                    datosSimulados[tipo] = datosFiltrados;
+                    
+                    Swal.close();
+                    crearGraficas(tipo);
+                    
+                } catch (error) {
+                    console.error(`Error cargando datos para ${tipo}:`, error);
+                    Swal.close();
+                    // Usar datos existentes si hay error
                     crearGraficas(tipo);
                 }
+            } else {
+                // Para otros tipos (dia, mes, anio, intereses)
+                crearGraficas(tipo);
             }
         }
+                
 
-
-        // Función para crear gráficas - VERSIÓN SIMPLIFICADA Y SEGURA
+        // Función corregida para crear gráficas - ACTUALIZADA
         function crearGraficas(tipo) {
-            console.log('=== CREANDO GRÁFICA PARA:', tipo, '===');
+            console.log(`=== CREANDO GRÁFICA PARA: ${tipo} ===`);
             
             const datos = datosSimulados[tipo];
             console.log('Datos completos:', datos);
@@ -2240,10 +2293,17 @@ async function cargarDatosDesdeUsuarios(generos) {
             let values = [];
 
             if (tipo === 'fecha') {
-                // PARA FECHA: Mostrar siempre los 4 géneros con datos de ejemplo
-                labels = ['Masculino', 'Femenino', 'Otro', 'Prefiero no decir'];
-                values = [25, 30, 8, 5]; // Datos de ejemplo
-                console.log('Usando datos de ejemplo para fecha:', { labels, values });
+                // PARA FECHA: Usar datos existentes de la base de datos
+                if (datos && datos.labels && datos.values) {
+                    labels = datos.labels;
+                    values = datos.values;
+                    console.log('Usando datos de BD para fecha:', { labels, values });
+                } else {
+                    // Fallback si no hay datos
+                    labels = ['Sin datos'];
+                    values = [0];
+                    console.log('Usando datos de fallback para fecha');
+                }
             } else if (datos && datos.labels && datos.values) {
                 // Para otros tipos, usar datos existentes
                 labels = datos.labels;
@@ -2273,9 +2333,10 @@ async function cargarDatosDesdeUsuarios(generos) {
             const ctxBar = document.getElementById("chartBar").getContext("2d");
             if (chartBar) chartBar.destroy();
             
-            // Para género, usar labels formateados
+            // Para fecha, formatear las etiquetas correctamente
             const labelsParaGrafica = tipo === 'genero' ? labels.map(formatearGenero) : 
-                         tipo === 'fecha' ? labels : 
+                                    tipo === 'fecha' ? labels.map(formatearGenero) : 
+                                    labels;
             
             console.log('Creando gráfica de barras con:', labelsParaGrafica, values);
             
@@ -2409,7 +2470,7 @@ async function cargarDatosDesdeUsuarios(generos) {
 
             console.log('=== GRÁFICAS CREADAS EXITOSAMENTE ===');
         }
-            
+                 
 
 
         // Función para abrir modal (VERSIÓN MEJORADA)
@@ -2566,7 +2627,7 @@ async function cargarDatosDesdeUsuarios(generos) {
                     type: tipoGrafica === "bar" ? "bar" : "doughnut",
                     data: {
                         labels: tipoActual === 'genero' ? datos.labels.map(formatearGenero) : 
-                                tipoActual === 'fecha' ? datos.labels.map(formatearFecha) : datos.labels,
+                                tipoActual === 'fecha' ? datos.labels.map(formatearGenero) : datos.labels,
                         datasets: [
                             {
                                 label: "Total de Visitantes",
@@ -3065,7 +3126,7 @@ async function cargarDatosDesdeUsuarios(generos) {
                     `;
                     break;
                 
-                // En la función crearFiltrosModal, actualizar el caso 'fecha':
+                // En la función crearFiltrosModal, actualiza el caso 'fecha':
                 case 'fecha':
                     // Obtener fechas mínima y máxima para establecer rangos por defecto
                     const fechasDisponibles = datosSimulados.fecha.labels || [];
@@ -3097,18 +3158,7 @@ async function cargarDatosDesdeUsuarios(generos) {
                             </select>
                         </div>
                         <div class="filtro-grupo">
-                            <button class="btn-limpiar-filtro" onclick="aplicarFiltroRangoFechas()" style="
-                                background: #27ae60;
-                                color: white;
-                                border: none;
-                                padding: 8px 16px;
-                                border-radius: 6px;
-                                cursor: pointer;
-                                font-size: 0.85rem;
-                                display: flex;
-                                align-items: center;
-                                gap: 6px;
-                            ">
+                            <button class="btn-aplicar-filtro" onclick="aplicarFiltroRangoFechas()">
                                 <i class="fas fa-filter"></i> Aplicar Filtro
                             </button>
                         </div>
@@ -3334,7 +3384,7 @@ async function cargarDatosDesdeUsuarios(generos) {
             aplicarFiltroMesEspecifico();
         }
 
-        // Función para aplicar filtro de rango de fechas y género - REEMPLAZAR COMPLETA
+        // Función para aplicar filtro de rango de fechas - VERSIÓN CORREGIDA
         async function aplicarFiltroRangoFechas() {
             const fechaInicial = document.getElementById('filtroFechaInicial').value;
             const fechaFinal = document.getElementById('filtroFechaFinal').value;
@@ -3378,7 +3428,7 @@ async function cargarDatosDesdeUsuarios(generos) {
 
                 console.log('Participantes en rango:', participantes);
 
-                // Obtener géneros
+                // Obtener TODOS los géneros (siempre los 4)
                 const { data: generos } = await supabase
                     .from('genero')
                     .select('id_genero, genero');
@@ -3394,23 +3444,28 @@ async function cargarDatosDesdeUsuarios(generos) {
 
                 console.log('Conteo por género en rango:', conteoPorGenero);
 
-                // Combinar datos de géneros con conteos
+                // Combinar datos de géneros con conteos - SIEMPRE incluir los 4 géneros
                 const datosCombinados = generos.map(genero => ({
                     genero: genero.genero,
-                    count: conteoPorGenero[genero.id_genero] || 0
+                    count: conteoPorGenero[genero.id_genero] || 0  // 0 si no hay datos en ese rango
                 }));
 
-                // Filtrar por género específico si se seleccionó
+                console.log('Datos combinados con 4 géneros:', datosCombinados);
+
+                // ⬇⬇⬇ CAMBIO IMPORTANTE: Siempre mostrar los 4 géneros, incluso si se filtra por uno específico
                 let datosFiltrados;
                 if (generoSeleccionado !== 'todos') {
+                    // Filtrar solo el género seleccionado, pero mantener la estructura
+                    const generoFiltrado = datosCombinados.find(item => item.genero === generoSeleccionado);
                     datosFiltrados = {
                         labels: [generoSeleccionado],
-                        values: [datosCombinados.find(item => item.genero === generoSeleccionado)?.count || 0]
+                        values: [generoFiltrado ? generoFiltrado.count : 0]
                     };
                 } else {
+                    // Mostrar TODOS los géneros
                     datosFiltrados = {
-                        labels: datosCombinados.map(item => item.genero),
-                        values: datosCombinados.map(item => item.count)
+                        labels: datosCombinados.map(item => item.genero),  // Siempre 4 géneros
+                        values: datosCombinados.map(item => item.count)    // Cantidades según filtro
                     };
                 }
 
@@ -3426,7 +3481,15 @@ async function cargarDatosDesdeUsuarios(generos) {
                     titulo += ` - ${formatearGenero(generoSeleccionado)}`;
                 }
                 
-                actualizarGraficaConFiltro(datosFiltrados, titulo);
+                // ⬇⬇⬇ CAMBIO: Actualizar los datos globales y recrear la gráfica
+                datosSimulados.fecha = datosFiltrados;
+                crearGraficas('fecha');
+                
+                // También actualizar el título
+                const modalTitle = document.getElementById("modalTitle");
+                if (modalTitle) {
+                    modalTitle.innerHTML = `<i class="fas fa-expand"></i> ${titulo}`;
+                }
 
             } catch (error) {
                 console.error('Error aplicando filtro de rango de fechas:', error);
@@ -3434,16 +3497,71 @@ async function cargarDatosDesdeUsuarios(generos) {
                 mostrarMensajeSinDatos('Error al cargar los datos del rango seleccionado');
             }
         }
+        
 
-        // Función para formatear fecha
+        // Función para formatear fecha - VERSIÓN CORREGIDA
         function formatearFecha(fechaStr) {
-            const fecha = new Date(fechaStr);
-            return fecha.toLocaleDateString('es-ES', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            });
+            if (!fechaStr) return 'Fecha inválida';
+            
+            try {
+                // Si ya es una fecha formateada, devolverla tal cual
+                if (typeof fechaStr === 'string' && (fechaStr.includes('/') || fechaStr.includes('-'))) {
+                    // Intentar parsear si parece una fecha pero no está formateada
+                    const fecha = new Date(fechaStr);
+                    if (!isNaN(fecha.getTime())) {
+                        return fecha.toLocaleDateString('es-ES', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                        });
+                    }
+                    return fechaStr; // Devolver tal cual si no se puede formatear
+                }
+                
+                const fecha = new Date(fechaStr);
+                
+                // Validar si la fecha es válida
+                if (isNaN(fecha.getTime())) {
+                    console.warn('Fecha inválida:', fechaStr);
+                    return 'Fecha inválida';
+                }
+                
+                return fecha.toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            } catch (error) {
+                console.error('Error formateando fecha:', fechaStr, error);
+                return 'Fecha inválida';
+            }
         }
+
+        // Función para validar y limpiar datos de fecha - NUEVA
+        function validarYLimpiarDatosFecha(datos) {
+            if (!datos || !datos.labels || !datos.values) {
+                return { labels: [], values: [] };
+            }
+            
+            const labelsLimpios = [];
+            const valuesLimpios = [];
+            
+            datos.labels.forEach((label, index) => {
+                // Validar y formatear cada fecha
+                const fechaFormateada = formatearFecha(label);
+                if (fechaFormateada !== 'Fecha inválida') {
+                    labelsLimpios.push(fechaFormateada);
+                    valuesLimpios.push(datos.values[index] || 0);
+                } else {
+                    console.warn('Fecha inválida encontrada y omitida:', label);
+                }
+            });
+            
+            return {
+                labels: labelsLimpios,
+                values: valuesLimpios
+            };
+}
 
         // Función para aplicar filtro de género
         function aplicarFiltroGenero() {
@@ -3620,7 +3738,7 @@ async function cargarDatosDesdeUsuarios(generos) {
 
                 // CORREGIR: Para fecha, usar labels tal cual (son géneros)
                 const labelsParaGrafica = tipoActual === 'genero' ? datosFiltrados.labels.map(formatearGenero) : 
-                                        tipoActual === 'fecha' ? datosFiltrados.labels : // ← CORRECCIÓN AQUÍ
+                                        tipoActual === 'fecha' ? datosFiltrados.labels.map(formatearGenero) :
                                         datosFiltrados.labels;
 
                 chartAmpliado = new Chart(ctx, {
@@ -3711,7 +3829,7 @@ async function cargarDatosDesdeUsuarios(generos) {
                         
                         // CORREGIR: Para fecha, usar label tal cual (son géneros)
                         const labelFormateado = tipoActual === 'genero' ? formatearGenero(l) : 
-                                            tipoActual === 'fecha' ? l : // ← CORRECCIÓN AQUÍ
+                                            tipoActual === 'fecha' ? formatearGenero(l) : // ← CORRECCIÓN AQUÍ
                                             l;
                         
                         // Para género, agregar badge
