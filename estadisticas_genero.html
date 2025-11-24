@@ -206,7 +206,6 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
-<<<<<<< HEAD
         /* boton de filtro */
         .btn-aplicar-filtro {
             background: #27ae60 !important;
@@ -226,10 +225,7 @@
             background: #219653 !important;
             transform: translateY(-2px) !important;
         }
-        /* cierra boron de filtro */
-
-=======
->>>>>>> ef29759ad333eca82cfa0fe3f970fd952cd87851
+        /* cierra boton de filtro */
 
         /* Tooltip Styles */
         .tooltip {
@@ -1433,36 +1429,86 @@
             };
         }
 
-              
-        // Función para cargar datos de género filtrados por fecha
+        
         async function cargarDatosGeneroPorTiempo(tipo, parametros = {}) {
             try {
-                let query = supabase
-                    .from('participantes_reserva')
-                    .select(`
-                        id_genero,
-                        reservas (
-                            fecha_visita
-                        )
-                    `)
-                    .not('id_genero', 'is', null);
+                console.log('🔍 Iniciando carga de datos por tiempo:', tipo, parametros);
 
-                // Aplicar filtro de rango de fechas
-                if (tipo === 'fecha' && parametros.fechaInicial && parametros.fechaFinal) {
-                    query = query.gte('reservas.fecha_visita', parametros.fechaInicial)
-                                .lte('reservas.fecha_visita', parametros.fechaFinal);
+                // PRIMERO: Consultar las reservas en el rango de fechas
+                let query = supabase
+                    .from('reservas')
+                    .select('id_reserva, fecha_visita, estado');
+
+                // Aplicar filtro de rango de fechas si está disponible
+                if (parametros.fechaInicial && parametros.fechaFinal) {
+                    console.log('📅 Aplicando filtro de fechas:', parametros.fechaInicial, 'a', parametros.fechaFinal);
+                    query = query
+                        .gte('fecha_visita', parametros.fechaInicial)
+                        .lte('fecha_visita', parametros.fechaFinal);
                 }
 
-                const { data: participantes, error } = await query;
+                // QUITAR el filtro de estado para probar
+                // query = query.eq('estado', 'confirmada'); // ← COMENTA ESTA LÍNEA
 
-                if (error) throw error;
+                const { data: reservas, error: errorReservas } = await query;
 
-                // Obtener TODOS los géneros (siempre los 4)
+                if (errorReservas) {
+                    console.error('❌ Error en consulta de reservas:', errorReservas);
+                    
+                    // Intentar una consulta más simple para diagnóstico
+                    console.log('🔄 Intentando consulta simple de reservas...');
+                    const { data: reservasSimples } = await supabase
+                        .from('reservas')
+                        .select('id_reserva, fecha_visita')
+                        .limit(5);
+                    console.log('📅 Reservas simples:', reservasSimples);
+                    
+                    throw errorReservas;
+                }
+
+                console.log('📅 Reservas encontradas:', reservas);
+
+                if (!reservas || reservas.length === 0) {
+                    console.log('⚠️ No hay reservas en el rango de fechas');
+                    return await obtenerEstructuraGenerosVacia();
+                }
+
+                // SEGUNDO: Obtener participantes de esas reservas
+                const idsReservas = reservas.map(r => r.id_reserva);
+                
+                console.log('🔍 Buscando participantes para reservas:', idsReservas);
+                
+                const { data: participantes, error: errorParticipantes } = await supabase
+                    .from('participantes_reserva')
+                    .select('id_genero, id_reserva')
+                    .in('id_reserva', idsReservas)
+                    .not('id_genero', 'is', null);
+
+                if (errorParticipantes) {
+                    console.error('❌ Error en consulta de participantes:', errorParticipantes);
+                    throw errorParticipantes;
+                }
+
+                console.log('👥 Participantes encontrados:', participantes);
+
+                if (!participantes || participantes.length === 0) {
+                    console.log('⚠️ No hay participantes con género en las reservas');
+                    return await obtenerEstructuraGenerosVacia();
+                }
+
+                // TERCERO: Obtener TODOS los géneros
                 const { data: generos } = await supabase
                     .from('genero')
                     .select('id_genero, genero');
 
-                // Contar por género dentro del rango de fechas
+                if (!generos || generos.length === 0) {
+                    console.error('❌ No se encontraron géneros en la base de datos');
+                    throw new Error('No hay géneros configurados en el sistema');
+                }
+
+                console.log('🎭 Géneros disponibles:', generos);
+
+                // CUARTO: Contar participantes por género
                 const conteoPorGenero = {};
                 participantes.forEach(participante => {
                     if (participante.id_genero) {
@@ -1471,27 +1517,57 @@
                     }
                 });
 
-                // Combinar con nombres de géneros - SIEMPRE incluir los 4 géneros
+                console.log('📊 Conteo por género ID:', conteoPorGenero);
+
+                // QUINTO: Combinar con nombres de géneros
                 const datosCombinados = generos.map(genero => ({
                     genero: genero.genero,
-                    count: conteoPorGenero[genero.id_genero] || 0  // 0 si no hay datos
+                    count: conteoPorGenero[genero.id_genero] || 0
                 }));
 
-                console.log('Datos filtrados por fecha:', datosCombinados);
+                console.log('✅ Datos combinados finales:', datosCombinados);
 
                 return {
-                    labels: datosCombinados.map(item => item.genero),  // Siempre 4 géneros
-                    values: datosCombinados.map(item => item.count)    // Cantidades según filtro
+                    labels: datosCombinados.map(item => item.genero),
+                    values: datosCombinados.map(item => item.count)
                 };
 
             } catch (error) {
-                console.error(`Error cargando datos de género por ${tipo}:`, error);
-                // Fallback a datos existentes (que también tienen los 4 géneros)
-                return datosSimulados.genero;
+                console.error(`💥 Error cargando datos de género por ${tipo}:`, error);
+                return await obtenerEstructuraGenerosVacia();
             }
         }
-                    
 
+               
+        // Función auxiliar para obtener estructura de géneros vacía
+        async function obtenerEstructuraGenerosVacia() {
+            try {
+                const { data: generos } = await supabase
+                    .from('genero')
+                    .select('id_genero, genero');
+
+                if (generos && generos.length > 0) {
+                    return {
+                        labels: generos.map(g => g.genero),
+                        values: generos.map(() => 0)
+                    };
+                } else {
+                    // Fallback por si no hay géneros en la base de datos
+                    return {
+                        labels: ['Masculino', 'Femenino', 'Otro', 'Prefiero no decir'],
+                        values: [0, 0, 0, 0]
+                    };
+                }
+            } catch (error) {
+                console.error('Error obteniendo estructura de géneros:', error);
+                return {
+                    labels: ['Masculino', 'Femenino', 'Otro', 'Prefiero no decir'],
+                    values: [0, 0, 0, 0]
+                };
+            }
+        }
+                 
+                    
         // Función para cargar intereses REALES
         async function cargarDatosInteresesReales() {
             try {
@@ -2488,8 +2564,8 @@ async function cargarDatosDesdeUsuarios(generos) {
             actualizarGraficaModal(tipoGrafica);
         }
 
-        // Función para actualizar la gráfica del modal - REEMPLAZAR COMPLETA
-        function actualizarGraficaModal(tipoGrafica) {
+        // Función para actualizar la gráfica del modal - VERSIÓN CORREGIDA
+        function actualizarGraficaModal(tipoGrafica, tituloPersonalizado = null) {
             const ctx = document.getElementById("chartAmpliado").getContext("2d");
             
             const datos = datosSimulados[tipoActual];
@@ -2498,13 +2574,15 @@ async function cargarDatosDesdeUsuarios(generos) {
                 : datos.values.reduce((a, b) => a + b, 0);
             
             const etiquetaDescriptiva = obtenerEtiquetaDescriptiva(tipoActual);
-            const tituloDescriptivo = obtenerTituloDescriptivo(tipoActual);
+            
+            // USAR título personalizado si se proporciona, de lo contrario usar el genérico
+            const tituloFinal = tituloPersonalizado || obtenerTituloDescriptivo(tipoActual);
 
             if (chartAmpliado) chartAmpliado.destroy();
 
-            // Actualizar título del modal
+            // Actualizar título del modal con el título final
             const modalTitle = document.getElementById("modalTitle");
-            modalTitle.innerHTML = `<i class="fas fa-expand"></i> ${tituloDescriptivo}`;
+            modalTitle.innerHTML = `<i class="fas fa-expand"></i> ${tituloFinal}`;
 
             // PARA GRÁFICA DE FECHA (AGRUPADA POR GÉNERO)
             if (tipoActual === 'fecha' && datos.type === 'grouped') {
@@ -2529,7 +2607,7 @@ async function cargarDatosDesdeUsuarios(generos) {
                             },
                             title: {
                                 display: true,
-                                text: tituloDescriptivo,
+                                text: tituloFinal, // ← USAR título final aquí también
                                 font: { size: 18, weight: 'bold' },
                                 padding: 25
                             },
@@ -2620,9 +2698,22 @@ async function cargarDatosDesdeUsuarios(generos) {
                 });
 
             } else {
-                // PARA OTROS TIPOS (GRÁFICAS NORMALES)
-                const colors = generarColores(tipoActual, datos.labels);
-                
+                let colors;
+
+                // Si estamos en fecha y hay solo un género (filtrado), usar el color específico de ese género
+                if (tipoActual === 'fecha' && datos.labels.length === 1) {
+                    const generoUnico = datos.labels[0];
+                    console.log(`🎨 Aplicando color específico para: ${generoUnico}`);
+                    
+                    // Usar el color específico del género
+                    colors = [coloresPorGenero[generoUnico] || '#95a5a6'];
+                } else {
+                    // Para múltiples géneros, usar la paleta normal
+                    colors = generarColores(tipoActual, datos.labels);
+                }
+
+                console.log('🎨 Colores aplicados:', colors);
+                                
                 chartAmpliado = new Chart(ctx, {
                     type: tipoGrafica === "bar" ? "bar" : "doughnut",
                     data: {
@@ -2657,7 +2748,7 @@ async function cargarDatosDesdeUsuarios(generos) {
                             },
                             title: {
                                 display: true,
-                                text: tituloDescriptivo,
+                                text: tituloFinal, // ← USAR título final aquí también
                                 font: { size: 18, weight: 'bold' },
                                 padding: 25
                             },
@@ -2715,7 +2806,7 @@ async function cargarDatosDesdeUsuarios(generos) {
                                             tipoActual === 'fecha' ? formatearGenero(l) : l;
                         
                         // Para género, agregar badge
-                        if (tipoActual === 'genero' || tipoActual === 'fecha') { // ← Y AQUÍ INCLUIR 'fecha'
+                        if (tipoActual === 'genero' || tipoActual === 'fecha') {
                             const claseGenero = obtenerClaseGenero(l);
                             return `<tr>
                                 <td>
@@ -2742,6 +2833,7 @@ async function cargarDatosDesdeUsuarios(generos) {
                 chartAmpliado.resize();
             }, 200);
         }
+                                                 
             
         // Función para obtener nombre del mes
         function obtenerNombreMes(mes) {
@@ -2848,173 +2940,419 @@ async function cargarDatosDesdeUsuarios(generos) {
             }
         }
 
-        // Funciones de filtrado específicas (las que faltaban)
-        function aplicarFiltroAnioEspecifico() {
+        async function aplicarFiltroDiaEspecifico() {
+            const diaSeleccionado = document.getElementById('filtroDiaEspecifico').value;
+            
+            if (diaSeleccionado === 'todos') {
+                // Restaurar datos originales
+                datosSimulados.dia = JSON.parse(JSON.stringify(datosOriginales.dia));
+                actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
+                return;
+            }
+
+            try {
+                Swal.fire({
+                    title: 'Aplicando filtro...',
+                    text: 'Consultando datos para el día seleccionado',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const ahora = new Date();
+                const añoActual = ahora.getFullYear();
+                const mesActual = ahora.getMonth();
+                const diaNumero = parseInt(diaSeleccionado);
+                
+                // Crear fecha específica para el día seleccionado
+                const fechaEspecifica = new Date(añoActual, mesActual, diaNumero);
+                const fechaStr = fechaEspecifica.toISOString().split('T')[0];
+                
+                console.log('Consultando datos para fecha:', fechaStr);
+
+                // Consultar participantes para esa fecha específica
+                const { data: participantes, error } = await supabase
+                    .from('participantes_reserva')
+                    .select(`
+                        id_genero,
+                        reservas (
+                            fecha_visita
+                        )
+                    `)
+                    .not('id_genero', 'is', null)
+                    .eq('reservas.fecha_visita', fechaStr);
+
+                if (error) {
+                    console.error('Error en consulta de día específico:', error);
+                    throw error;
+                }
+
+                console.log('Participantes encontrados para el día:', participantes);
+
+                // Obtener TODOS los géneros
+                const { data: generos } = await supabase
+                    .from('genero')
+                    .select('id_genero, genero');
+
+                // Contar participantes por género
+                const conteoPorGenero = {};
+                participantes.forEach(participante => {
+                    if (participante.id_genero) {
+                        const generoId = participante.id_genero;
+                        conteoPorGenero[generoId] = (conteoPorGenero[generoId] || 0) + 1;
+                    }
+                });
+
+                console.log('Conteo por género para el día:', conteoPorGenero);
+
+                // Combinar datos de géneros con conteos - SIEMPRE incluir los 4 géneros
+                const datosCombinados = generos.map(genero => ({
+                    genero: genero.genero,
+                    count: conteoPorGenero[genero.id_genero] || 0
+                }));
+
+                const datosFiltrados = {
+                    labels: datosCombinados.map(item => item.genero),
+                    values: datosCombinados.map(item => item.count)
+                };
+
+                Swal.close();
+
+                // Verificar si hay datos
+                const totalVisitantes = datosFiltrados.values.reduce((a, b) => a + b, 0);
+                if (totalVisitantes === 0) {
+                    const nombreDia = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][fechaEspecifica.getDay()];
+                    mostrarMensajeSinDatos(`No hay datos disponibles para el ${nombreDia} ${diaNumero}`);
+                    return;
+                }
+
+                // Crear título descriptivo
+                const nombreDia = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][fechaEspecifica.getDay()];
+                const mesNombre = obtenerNombreMes(mesActual);
+                const titulo = `Visitantes - ${nombreDia} ${diaNumero} de ${mesNombre}`;
+                
+                // Actualizar datos y gráfica
+                datosSimulados.dia = datosFiltrados;
+                actualizarGraficaConFiltro(datosFiltrados, titulo);
+
+            } catch (error) {
+                console.error('Error aplicando filtro de día específico:', error);
+                Swal.close();
+                mostrarMensajeSinDatos('Error al cargar los datos para el día seleccionado');
+            }
+        }
+
+        async function aplicarFiltroAnioEspecifico() {
             const añoSeleccionado = document.getElementById('filtroAnioEspecifico').value;
             const generoSeleccionado = document.getElementById('filtroGeneroAnio').value;
             
             if (añoSeleccionado === 'todos' && generoSeleccionado === 'todos') {
+                datosSimulados.anio = JSON.parse(JSON.stringify(datosOriginales.anio));
                 actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
                 return;
             }
-            
-            // Restaurar datos originales
-            datosSimulados.anio = JSON.parse(JSON.stringify(datosOriginales.anio));
-            
-            // Si se seleccionó un género específico, filtrar por género
-            if (generoSeleccionado !== 'todos') {
-                // En un caso real, aquí harías una consulta a la base de datos
-                // Por ahora, simulamos el filtrado
-                const factorFiltro = Math.random() * 0.5 + 0.5; // Simula reducción de datos
-                datosSimulados.anio.values = datosSimulados.anio.values.map(valor => 
-                    Math.round(valor * factorFiltro)
-                );
-            }
-            
-            // Filtrar por año específico si se seleccionó
-            if (añoSeleccionado !== 'todos') {
-                const { labels, values } = datosSimulados.anio;
-                const index = labels.indexOf(añoSeleccionado);
-                
-                if (index !== -1) {
-                    const datosFiltrados = {
-                        labels: [labels[index]],
-                        values: [values[index]]
-                    };
-                    
-                    let titulo = `Visitantes - Año ${añoSeleccionado}`;
-                    if (generoSeleccionado !== 'todos') {
-                        titulo += ` - ${formatearGenero(generoSeleccionado)}`;
+
+            try {
+                Swal.fire({
+                    title: 'Aplicando filtro...',
+                    text: 'Consultando datos para el año seleccionado',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
                     }
-                    
-                    actualizarGraficaConFiltro(datosFiltrados, titulo);
+                });
+
+                // Calcular rango de fechas para el año
+                const año = parseInt(añoSeleccionado);
+                const fechaInicial = new Date(año, 0, 1); // 1 de Enero
+                const fechaFinal = new Date(año, 11, 31); // 31 de Diciembre
+                
+                const { data: participantes, error } = await supabase
+                    .from('participantes_reserva')
+                    .select(`
+                        id_genero,
+                        reservas (
+                            fecha_visita
+                        )
+                    `)
+                    .not('id_genero', 'is', null)
+                    .gte('reservas.fecha_visita', fechaInicial.toISOString().split('T')[0])
+                    .lte('reservas.fecha_visita', fechaFinal.toISOString().split('T')[0]);
+
+                if (error) throw error;
+
+                // Obtener géneros
+                const { data: generos } = await supabase
+                    .from('genero')
+                    .select('id_genero, genero');
+
+                // Contar por género
+                const conteoPorGenero = {};
+                participantes.forEach(participante => {
+                    if (participante.id_genero) {
+                        const generoId = participante.id_genero;
+                        conteoPorGenero[generoId] = (conteoPorGenero[generoId] || 0) + 1;
+                    }
+                });
+
+                // Combinar datos
+                const datosCombinados = generos.map(genero => ({
+                    genero: genero.genero,
+                    count: conteoPorGenero[genero.id_genero] || 0
+                }));
+
+                let datosFiltrados;
+                if (generoSeleccionado !== 'todos') {
+                    const generoFiltrado = datosCombinados.find(item => item.genero === generoSeleccionado);
+                    datosFiltrados = {
+                        labels: [generoSeleccionado],
+                        values: [generoFiltrado ? generoFiltrado.count : 0]
+                    };
                 } else {
-                    mostrarMensajeSinDatos(`No hay datos disponibles para el año ${añoSeleccionado}`);
+                    datosFiltrados = {
+                        labels: datosCombinados.map(item => item.genero),
+                        values: datosCombinados.map(item => item.count)
+                    };
                 }
-            } else {
-                // Solo filtro por género
-                let titulo = 'Visitantes por Año';
+
+                Swal.close();
+
+                if (datosFiltrados.values.reduce((a, b) => a + b, 0) === 0) {
+                    mostrarMensajeSinDatos(`No hay datos disponibles para el año ${añoSeleccionado}`);
+                    return;
+                }
+
+                let titulo = `Visitantes - Año ${añoSeleccionado}`;
                 if (generoSeleccionado !== 'todos') {
                     titulo += ` - ${formatearGenero(generoSeleccionado)}`;
                 }
-                actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
-            }
-        }
+                
+                datosSimulados.anio = datosFiltrados;
+                actualizarGraficaConFiltro(datosFiltrados, titulo);
 
-        function aplicarFiltroMesEspecifico() {
+            } catch (error) {
+                console.error('Error aplicando filtro de año:', error);
+                Swal.close();
+                mostrarMensajeSinDatos('Error al cargar datos para el año seleccionado');
+            }
+        }    
+
+        async function aplicarFiltroMesEspecifico() {
             const mesSeleccionado = document.getElementById('filtroMesEspecifico').value;
+            const añoSeleccionado = document.getElementById('filtroAnioMes').value;
             const generoSeleccionado = document.getElementById('filtroGeneroMes').value;
             
             if (mesSeleccionado === 'todos' && generoSeleccionado === 'todos') {
+                // Restaurar datos originales
+                datosSimulados.mes = JSON.parse(JSON.stringify(datosOriginales.mes));
                 actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
                 return;
             }
-            
-            const añoActual = new Date().getFullYear();
-            const mesNumero = parseInt(mesSeleccionado);
-            const mesNombre = obtenerNombreMes(mesNumero);
-            
-            // Restaurar datos originales
-            datosSimulados.mes = JSON.parse(JSON.stringify(datosOriginales.mes));
-            
-            // Si se seleccionó un género específico, filtrar por género
-            if (generoSeleccionado !== 'todos') {
-                // En un caso real, aquí harías una consulta a la base de datos
-                // Por ahora, simulamos el filtrado
-                const factorFiltro = Math.random() * 0.5 + 0.5; // Simula reducción de datos
-                datosSimulados.mes.values = datosSimulados.mes.values.map(valor => 
-                    Math.round(valor * factorFiltro)
-                );
-            }
-            
-            // Filtrar por mes específico si se seleccionó
-            if (mesSeleccionado !== 'todos') {
-                const { labels, values } = datosSimulados.mes;
-                const datosFiltrados = {
-                    labels: [],
-                    values: []
-                };
-                
-                // Encontrar el mes específico
-                const index = labels.findIndex(mes => {
-                    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-                    return meses.indexOf(mes) === mesNumero;
-                });
-                
-                if (index !== -1) {
-                    datosFiltrados.labels = [labels[index]];
-                    datosFiltrados.values = [values[index]];
-                }
-                
-                if (datosFiltrados.labels.length > 0) {
-                    let titulo = `Visitantes - ${mesNombre} ${añoActual}`;
-                    if (generoSeleccionado !== 'todos') {
-                        titulo += ` - ${formatearGenero(generoSeleccionado)}`;
+
+            try {
+                Swal.fire({
+                    title: 'Aplicando filtro...',
+                    text: 'Consultando datos para el mes seleccionado',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
                     }
-                    
-                    actualizarGraficaConFiltro(datosFiltrados, titulo);
-                } else {
-                    mostrarMensajeSinDatos(`No hay datos disponibles para ${mesNombre} ${añoActual}`);
+                });
+
+                // Determinar año y mes
+                const año = añoSeleccionado === 'todos' ? new Date().getFullYear() : parseInt(añoSeleccionado);
+                const mesNumero = parseInt(mesSeleccionado);
+                const mesNombre = obtenerNombreMes(mesNumero);
+                
+                // Calcular rango de fechas para el mes completo
+                const fechaInicial = new Date(año, mesNumero, 1);
+                const fechaFinal = new Date(año, mesNumero + 1, 0); // Último día del mes
+                
+                console.log('Consultando datos para mes:', mesNombre, año, 'de', fechaInicial, 'a', fechaFinal);
+
+                // Consultar participantes en el rango del mes
+                const { data: participantes, error } = await supabase
+                    .from('participantes_reserva')
+                    .select(`
+                        id_genero,
+                        reservas (
+                            fecha_visita
+                        )
+                    `)
+                    .not('id_genero', 'is', null)
+                    .gte('reservas.fecha_visita', fechaInicial.toISOString().split('T')[0])
+                    .lte('reservas.fecha_visita', fechaFinal.toISOString().split('T')[0]);
+
+                if (error) {
+                    console.error('Error en consulta de mes específico:', error);
+                    throw error;
                 }
-            } else {
-                // Solo filtro por género
-                let titulo = 'Visitantes por Mes';
+
+                console.log('Participantes encontrados para el mes:', participantes);
+
+                // Obtener TODOS los géneros
+                const { data: generos } = await supabase
+                    .from('genero')
+                    .select('id_genero, genero');
+
+                // Contar participantes por género
+                const conteoPorGenero = {};
+                participantes.forEach(participante => {
+                    if (participante.id_genero) {
+                        const generoId = participante.id_genero;
+                        conteoPorGenero[generoId] = (conteoPorGenero[generoId] || 0) + 1;
+                    }
+                });
+
+                console.log('Conteo por género para el mes:', conteoPorGenero);
+
+                // Combinar datos de géneros con conteos
+                const datosCombinados = generos.map(genero => ({
+                    genero: genero.genero,
+                    count: conteoPorGenero[genero.id_genero] || 0
+                }));
+
+                // Preparar datos según filtros
+                let datosFiltrados;
+                if (generoSeleccionado !== 'todos') {
+                    // Filtrar solo el género seleccionado
+                    const generoFiltrado = datosCombinados.find(item => item.genero === generoSeleccionado);
+                    datosFiltrados = {
+                        labels: [generoSeleccionado],
+                        values: [generoFiltrado ? generoFiltrado.count : 0]
+                    };
+                } else {
+                    // Mostrar todos los géneros
+                    datosFiltrados = {
+                        labels: datosCombinados.map(item => item.genero),
+                        values: datosCombinados.map(item => item.count)
+                    };
+                }
+
+                Swal.close();
+
+                // Verificar si hay datos
+                const totalVisitantes = datosFiltrados.values.reduce((a, b) => a + b, 0);
+                if (totalVisitantes === 0) {
+                    mostrarMensajeSinDatos(`No hay datos disponibles para ${mesNombre} ${año}`);
+                    return;
+                }
+
+                // Crear título descriptivo
+                let titulo = `Visitantes - ${mesNombre} ${año}`;
                 if (generoSeleccionado !== 'todos') {
                     titulo += ` - ${formatearGenero(generoSeleccionado)}`;
                 }
-                actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
+                
+                // Actualizar datos y gráfica
+                datosSimulados.mes = datosFiltrados;
+                actualizarGraficaConFiltro(datosFiltrados, titulo);
+
+            } catch (error) {
+                console.error('Error aplicando filtro de mes específico:', error);
+                Swal.close();
+                mostrarMensajeSinDatos('Error al cargar los datos para el mes seleccionado');
             }
         }
 
-        function aplicarFiltroFechaCompleta() {
+        async function aplicarFiltroFechaCompleta() {
             const año = document.getElementById('filtroAñoFecha').value;
             const mes = document.getElementById('filtroMesFecha').value;
             const dia = document.getElementById('filtroDiaFecha').value;
             
             if (año === 'todos' && mes === 'todos' && dia === 'todos') {
+                datosSimulados.fecha = JSON.parse(JSON.stringify(datosOriginales.fecha));
                 actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
                 return;
             }
-            
-            // Validar si hay datos para la selección
-            if (dia !== 'todos' && !hayDatosParaFecha(año, mes, dia)) {
-                mostrarMensajeSinDatos(`No hay datos disponibles para la fecha seleccionada`);
-                return;
-            }
-            
-            // Filtrar datos según la selección
-            const { labels, values } = datosSimulados.fecha;
-            const datosFiltrados = {
-                labels: [],
-                values: []
-            };
-            
-            labels.forEach((fecha, index) => {
-                const fechaObj = new Date(fecha);
-                const cumpleAño = año === 'todos' || fechaObj.getFullYear() === parseInt(año);
-                const cumpleMes = mes === 'todos' || fechaObj.getMonth() === parseInt(mes);
-                const cumpleDia = dia === 'todos' || fechaObj.getDate() === parseInt(dia);
+
+            try {
+                Swal.fire({
+                    title: 'Aplicando filtro...',
+                    text: 'Consultando datos para la fecha seleccionada',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Construir fecha específica
+                let fechaInicial, fechaFinal;
                 
-                if (cumpleAño && cumpleMes && cumpleDia) {
-                    datosFiltrados.labels.push(formatearFecha(fecha));
-                    datosFiltrados.values.push(values[index]);
+                if (año !== 'todos' && mes !== 'todos' && dia !== 'todos') {
+                    // Fecha específica (día completo)
+                    fechaInicial = new Date(parseInt(año), parseInt(mes), parseInt(dia));
+                    fechaFinal = new Date(parseInt(año), parseInt(mes), parseInt(dia) + 1);
+                } else if (año !== 'todos' && mes !== 'todos') {
+                    // Mes completo
+                    fechaInicial = new Date(parseInt(año), parseInt(mes), 1);
+                    fechaFinal = new Date(parseInt(año), parseInt(mes) + 1, 0);
+                } else if (año !== 'todos') {
+                    // Año completo
+                    fechaInicial = new Date(parseInt(año), 0, 1);
+                    fechaFinal = new Date(parseInt(año), 11, 31);
                 }
-            });
-            
-            if (datosFiltrados.labels.length > 0) {
-                let titulo = 'Visitantes - ';
-                if (año !== 'todos') titulo += `${año}`;
+
+                const { data: participantes, error } = await supabase
+                    .from('participantes_reserva')
+                    .select(`
+                        id_genero,
+                        reservas (
+                            fecha_visita
+                        )
+                    `)
+                    .not('id_genero', 'is', null)
+                    .gte('reservas.fecha_visita', fechaInicial.toISOString().split('T')[0])
+                    .lte('reservas.fecha_visita', fechaFinal.toISOString().split('T')[0]);
+
+                if (error) throw error;
+
+                // Obtener géneros y procesar datos (similar a otras funciones)
+                const { data: generos } = await supabase
+                    .from('genero')
+                    .select('id_genero, genero');
+
+                const conteoPorGenero = {};
+                participantes.forEach(participante => {
+                    if (participante.id_genero) {
+                        const generoId = participante.id_genero;
+                        conteoPorGenero[generoId] = (conteoPorGenero[generoId] || 0) + 1;
+                    }
+                });
+
+                const datosCombinados = generos.map(genero => ({
+                    genero: genero.genero,
+                    count: conteoPorGenero[genero.id_genero] || 0
+                }));
+
+                const datosFiltrados = {
+                    labels: datosCombinados.map(item => item.genero),
+                    values: datosCombinados.map(item => item.count)
+                };
+
+                Swal.close();
+
+                if (datosFiltrados.values.reduce((a, b) => a + b, 0) === 0) {
+                    mostrarMensajeSinDatos('No hay datos disponibles para la fecha seleccionada');
+                    return;
+                }
+
+                let titulo = 'Visitantes';
+                if (año !== 'todos') titulo += ` - ${año}`;
                 if (mes !== 'todos') titulo += ` ${obtenerNombreMes(parseInt(mes))}`;
                 if (dia !== 'todos') titulo += ` ${dia}`;
                 
+                datosSimulados.fecha = datosFiltrados;
                 actualizarGraficaConFiltro(datosFiltrados, titulo);
-            } else {
-                mostrarMensajeSinDatos('No hay datos disponibles para los criterios seleccionados');
+
+            } catch (error) {
+                console.error('Error aplicando filtro de fecha completa:', error);
+                Swal.close();
+                mostrarMensajeSinDatos('Error al cargar datos para la fecha seleccionada');
             }
         }
 
-        // Función para obtener días con datos del mes actual
         function obtenerDiasConDatosDelMesActual() {
             const ahora = new Date();
             const añoActual = ahora.getFullYear();
@@ -3024,76 +3362,26 @@ async function cargarDatosDesdeUsuarios(generos) {
             const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
             const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
             
-            // Buscar en los datos de fecha qué días del mes actual tienen datos
-            if (datosSimulados.fecha && datosSimulados.fecha.labels) {
-                datosSimulados.fecha.labels.forEach(fechaStr => {
-                    try {
-                        const fecha = new Date(fechaStr);
-                        if (fecha.getFullYear() === añoActual && fecha.getMonth() === mesActual) {
-                            const diaNumero = fecha.getDate();
-                            const diaSemana = diasSemana[fecha.getDay()];
-                            const mesNombre = meses[mesActual];
-                            
-                            // Evitar duplicados
-                            if (!diasConDatos.some(d => d.diaNumero === diaNumero)) {
-                                diasConDatos.push({
-                                    diaNumero: diaNumero,
-                                    diaSemana: diaSemana,
-                                    mesNombre: mesNombre
-                                });
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Error procesando fecha:', fechaStr, error);
-                    }
+            // Por simplicidad, generamos días del 1 al actual del mes
+            // En producción, aquí consultarías la base de datos para ver qué días tienen datos
+            const diaActual = ahora.getDate();
+            
+            for (let dia = 1; dia <= diaActual; dia++) {
+                const fecha = new Date(añoActual, mesActual, dia);
+                const diaSemana = diasSemana[fecha.getDay()];
+                const mesNombre = meses[mesActual];
+                
+                diasConDatos.push({
+                    diaNumero: dia,
+                    diaSemana: diaSemana,
+                    mesNombre: mesNombre,
+                    tieneDatos: true // Por defecto asumimos que tiene datos
                 });
             }
             
-            // Ordenar por día
             return diasConDatos.sort((a, b) => a.diaNumero - b.diaNumero);
         }
 
-        // También agrega esta función que falta para el filtro de día específico
-        function aplicarFiltroDiaEspecifico() {
-            const diaSeleccionado = document.getElementById('filtroDiaEspecifico').value;
-            
-            if (diaSeleccionado === 'todos') {
-                actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
-                return;
-            }
-            
-            const diaNumero = parseInt(diaSeleccionado);
-            
-            // Validar si hay datos para el día seleccionado
-            if (!hayDatosParaDia(diaNumero)) {
-                mostrarMensajeSinDatos(`No hay datos disponibles para el día ${diaNumero}`);
-                return;
-            }
-            
-            const ahora = new Date();
-            const añoActual = ahora.getFullYear();
-            const mesActual = ahora.getMonth();
-            
-            // Buscar la fecha correspondiente en los datos
-            const { labels, values } = datosSimulados.fecha;
-            
-            for (let i = 0; i < labels.length; i++) {
-                const fecha = new Date(labels[i]);
-                if (fecha.getFullYear() === añoActual && 
-                    fecha.getMonth() === mesActual && 
-                    fecha.getDate() === diaNumero) {
-                    
-                    const datosFiltrados = {
-                        labels: [formatearFecha(labels[i])],
-                        values: [values[i]]
-                    };
-                    
-                    const mesNombre = obtenerNombreMes(mesActual);
-                    actualizarGraficaConFiltro(datosFiltrados, `Visitantes - ${diaNumero} ${mesNombre}`);
-                    return;
-                }
-            }
-        }
 
         // Función para crear filtros en el modal - VERSIÓN MEJORADA CON RANGO DE FECHAS
         function crearFiltrosModal() {
@@ -3126,35 +3414,29 @@ async function cargarDatosDesdeUsuarios(generos) {
                     `;
                     break;
                 
-                // En la función crearFiltrosModal, actualiza el caso 'fecha':
                 case 'fecha':
-                    // Obtener fechas mínima y máxima para establecer rangos por defecto
-                    const fechasDisponibles = datosSimulados.fecha.labels || [];
-                    const fechaMinima = fechasDisponibles.length > 0 ? fechasDisponibles[0] : new Date().toISOString().split('T')[0];
-                    const fechaMaxima = fechasDisponibles.length > 0 ? fechasDisponibles[fechasDisponibles.length - 1] : new Date().toISOString().split('T')[0];
+                    // USAR LAS FECHAS FUTURAS DE TUS RESERVAS REALES
+                    const fechaInicialDefault = "2025-01-20"; // Tu fecha más antigua
+                    const fechaFinalDefault = "2025-03-01";   // Tu fecha más reciente
                     
-                    // Calcular fecha por defecto (últimos 30 días)
-                    const fechaPorDefectoInicial = new Date();
-                    fechaPorDefectoInicial.setDate(fechaPorDefectoInicial.getDate() - 30);
-                    const fechaPorDefectoInicialStr = fechaPorDefectoInicial.toISOString().split('T')[0];
-                    const fechaPorDefectoFinalStr = new Date().toISOString().split('T')[0];
-                    
+                    // En crearFiltrosModal - caso 'fecha'
                     filtrosHTML = `
                         <div class="filtro-grupo">
                             <label for="filtroFechaInicial"><i class="fas fa-calendar-alt"></i> Fecha Inicial:</label>
-                            <input type="date" id="filtroFechaInicial" value="${fechaPorDefectoInicialStr}" min="${fechaMinima}" max="${fechaMaxima}">
+                            <input type="date" id="filtroFechaInicial" value="${fechaInicialDefault}">
                         </div>
                         <div class="filtro-grupo">
                             <label for="filtroFechaFinal"><i class="fas fa-calendar-alt"></i> Fecha Final:</label>
-                            <input type="date" id="filtroFechaFinal" value="${fechaPorDefectoFinalStr}" min="${fechaMinima}" max="${fechaMaxima}">
+                            <input type="date" id="filtroFechaFinal" value="${fechaFinalDefault}">
                         </div>
                         <div class="filtro-grupo">
                             <label for="filtroGeneroFecha"><i class="fas fa-venus-mars"></i> Género:</label>
                             <select id="filtroGeneroFecha">
                                 <option value="todos">Todos los géneros</option>
-                                ${datosSimulados.genero.labels.map(genero => 
-                                    `<option value="${genero}">${formatearGenero(genero)}</option>`
-                                ).join('')}
+                                <option value="Masculino">Masculino</option>
+                                <option value="Femenino">Femenino</option>
+                                <option value="Otro">Otro</option>
+                                <option value="Prefiero no decir">Prefiero no decir</option>
                             </select>
                         </div>
                         <div class="filtro-grupo">
@@ -3164,7 +3446,7 @@ async function cargarDatosDesdeUsuarios(generos) {
                         </div>
                     `;
                     break;
-                
+                    
                 // dia modificado:
                 case 'dia':
                     // Para día específico del mes actual - usar datos reales
@@ -3327,70 +3609,97 @@ async function cargarDatosDesdeUsuarios(generos) {
             }
         }
 
-        // Función para aplicar filtro a intereses con mes y año
-        function aplicarFiltroIntereses() {
+        async function aplicarFiltroIntereses() {
             const añoSeleccionado = document.getElementById('filtroAnioIntereses').value;
             const mesSeleccionado = document.getElementById('filtroMesIntereses').value;
             const interesSeleccionado = document.getElementById('filtroInteres').value;
             
             if (añoSeleccionado === 'todos' && mesSeleccionado === 'todos' && interesSeleccionado === 'todos') {
+                datosSimulados.intereses = JSON.parse(JSON.stringify(datosOriginales.intereses));
                 actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
                 return;
             }
-            
-            // Restaurar datos originales
-            datosSimulados.intereses = JSON.parse(JSON.stringify(datosOriginales.intereses));
-            
-            // Simular filtrado por año y mes (en un caso real, harías consultas a la BD)
-            if (añoSeleccionado !== 'todos' || mesSeleccionado !== 'todos') {
-                const factorFiltro = Math.random() * 0.7 + 0.3; // Simula reducción de datos
-                datosSimulados.intereses.values = datosSimulados.intereses.values.map(valor => 
-                    Math.round(valor * factorFiltro)
-                );
-            }
-            
-            // Filtrar por interés específico
-            if (interesSeleccionado !== 'todos') {
-                const { labels, values } = datosSimulados.intereses;
-                const index = labels.indexOf(interesSeleccionado);
+
+            try {
+                Swal.fire({
+                    title: 'Aplicando filtro...',
+                    text: 'Consultando datos de intereses',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Consultar datos reales de intereses (ajusta según tu esquema)
+                // Por ahora usamos datos simulados
+                const datosFiltrados = JSON.parse(JSON.stringify(datosOriginales.intereses));
                 
-                if (index !== -1) {
-                    const datosFiltrados = {
-                        labels: [labels[index]],
-                        values: [values[index]]
-                    };
-                    
-                    let titulo = `Visitantes - ${interesSeleccionado}`;
-                    if (añoSeleccionado !== 'todos') titulo += ` - Año ${añoSeleccionado}`;
-                    if (mesSeleccionado !== 'todos') titulo += ` - ${obtenerNombreMes(parseInt(mesSeleccionado))}`;
-                    
-                    actualizarGraficaConFiltro(datosFiltrados, titulo);
+                // Aplicar filtros simulados
+                if (añoSeleccionado !== 'todos' || mesSeleccionado !== 'todos') {
+                    const factorFiltro = 0.7; // Reducir datos para simular filtro
+                    datosFiltrados.values = datosFiltrados.values.map(valor => 
+                        Math.round(valor * factorFiltro)
+                    );
                 }
-            } else {
+                
+                // Filtrar por interés específico
+                if (interesSeleccionado !== 'todos') {
+                    const index = datosFiltrados.labels.indexOf(interesSeleccionado);
+                    if (index !== -1) {
+                        datosFiltrados.labels = [datosFiltrados.labels[index]];
+                        datosFiltrados.values = [datosFiltrados.values[index]];
+                    }
+                }
+
+                Swal.close();
+
+                if (datosFiltrados.values.reduce((a, b) => a + b, 0) === 0) {
+                    mostrarMensajeSinDatos('No hay datos disponibles para los criterios seleccionados');
+                    return;
+                }
+
                 let titulo = 'Visitantes por Interés';
                 if (añoSeleccionado !== 'todos') titulo += ` - Año ${añoSeleccionado}`;
                 if (mesSeleccionado !== 'todos') titulo += ` - ${obtenerNombreMes(parseInt(mesSeleccionado))}`;
+                if (interesSeleccionado !== 'todos') titulo += ` - ${interesSeleccionado}`;
                 
-                // Actualizar título pero mantener todos los datos
-                const modalTitle = document.getElementById("modalTitle");
-                modalTitle.innerHTML = `<i class="fas fa-expand"></i> ${titulo}`;
+                datosSimulados.intereses = datosFiltrados;
+                actualizarGraficaConFiltro(datosFiltrados, titulo);
+
+            } catch (error) {
+                console.error('Error aplicando filtro de intereses:', error);
+                Swal.close();
+                mostrarMensajeSinDatos('Error al cargar datos de intereses');
             }
         }
+            
 
-        // Función para actualizar meses disponibles según año seleccionado
         function actualizarMesesDisponibles() {
             const añoSeleccionado = document.getElementById('filtroAnioMes').value;
-            // En un caso real, aquí cargarías los meses disponibles para ese año
+            
+            // Por ahora simplemente aplicamos el filtro
+            // En una implementación más avanzada, podrías cargar solo los meses que tienen datos para ese año
             aplicarFiltroMesEspecifico();
         }
 
-        // Función para aplicar filtro de rango de fechas - VERSIÓN CORREGIDA
+        // FUNCIÓN CORREGIDA para aplicar filtro de rango de fechas
         async function aplicarFiltroRangoFechas() {
             const fechaInicial = document.getElementById('filtroFechaInicial').value;
             const fechaFinal = document.getElementById('filtroFechaFinal').value;
             const generoSeleccionado = document.getElementById('filtroGeneroFecha').value;
             
-            // Validar que la fecha inicial no sea mayor que la final
+            console.log('🎯 Aplicando filtro con parámetros:', {
+                fechaInicial, 
+                fechaFinal, 
+                generoSeleccionado
+            });
+            
+            // Validaciones
+            if (!fechaInicial || !fechaFinal) {
+                mostrarMensajeSinDatos('Por favor selecciona ambas fechas');
+                return;
+            }
+            
             if (fechaInicial > fechaFinal) {
                 mostrarMensajeSinDatos('La fecha inicial no puede ser mayor que la fecha final');
                 return;
@@ -3406,134 +3715,134 @@ async function cargarDatosDesdeUsuarios(generos) {
                     }
                 });
 
-                console.log('Consultando datos para rango:', fechaInicial, 'a', fechaFinal);
+                console.log('🔍 Aplicando filtro para rango:', fechaInicial, 'a', fechaFinal);
                 
-                // Consultar participantes en el rango de fechas
-                const { data: participantes, error } = await supabase
-                    .from('participantes_reserva')
-                    .select(`
-                        id_genero,
-                        reservas (
-                            fecha_visita
-                        )
-                    `)
-                    .not('id_genero', 'is', null)
-                    .gte('reservas.fecha_visita', fechaInicial)
-                    .lte('reservas.fecha_visita', fechaFinal);
-
-                if (error) {
-                    console.error('Error en consulta de participantes:', error);
-                    throw error;
-                }
-
-                console.log('Participantes en rango:', participantes);
-
-                // Obtener TODOS los géneros (siempre los 4)
-                const { data: generos } = await supabase
-                    .from('genero')
-                    .select('id_genero, genero');
-
-                // Contar participantes por género
-                const conteoPorGenero = {};
-                participantes.forEach(participante => {
-                    if (participante.id_genero) {
-                        const generoId = participante.id_genero;
-                        conteoPorGenero[generoId] = (conteoPorGenero[generoId] || 0) + 1;
-                    }
+                // Usar la función corregida para cargar datos
+                const datosFiltrados = await cargarDatosGeneroPorTiempo('fecha', {
+                    fechaInicial: fechaInicial,
+                    fechaFinal: fechaFinal
                 });
 
-                console.log('Conteo por género en rango:', conteoPorGenero);
+                console.log('✅ Datos filtrados obtenidos:', datosFiltrados);
 
-                // Combinar datos de géneros con conteos - SIEMPRE incluir los 4 géneros
-                const datosCombinados = generos.map(genero => ({
-                    genero: genero.genero,
-                    count: conteoPorGenero[genero.id_genero] || 0  // 0 si no hay datos en ese rango
-                }));
+                // PREPARAR DATOS SEGÚN FILTRO DE GÉNERO - VERSIÓN CORREGIDA
+                let datosFinales;
+                let titulo = `Visitantes por Género (${formatearFecha(fechaInicial)} - ${formatearFecha(fechaFinal)})`;
 
-                console.log('Datos combinados con 4 géneros:', datosCombinados);
-
-                // ⬇⬇⬇ CAMBIO IMPORTANTE: Siempre mostrar los 4 géneros, incluso si se filtra por uno específico
-                let datosFiltrados;
                 if (generoSeleccionado !== 'todos') {
-                    // Filtrar solo el género seleccionado, pero mantener la estructura
-                    const generoFiltrado = datosCombinados.find(item => item.genero === generoSeleccionado);
-                    datosFiltrados = {
-                        labels: [generoSeleccionado],
-                        values: [generoFiltrado ? generoFiltrado.count : 0]
+                    console.log(`🔍 Filtrando por género: "${generoSeleccionado}"`);
+                    console.log('📊 Labels disponibles:', datosFiltrados.labels);
+                    
+                    // MAPEO DE GÉNEROS - Corrige las diferencias de nombres
+                    const mapeoGeneros = {
+                        'Masculino': 'Masculino',
+                        'Femenino': 'Femenino',
+                        'Otro': 'Otro',
+                        'Prefiero no decir': 'Prefiero no decirlo' // ← CORRECCIÓN CLAVE
                     };
+                    
+                    const generoBuscado = mapeoGeneros[generoSeleccionado] || generoSeleccionado;
+                    console.log(`🔍 Buscando género: "${generoBuscado}"`);
+                    
+                    const index = datosFiltrados.labels.findIndex(label => 
+                        label === generoBuscado
+                    );
+                    
+                    console.log(`🔍 Índice encontrado:`, index);
+                    
+                    if (index !== -1) {
+                        datosFinales = {
+                            labels: [datosFiltrados.labels[index]],
+                            values: [datosFiltrados.values[index]]
+                        };
+                        titulo += ` - ${formatearGenero(generoSeleccionado)}`;
+                        console.log('✅ Género encontrado, datos filtrados:', datosFinales);
+                    } else {
+                        console.log('❌ Género no encontrado después del mapeo');
+                        datosFinales = {
+                            labels: [generoSeleccionado],
+                            values: [0]
+                        };
+                    }
                 } else {
-                    // Mostrar TODOS los géneros
-                    datosFiltrados = {
-                        labels: datosCombinados.map(item => item.genero),  // Siempre 4 géneros
-                        values: datosCombinados.map(item => item.count)    // Cantidades según filtro
-                    };
+                    // Mostrar todos los géneros
+                    datosFinales = datosFiltrados;
+
                 }
 
                 Swal.close();
 
-                if (datosFiltrados.values.reduce((a, b) => a + b, 0) === 0) {
+                // Verificar si hay datos
+                const totalVisitantes = datosFinales.values.reduce((a, b) => a + b, 0);
+                console.log('👥 Total de visitantes encontrados:', totalVisitantes);
+                
+                if (totalVisitantes === 0) {
                     mostrarMensajeSinDatos('No hay datos disponibles para el rango de fechas seleccionado');
                     return;
                 }
 
-                let titulo = `Visitantes por Género (${formatearFecha(fechaInicial)} - ${formatearFecha(fechaFinal)})`;
-                if (generoSeleccionado !== 'todos') {
-                    titulo += ` - ${formatearGenero(generoSeleccionado)}`;
-                }
+                console.log('🎯 Datos finales para mostrar:', datosFinales);
                 
-                // ⬇⬇⬇ CAMBIO: Actualizar los datos globales y recrear la gráfica
-                datosSimulados.fecha = datosFiltrados;
-                crearGraficas('fecha');
+                // Actualizar datos y gráfica
+                datosSimulados.fecha = datosFinales;
                 
-                // También actualizar el título
-                const modalTitle = document.getElementById("modalTitle");
-                if (modalTitle) {
-                    modalTitle.innerHTML = `<i class="fas fa-expand"></i> ${titulo}`;
+                // SIEMPRE actualizar la gráfica del modal (no solo si está abierto)
+                const modal = document.getElementById("chartModal");
+                if (modal && modal.classList.contains('show')) {
+                    console.log('🔄 Actualizando gráfica en modal...');
+                    
+                    // Actualizar título del modal
+                    const modalTitle = document.getElementById("modalTitle");
+                    if (modalTitle) {
+                        modalTitle.innerHTML = `<i class="fas fa-expand"></i> ${titulo}`;
+                    }
+                    
+                    // FORZAR la actualización de la gráfica con los nuevos datos Y el título personalizado
+                    const tipoGraficaActual = document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica');
+                    actualizarGraficaModal(tipoGraficaActual, titulo); // ← ESTA ES LA LÍNEA CLAVE
                 }
 
+                // Mostrar resumen
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Filtro aplicado',
+                    text: `Se encontraron ${totalVisitantes} visitantes en el rango seleccionado`,
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+
             } catch (error) {
-                console.error('Error aplicando filtro de rango de fechas:', error);
+                console.error('💥 Error aplicando filtro de rango de fechas:', error);
                 Swal.close();
-                mostrarMensajeSinDatos('Error al cargar los datos del rango seleccionado');
+                mostrarMensajeSinDatos('Error al cargar los datos: ' + error.message);
             }
         }
-        
-
-        // Función para formatear fecha - VERSIÓN CORREGIDA
-        function formatearFecha(fechaStr) {
-            if (!fechaStr) return 'Fecha inválida';
-            
+                
+        // Función auxiliar para obtener estructura de géneros vacía
+        async function obtenerEstructuraGenerosVacia() {
             try {
-                // Si ya es una fecha formateada, devolverla tal cual
-                if (typeof fechaStr === 'string' && (fechaStr.includes('/') || fechaStr.includes('-'))) {
-                    // Intentar parsear si parece una fecha pero no está formateada
-                    const fecha = new Date(fechaStr);
-                    if (!isNaN(fecha.getTime())) {
-                        return fecha.toLocaleDateString('es-ES', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric'
-                        });
-                    }
-                    return fechaStr; // Devolver tal cual si no se puede formatear
+                const { data: generos } = await supabase
+                    .from('genero')
+                    .select('id_genero, genero');
+
+                if (generos && generos.length > 0) {
+                    return {
+                        labels: generos.map(g => g.genero),
+                        values: generos.map(() => 0)
+                    };
+                } else {
+                    // Fallback por si no hay géneros en la base de datos
+                    return {
+                        labels: ['Masculino', 'Femenino', 'Otro', 'Prefiero no decir'],
+                        values: [0, 0, 0, 0]
+                    };
                 }
-                
-                const fecha = new Date(fechaStr);
-                
-                // Validar si la fecha es válida
-                if (isNaN(fecha.getTime())) {
-                    console.warn('Fecha inválida:', fechaStr);
-                    return 'Fecha inválida';
-                }
-                
-                return fecha.toLocaleDateString('es-ES', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                });
             } catch (error) {
-                console.error('Error formateando fecha:', fechaStr, error);
-                return 'Fecha inválida';
+                console.error('Error obteniendo estructura de géneros:', error);
+                return {
+                    labels: ['Masculino', 'Femenino', 'Otro', 'Prefiero no decir'],
+                    values: [0, 0, 0, 0]
+                };
             }
         }
 
@@ -3563,16 +3872,17 @@ async function cargarDatosDesdeUsuarios(generos) {
             };
 }
 
-        // Función para aplicar filtro de género
         function aplicarFiltroGenero() {
             const filtro = document.getElementById('filtroGenero').value;
             
             if (filtro === 'todos') {
+                // Restaurar datos originales
+                datosSimulados.genero = JSON.parse(JSON.stringify(datosOriginales.genero));
                 actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
                 return;
             }
 
-            const { labels, values } = datosSimulados.genero;
+            const { labels, values } = datosOriginales.genero;
             const index = labels.indexOf(filtro);
             
             if (index !== -1) {
@@ -3581,32 +3891,12 @@ async function cargarDatosDesdeUsuarios(generos) {
                     values: [values[index]]
                 };
                 
+                // Actualizar datos temporales
+                datosSimulados.genero = datosFiltrados;
                 actualizarGraficaConFiltro(datosFiltrados, `Visitantes - ${formatearGenero(filtro)}`);
             }
         }
-
-        // Función para aplicar filtro de intereses
-        function aplicarFiltroInteres() {
-            const filtro = document.getElementById('filtroInteres').value;
             
-            if (filtro === 'todos') {
-                actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
-                return;
-            }
-
-            const { labels, values } = datosSimulados.intereses;
-            const index = labels.indexOf(filtro);
-            
-            if (index !== -1) {
-                const datosFiltrados = {
-                    labels: [labels[index]],
-                    values: [values[index]]
-                };
-                
-                actualizarGraficaConFiltro(datosFiltrados, `Visitantes - ${filtro}`);
-            }
-        }
-
 
         // Función para actualizar gráfica con datos filtrados - VERSIÓN CORREGIDA
         function actualizarGraficaConFiltro(datosFiltrados, tituloPersonalizado) {
@@ -3857,10 +4147,15 @@ async function cargarDatosDesdeUsuarios(generos) {
             }
         }
 
-
-        // Función para limpiar filtro - VERSIÓN MEJORADA
         function limpiarFiltro() {
-            // Agregar los nuevos IDs a la lista
+            // Restaurar todos los datos originales
+            Object.keys(datosOriginales).forEach(key => {
+                if (datosOriginales[key]) {
+                    datosSimulados[key] = JSON.parse(JSON.stringify(datosOriginales[key]));
+                }
+            });
+            
+            // Restablecer todos los selects a "todos"
             const selects = [
                 'filtroGenero', 'filtroFechaInicial', 'filtroFechaFinal', 'filtroGeneroFecha',
                 'filtroDiaEspecifico', 'filtroAnioMes', 'filtroMesEspecifico', 'filtroGeneroMes', 
@@ -3886,19 +4181,44 @@ async function cargarDatosDesdeUsuarios(generos) {
                 }
             });
             
-            // Para fecha, recargar datos con el rango por defecto (últimos 30 días)
-            if (tipoActual === 'fecha') {
-                aplicarFiltroRangoFechas();
-            } else {
-                // Restaurar datos originales para otros tipos
-                if (datosOriginales[tipoActual]) {
-                    datosSimulados[tipoActual] = JSON.parse(JSON.stringify(datosOriginales[tipoActual]));
+            // Recargar gráfica con datos originales
+            actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
+            
+            // Mostrar mensaje de confirmación
+            Swal.fire({
+                icon: 'success',
+                title: 'Filtros limpiados',
+                text: 'Todos los filtros han sido restablecidos',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+                      
+        // Función para formatear fecha - AGREGAR ESTA FUNCIÓN
+        function formatearFecha(fechaStr) {
+            if (!fechaStr) return 'Fecha inválida';
+            
+            try {
+                // Intentar crear fecha directamente
+                const fecha = new Date(fechaStr);
+                
+                // Validar si la fecha es válida
+                if (isNaN(fecha.getTime())) {
+                    console.warn('Fecha inválida:', fechaStr);
+                    return 'Fecha inválida';
                 }
                 
-                // Recargar gráfica original
-                actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
+                return fecha.toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit', 
+                    year: 'numeric'
+                });
+            } catch (error) {
+                console.error('Error formateando fecha:', fechaStr, error);
+                return 'Fecha inválida';
             }
         }
+
 
         // Función para cerrar modal
         function cerrarModal() {
