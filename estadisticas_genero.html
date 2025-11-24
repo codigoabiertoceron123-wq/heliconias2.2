@@ -1972,6 +1972,156 @@ async function cargarDatosIntereses() {
     }
 }
 
+// Función para cargar datos de intereses por rango de tiempo
+async function cargarDatosInteresesPorTiempo(fechaInicial, fechaFinal, interesEspecifico = 'todos') {
+    try {
+        console.log('🔍 Cargando datos de intereses:', { fechaInicial, fechaFinal, interesEspecifico });
+
+        // PRIMERO: Consultar las reservas en el rango de fechas
+        let queryReservas = supabase
+            .from('reservas')
+            .select('id_reserva, fecha_visita')
+            .gte('fecha_visita', fechaInicial)
+            .lte('fecha_visita', fechaFinal);
+
+        const { data: reservas, error: errorReservas } = await queryReservas;
+
+        if (errorReservas) {
+            console.error('❌ Error en consulta de reservas:', errorReservas);
+            throw errorReservas;
+        }
+
+        console.log('📅 Reservas encontradas:', reservas?.length);
+
+        if (!reservas || reservas.length === 0) {
+            console.log('⚠️ No hay reservas en el rango de fechas');
+            return await obtenerEstructuraInteresesVacia();
+        }
+
+        // SEGUNDO: Obtener participantes de esas reservas
+        const idsReservas = reservas.map(r => r.id_reserva);
+        
+        let queryParticipantes = supabase
+            .from('participantes_reserva')
+            .select('id_genero, id_reserva, intereses_heliconias')
+            .in('id_reserva', idsReservas);
+
+        // Filtrar por interés específico si se seleccionó
+        if (interesEspecifico !== 'todos') {
+            queryParticipantes = queryParticipantes.eq('intereses_heliconias', interesEspecifico);
+        }
+
+        const { data: participantes, error: errorParticipantes } = await queryParticipantes;
+
+        if (errorParticipantes) {
+            console.error('❌ Error en consulta de participantes:', errorParticipantes);
+            throw errorParticipantes;
+        }
+
+        console.log('👥 Participantes encontrados:', participantes?.length);
+
+        if (!participantes || participantes.length === 0) {
+            console.log('⚠️ No hay participantes con intereses en las reservas');
+            return await obtenerEstructuraInteresesVacia();
+        }
+
+        // TERCERO: Obtener TODOS los géneros
+        const { data: generos } = await supabase
+            .from('genero')
+            .select('id_genero, genero');
+
+        if (!generos || generos.length === 0) {
+            console.error('❌ No se encontraron géneros en la base de datos');
+            throw new Error('No hay géneros configurados en el sistema');
+        }
+
+        // CUARTO: Procesar datos según el filtro seleccionado
+        if (interesEspecifico !== 'todos') {
+            // CASO 1: Interés específico - mostrar distribución por géneros para ese interés
+            return await procesarInteresEspecifico(participantes, generos, interesEspecifico);
+        } else {
+            // CASO 2: Todos los intereses - mostrar distribución de intereses
+            return await procesarTodosLosIntereses(participantes, generos);
+        }
+
+    } catch (error) {
+        console.error('💥 Error cargando datos de intereses:', error);
+        return await obtenerEstructuraInteresesVacia();
+    }
+}
+
+
+// Procesar cuando se selecciona un interés específico
+async function procesarInteresEspecifico(participantes, generos, interesEspecifico) {
+    console.log(`📊 Procesando interés específico: ${interesEspecifico}`);
+    
+    // Filtrar participantes por el interés específico
+    const participantesFiltrados = participantes.filter(p => p.intereses_heliconias === interesEspecifico);
+    
+    // Contar por género
+    const conteoPorGenero = {};
+    participantesFiltrados.forEach(participante => {
+        if (participante.id_genero) {
+            const generoId = participante.id_genero;
+            conteoPorGenero[generoId] = (conteoPorGenero[generoId] || 0) + 1;
+        }
+    });
+
+    // Combinar con nombres de géneros
+    const datosCombinados = generos.map(genero => ({
+        genero: genero.genero,
+        count: conteoPorGenero[genero.id_genero] || 0
+    }));
+
+    console.log('✅ Datos para interés específico:', datosCombinados);
+
+    return {
+        type: 'genero', // Indicar que muestra géneros
+        labels: datosCombinados.map(item => item.genero),
+        values: datosCombinados.map(item => item.count),
+        interes: interesEspecifico
+    };
+}
+
+// Procesar cuando se seleccionan todos los intereses
+async function procesarTodosLosIntereses(participantes, generos) {
+    console.log('📊 Procesando todos los intereses');
+    
+    // Contar por interés
+    const conteoPorInteres = {};
+    const intereses = ['Observación', 'Fotografía', 'Investigación', 'Educación', 'Recreación'];
+    
+    // Inicializar conteo
+    intereses.forEach(interes => {
+        conteoPorInteres[interes] = 0;
+    });
+
+    // Contar participantes por interés
+    participantes.forEach(participante => {
+        if (participante.intereses_heliconias && intereses.includes(participante.intereses_heliconias)) {
+            conteoPorInteres[participante.intereses_heliconias] = (conteoPorInteres[participante.intereses_heliconias] || 0) + 1;
+        }
+    });
+
+    console.log('✅ Conteo por interés:', conteoPorInteres);
+
+    return {
+        type: 'interes', // Indicar que muestra intereses
+        labels: intereses,
+        values: intereses.map(interes => conteoPorInteres[interes] || 0)
+    };
+}
+
+// Función para obtener estructura vacía de intereses
+async function obtenerEstructuraInteresesVacia() {
+    const intereses = ['Observación', 'Fotografía', 'Investigación', 'Educación', 'Recreación'];
+    return {
+        type: 'interes',
+        labels: intereses,
+        values: intereses.map(() => 0)
+    };
+}
+
 // También puedes cargar datos desde usuarios si es necesario
 async function cargarDatosDesdeUsuarios(generos) {
     try {
@@ -2232,13 +2382,13 @@ async function cargarDatosDesdeUsuarios(generos) {
         }
 
         // Función para obtener título descriptivo
+        // Función para obtener título descriptivo (ACTUALIZAR ESTA FUNCIÓN)
         function obtenerTituloDescriptivo(tipo) {
             const titulos = {
                 genero: 'Visitantes por Género',
                 fecha: 'Visitantes por Género (Filtrado por Fecha)',
-                dia: 'Visitantes por Día de la Semana',
-                mes: 'Visitantes por Mes',
-                anio: 'Visitantes por Año',
+                mes: 'Visitantes por Género (Mes Actual)',  // CAMBIADO
+                anio: 'Visitantes por Género (Año Actual)', // CAMBIADO
                 intereses: 'Visitantes por Interés en Heliconias'
             };
             return titulos[tipo] || 'Distribución de Visitantes';
@@ -2350,11 +2500,701 @@ async function cargarDatosDesdeUsuarios(generos) {
                     // Usar datos existentes si hay error
                     crearGraficas(tipo);
                 }
-            } else {
-                // Para otros tipos (dia, mes, anio, intereses)
+
+            }
+             else if (tipo === 'mes') {
+                try {
+                    Swal.fire({
+                        title: 'Cargando datos...',
+                        text: 'Consultando datos del mes actual',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    const datosMes = await cargarDatosPorMes();
+                    datosSimulados.mes = datosMes;
+                    
+                    Swal.close();
+                    crearGraficas(tipo);
+                } catch (error) {
+                    console.error('Error cargando datos por mes:', error);
+                    Swal.close();
+                    crearGraficas(tipo);
+                }
+            }
+             else if (tipo === 'anio') {
+                try {
+                    Swal.fire({
+                        title: 'Cargando datos...',
+                        text: 'Consultando datos del año actual',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    const datosAnio = await cargarDatosPorAnio();
+                    datosSimulados.anio = datosAnio;
+                    
+                    Swal.close();
+                    crearGraficas(tipo);
+
+                } catch (error) {
+                    console.error('Error cargando datos por año:', error);
+                    Swal.close();
+                    crearGraficas(tipo);
+                }
+                
+            }
+            // En la función mostrarGraficas, agrega el caso 'intereses':
+            else if (tipo === 'intereses') {
+                try {
+                    Swal.fire({
+                        title: 'Cargando datos...',
+                        text: 'Consultando datos de intereses',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Cargar datos iniciales de intereses (últimos 30 días)
+                    const fechaInicial = new Date();
+                    fechaInicial.setDate(fechaInicial.getDate() - 30);
+                    const fechaFinal = new Date();
+                    
+                    const datosIntereses = await cargarDatosInteresesPorTiempo(
+                        fechaInicial.toISOString().split('T')[0],
+                        fechaFinal.toISOString().split('T')[0],
+                        'todos' // Todos los intereses por defecto
+                    );
+                    
+                    datosSimulados.intereses = datosIntereses;
+                    // Actualizar también datosOriginales
+                    datosOriginales.intereses = JSON.parse(JSON.stringify(datosIntereses));
+                    
+                    Swal.close();
+                    crearGraficas(tipo);
+
+                } catch (error) {
+                    console.error('Error cargando datos de intereses:', error);
+                    Swal.close();
+                    // En caso de error, usar datos vacíos
+                    datosSimulados.intereses = await obtenerEstructuraInteresesVacia();
+                    crearGraficas(tipo);
+                }
+            } 
+            else {
+                // Para otros tipos (intereses)
                 crearGraficas(tipo);
             }
         }
+            
+        // FUNCIONES PARA POR MES Y AÑO
+
+        // Función para cargar datos por mes (mes actual por defecto)
+       // Función para cargar datos por mes
+        async function cargarDatosPorMes() {
+            try {
+                const ahora = new Date();
+                const añoActual = ahora.getFullYear();
+                const mesActual = ahora.getMonth();
+                
+                // Calcular rango del mes actual
+                const fechaInicial = new Date(añoActual, mesActual, 1);
+                const fechaFinal = new Date(añoActual, mesActual + 1, 0); // Último día del mes
+                
+                console.log('📅 Cargando datos del mes actual:', fechaInicial, 'a', fechaFinal);
+
+                const datosMes = await cargarDatosGeneroPorTiempo('mes', {
+                    fechaInicial: fechaInicial.toISOString().split('T')[0],
+                    fechaFinal: fechaFinal.toISOString().split('T')[0]
+                });
+
+                console.log('✅ Datos del mes cargados:', datosMes);
+                return datosMes;
+
+            } catch (error) {
+                console.error('Error cargando datos por mes:', error);
+                return await obtenerEstructuraGenerosVacia();
+            }
+        }
+
+        // Función para cargar datos por año (año actual por defecto)
+       // Función para cargar datos por año
+        async function cargarDatosPorAnio() {
+            try {
+                const añoActual = new Date().getFullYear();
+                
+                // Calcular rango del año actual
+                const fechaInicial = new Date(añoActual, 0, 1); // 1 de Enero
+                const fechaFinal = new Date(añoActual, 11, 31); // 31 de Diciembre
+                
+                console.log('📅 Cargando datos del año actual:', añoActual, fechaInicial, 'a', fechaFinal);
+
+                const datosAnio = await cargarDatosGeneroPorTiempo('anio', {
+                    fechaInicial: fechaInicial.toISOString().split('T')[0],
+                    fechaFinal: fechaFinal.toISOString().split('T')[0]
+                });
+
+                console.log('✅ Datos del año cargados:', datosAnio);
+                return datosAnio;
+
+            } catch (error) {
+                console.error('Error cargando datos por año:', error);
+                return await obtenerEstructuraGenerosVacia();
+            }
+        }
+
+        // Agregar funciones de filtro para mes y año
+        async function aplicarFiltroMes() {
+            const añoSeleccionado = document.getElementById('filtroAnioMes').value;
+            const mesSeleccionado = document.getElementById('filtroMesEspecifico').value;
+            const generoSeleccionado = document.getElementById('filtroGeneroMes').value;
+            
+            if (añoSeleccionado === 'todos' && mesSeleccionado === 'todos' && generoSeleccionado === 'todos') {
+                // Restaurar datos del mes actual
+                const datosMesActual = await cargarDatosPorMes();
+                datosSimulados.mes = datosMesActual;
+                actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
+                return;
+            }
+
+            try {
+                Swal.fire({
+                    title: 'Aplicando filtro...',
+                    text: 'Consultando datos para el mes seleccionado',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                let fechaInicial, fechaFinal;
+                
+                if (añoSeleccionado !== 'todos' && mesSeleccionado !== 'todos') {
+                    // Mes específico
+                    fechaInicial = new Date(parseInt(añoSeleccionado), parseInt(mesSeleccionado), 1);
+                    fechaFinal = new Date(parseInt(añoSeleccionado), parseInt(mesSeleccionado) + 1, 0);
+                } else if (añoSeleccionado !== 'todos') {
+                    // Año completo
+                    fechaInicial = new Date(parseInt(añoSeleccionado), 0, 1);
+                    fechaFinal = new Date(parseInt(añoSeleccionado), 11, 31);
+                } else {
+                    // Todos los años - usar datos existentes
+                    fechaInicial = null;
+                    fechaFinal = null;
+                }
+
+                let datosFiltrados;
+                if (fechaInicial && fechaFinal) {
+                    datosFiltrados = await cargarDatosGeneroPorTiempo('mes', {
+                        fechaInicial: fechaInicial.toISOString().split('T')[0],
+                        fechaFinal: fechaFinal.toISOString().split('T')[0]
+                    });
+                } else {
+                    datosFiltrados = await cargarDatosPorMes();
+                }
+
+                // Aplicar filtro de género si está seleccionado
+                if (generoSeleccionado !== 'todos') {
+                    const index = datosFiltrados.labels.indexOf(generoSeleccionado);
+                    if (index !== -1) {
+                        datosFiltrados = {
+                            labels: [datosFiltrados.labels[index]],
+                            values: [datosFiltrados.values[index]]
+                        };
+                    }
+                }
+
+                Swal.close();
+
+                if (datosFiltrados.values.reduce((a, b) => a + b, 0) === 0) {
+                    mostrarMensajeSinDatos('No hay datos disponibles para los criterios seleccionados');
+                    return;
+                }
+
+                let titulo = 'Visitantes por Género';
+                if (añoSeleccionado !== 'todos') titulo += ` - Año ${añoSeleccionado}`;
+                if (mesSeleccionado !== 'todos') titulo += ` - ${obtenerNombreMes(parseInt(mesSeleccionado))}`;
+                if (generoSeleccionado !== 'todos') titulo += ` - ${formatearGenero(generoSeleccionado)}`;
+                
+                datosSimulados.mes = datosFiltrados;
+                actualizarGraficaConFiltro(datosFiltrados, titulo);
+
+            } catch (error) {
+                console.error('Error aplicando filtro de mes:', error);
+                Swal.close();
+                mostrarMensajeSinDatos('Error al cargar datos para el mes seleccionado');
+            }
+        }
+
+        // FUNCIÓN CORREGIDA para aplicar filtro de rango de meses
+        async function aplicarFiltroRangoMeses() {
+            const fechaInicial = document.getElementById('filtroFechaInicialMes').value;
+            const fechaFinal = document.getElementById('filtroFechaFinalMes').value;
+            const generoSeleccionado = document.getElementById('filtroGeneroMes').value;
+            
+            console.log('🎯 Aplicando filtro MES con parámetros:', {
+                fechaInicial, 
+                fechaFinal, 
+                generoSeleccionado
+            });
+            
+            // Validaciones
+            if (!fechaInicial || !fechaFinal) {
+                mostrarMensajeSinDatos('Por favor selecciona ambas fechas');
+                return;
+            }
+            
+            if (fechaInicial > fechaFinal) {
+                mostrarMensajeSinDatos('La fecha inicial no puede ser mayor que la fecha final');
+                return;
+            }
+
+            try {
+                Swal.fire({
+                    title: 'Aplicando filtro...',
+                    text: 'Consultando datos en el rango de meses seleccionado',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                console.log('🔍 Aplicando filtro MES para rango:', fechaInicial, 'a', fechaFinal);
+                
+                // Usar la función para cargar datos
+                const datosFiltrados = await cargarDatosGeneroPorTiempo('mes', {
+                    fechaInicial: fechaInicial,
+                    fechaFinal: fechaFinal
+                });
+
+                console.log('✅ Datos MES filtrados obtenidos:', datosFiltrados);
+
+                // PREPARAR DATOS SEGÚN FILTRO DE GÉNERO
+                let datosFinales;
+                let titulo = `Visitantes por Género (${formatearFecha(fechaInicial)} - ${formatearFecha(fechaFinal)})`;
+
+                if (generoSeleccionado !== 'todos') {
+                    console.log(`🔍 Filtrando por género: "${generoSeleccionado}"`);
+                    console.log('📊 Labels disponibles:', datosFiltrados.labels);
+                    
+                    // MAPEO DE GÉNEROS
+                    const mapeoGeneros = {
+                        'Masculino': 'Masculino',
+                        'Femenino': 'Femenino',
+                        'Otro': 'Otro',
+                        'Prefiero no decir': 'Prefiero no decirlo'
+                    };
+                    
+                    const generoBuscado = mapeoGeneros[generoSeleccionado] || generoSeleccionado;
+                    console.log(`🔍 Buscando género: "${generoBuscado}"`);
+                    
+                    const index = datosFiltrados.labels.findIndex(label => 
+                        label === generoBuscado
+                    );
+                    
+                    console.log(`🔍 Índice encontrado:`, index);
+                    
+                    if (index !== -1) {
+                        datosFinales = {
+                            labels: [datosFiltrados.labels[index]],
+                            values: [datosFiltrados.values[index]]
+                        };
+                        titulo += ` - ${formatearGenero(generoSeleccionado)}`;
+                        console.log('✅ Género encontrado, datos filtrados:', datosFinales);
+                    } else {
+                        console.log('❌ Género no encontrado después del mapeo');
+                        datosFinales = {
+                            labels: [generoSeleccionado],
+                            values: [0]
+                        };
+                    }
+                } else {
+                    // Mostrar todos los géneros
+                    datosFinales = datosFiltrados;
+                }
+
+                Swal.close();
+
+                // Verificar si hay datos
+                const totalVisitantes = datosFinales.values.reduce((a, b) => a + b, 0);
+                console.log('👥 Total de visitantes encontrados:', totalVisitantes);
+                
+                if (totalVisitantes === 0) {
+                    mostrarMensajeSinDatos('No hay datos disponibles para el rango de meses seleccionado');
+                    return;
+                }
+
+                console.log('🎯 Datos finales para mostrar:', datosFinales);
+                
+                // Actualizar datos y gráfica
+                datosSimulados.mes = datosFinales;
+                
+                // Actualizar la gráfica del modal
+                const modal = document.getElementById("chartModal");
+                if (modal && modal.classList.contains('show')) {
+                    console.log('🔄 Actualizando gráfica en modal...');
+                    
+                    // Actualizar título del modal
+                    const modalTitle = document.getElementById("modalTitle");
+                    if (modalTitle) {
+                        modalTitle.innerHTML = `<i class="fas fa-expand"></i> ${titulo}`;
+                    }
+                    
+                    // FORZAR la actualización de la gráfica con los nuevos datos Y el título personalizado
+                    const tipoGraficaActual = document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica');
+                    actualizarGraficaModal(tipoGraficaActual, titulo);
+                }
+
+                // Mostrar resumen
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Filtro aplicado',
+                    text: `Se encontraron ${totalVisitantes} visitantes en el rango de meses seleccionado`,
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+
+            } catch (error) {
+                console.error('💥 Error aplicando filtro de rango de meses:', error);
+                Swal.close();
+                mostrarMensajeSinDatos('Error al cargar los datos: ' + error.message);
+            }
+        }
+
+                
+        // filtro año
+        async function aplicarFiltroAnio() {
+            const añoSeleccionado = document.getElementById('filtroAnioEspecifico').value;
+            const generoSeleccionado = document.getElementById('filtroGeneroAnio').value;
+            
+            if (añoSeleccionado === 'todos' && generoSeleccionado === 'todos') {
+                // Restaurar datos del año actual
+                const datosAnioActual = await cargarDatosPorAnio();
+                datosSimulados.anio = datosAnioActual;
+                actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
+                return;
+            }
+
+            try {
+                Swal.fire({
+                    title: 'Aplicando filtro...',
+                    text: 'Consultando datos para el año seleccionado',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                let datosFiltrados;
+                if (añoSeleccionado !== 'todos') {
+                    // Año específico
+                    const fechaInicial = new Date(parseInt(añoSeleccionado), 0, 1);
+                    const fechaFinal = new Date(parseInt(añoSeleccionado), 11, 31);
+                    
+                    datosFiltrados = await cargarDatosGeneroPorTiempo('anio', {
+                        fechaInicial: fechaInicial.toISOString().split('T')[0],
+                        fechaFinal: fechaFinal.toISOString().split('T')[0]
+                    });
+                } else {
+                    // Todos los años - usar datos existentes
+                    datosFiltrados = await cargarDatosPorAnio();
+                }
+
+                // Aplicar filtro de género si está seleccionado
+                if (generoSeleccionado !== 'todos') {
+                    const index = datosFiltrados.labels.indexOf(generoSeleccionado);
+                    if (index !== -1) {
+                        datosFiltrados = {
+                            labels: [datosFiltrados.labels[index]],
+                            values: [datosFiltrados.values[index]]
+                        };
+                    }
+                }
+
+                Swal.close();
+
+                if (datosFiltrados.values.reduce((a, b) => a + b, 0) === 0) {
+                    mostrarMensajeSinDatos('No hay datos disponibles para los criterios seleccionados');
+                    return;
+                }
+
+                let titulo = 'Visitantes por Género';
+                if (añoSeleccionado !== 'todos') titulo += ` - Año ${añoSeleccionado}`;
+                if (generoSeleccionado !== 'todos') titulo += ` - ${formatearGenero(generoSeleccionado)}`;
+                
+                datosSimulados.anio = datosFiltrados;
+                actualizarGraficaConFiltro(datosFiltrados, titulo);
+
+            } catch (error) {
+                console.error('Error aplicando filtro de año:', error);
+                Swal.close();
+                mostrarMensajeSinDatos('Error al cargar datos para el año seleccionado');
+            }
+        }
+
+        // FUNCIÓN CORREGIDA para aplicar filtro de rango de años
+        async function aplicarFiltroRangoAnios() {
+            const fechaInicial = document.getElementById('filtroFechaInicialAnio').value;
+            const fechaFinal = document.getElementById('filtroFechaFinalAnio').value;
+            const generoSeleccionado = document.getElementById('filtroGeneroAnio').value;
+            
+            console.log('🎯 Aplicando filtro AÑO con parámetros:', {
+                fechaInicial, 
+                fechaFinal, 
+                generoSeleccionado
+            });
+            
+            // Validaciones
+            if (!fechaInicial || !fechaFinal) {
+                mostrarMensajeSinDatos('Por favor selecciona ambas fechas');
+                return;
+            }
+            
+            if (fechaInicial > fechaFinal) {
+                mostrarMensajeSinDatos('La fecha inicial no puede ser mayor que la fecha final');
+                return;
+            }
+
+            try {
+                Swal.fire({
+                    title: 'Aplicando filtro...',
+                    text: 'Consultando datos en el rango de años seleccionado',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                console.log('🔍 Aplicando filtro AÑO para rango:', fechaInicial, 'a', fechaFinal);
+                
+                // Usar la función para cargar datos
+                const datosFiltrados = await cargarDatosGeneroPorTiempo('anio', {
+                    fechaInicial: fechaInicial,
+                    fechaFinal: fechaFinal
+                });
+
+                console.log('✅ Datos AÑO filtrados obtenidos:', datosFiltrados);
+
+                // PREPARAR DATOS SEGÚN FILTRO DE GÉNERO
+                let datosFinales;
+                let titulo = `Visitantes por Género (${formatearFecha(fechaInicial)} - ${formatearFecha(fechaFinal)})`;
+
+                if (generoSeleccionado !== 'todos') {
+                    console.log(`🔍 Filtrando por género: "${generoSeleccionado}"`);
+                    console.log('📊 Labels disponibles:', datosFiltrados.labels);
+                    
+                    // MAPEO DE GÉNEROS
+                    const mapeoGeneros = {
+                        'Masculino': 'Masculino',
+                        'Femenino': 'Femenino',
+                        'Otro': 'Otro',
+                        'Prefiero no decir': 'Prefiero no decirlo'
+                    };
+                    
+                    const generoBuscado = mapeoGeneros[generoSeleccionado] || generoSeleccionado;
+                    console.log(`🔍 Buscando género: "${generoBuscado}"`);
+                    
+                    const index = datosFiltrados.labels.findIndex(label => 
+                        label === generoBuscado
+                    );
+                    
+                    console.log(`🔍 Índice encontrado:`, index);
+                    
+                    if (index !== -1) {
+                        datosFinales = {
+                            labels: [datosFiltrados.labels[index]],
+                            values: [datosFiltrados.values[index]]
+                        };
+                        titulo += ` - ${formatearGenero(generoSeleccionado)}`;
+                        console.log('✅ Género encontrado, datos filtrados:', datosFinales);
+                    } else {
+                        console.log('❌ Género no encontrado después del mapeo');
+                        datosFinales = {
+                            labels: [generoSeleccionado],
+                            values: [0]
+                        };
+                    }
+                } else {
+                    // Mostrar todos los géneros
+                    datosFinales = datosFiltrados;
+                }
+
+                Swal.close();
+
+                // Verificar si hay datos
+                const totalVisitantes = datosFinales.values.reduce((a, b) => a + b, 0);
+                console.log('👥 Total de visitantes encontrados:', totalVisitantes);
+                
+                if (totalVisitantes === 0) {
+                    mostrarMensajeSinDatos('No hay datos disponibles para el rango de años seleccionado');
+                    return;
+                }
+
+                console.log('🎯 Datos finales para mostrar:', datosFinales);
+                
+                // Actualizar datos y gráfica
+                datosSimulados.anio = datosFinales;
+                
+                // Actualizar la gráfica del modal
+                const modal = document.getElementById("chartModal");
+                if (modal && modal.classList.contains('show')) {
+                    console.log('🔄 Actualizando gráfica en modal...');
+                    
+                    // Actualizar título del modal
+                    const modalTitle = document.getElementById("modalTitle");
+                    if (modalTitle) {
+                        modalTitle.innerHTML = `<i class="fas fa-expand"></i> ${titulo}`;
+                    }
+                    
+                    // FORZAR la actualización de la gráfica con los nuevos datos Y el título personalizado
+                    const tipoGraficaActual = document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica');
+                    actualizarGraficaModal(tipoGraficaActual, titulo);
+                }
+
+                // Mostrar resumen
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Filtro aplicado',
+                    text: `Se encontraron ${totalVisitantes} visitantes en el rango de años seleccionado`,
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+
+            } catch (error) {
+                console.error('💥 Error aplicando filtro de rango de años:', error);
+                Swal.close();
+                mostrarMensajeSinDatos('Error al cargar los datos: ' + error.message);
+            }
+        }
+
+        // Función para obtener nombre del mes
+        function obtenerNombreMes(mes) {
+            const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            return meses[mes] || 'Mes desconocido';
+        }
+
+        // FUNCIÓN para aplicar filtro de intereses
+        async function aplicarFiltroIntereses() {
+            // Obtener elementos del DOM con verificación
+            const fechaInicialElement = document.getElementById('filtroFechaInicialIntereses');
+            const fechaFinalElement = document.getElementById('filtroFechaFinalIntereses');
+            const interesElement = document.getElementById('filtroInteresEspecifico');
+            
+            // Verificar que los elementos existan
+            if (!fechaInicialElement || !fechaFinalElement || !interesElement) {
+                console.error('❌ No se encontraron los elementos del filtro de intereses');
+                mostrarMensajeSinDatos('Error: No se pudieron cargar los filtros');
+                return;
+            }
+            
+            const fechaInicial = fechaInicialElement.value;
+            const fechaFinal = fechaFinalElement.value;
+            const interesSeleccionado = interesElement.value;
+            
+            console.log('🎯 Aplicando filtro INTERESES con parámetros:', {
+                fechaInicial, 
+                fechaFinal, 
+                interesSeleccionado
+            });
+            
+            // Validaciones
+            if (!fechaInicial || !fechaFinal) {
+                mostrarMensajeSinDatos('Por favor selecciona ambas fechas');
+                return;
+            }
+            
+            if (fechaInicial > fechaFinal) {
+                mostrarMensajeSinDatos('La fecha inicial no puede ser mayor que la fecha final');
+                return;
+            }
+
+            try {
+                Swal.fire({
+                    title: 'Aplicando filtro...',
+                    text: 'Consultando datos de intereses en el rango seleccionado',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Cargar datos de intereses
+                const datosFiltrados = await cargarDatosInteresesPorTiempo(fechaInicial, fechaFinal, interesSeleccionado);
+
+                console.log('✅ Datos INTERESES filtrados obtenidos:', datosFiltrados);
+
+                Swal.close();
+
+                // Verificar si hay datos
+                const totalVisitantes = datosFiltrados.values.reduce((a, b) => a + b, 0);
+                console.log('👥 Total de visitantes encontrados:', totalVisitantes);
+                
+                if (totalVisitantes === 0) {
+                    mostrarMensajeSinDatos('No hay datos disponibles para los criterios seleccionados');
+                    return;
+                }
+
+                // Crear título descriptivo según el tipo de datos
+                let titulo;
+                if (datosFiltrados.type === 'genero') {
+                    // Muestra géneros para un interés específico
+                    titulo = `Distribución por Género - Interés: ${datosFiltrados.interes}`;
+                    if (fechaInicial && fechaFinal) {
+                        titulo += ` (${formatearFecha(fechaInicial)} - ${formatearFecha(fechaFinal)})`;
+                    }
+                } else {
+                    // Muestra todos los intereses
+                    titulo = 'Visitantes por Interés en Heliconias';
+                    if (fechaInicial && fechaFinal) {
+                        titulo += ` (${formatearFecha(fechaInicial)} - ${formatearFecha(fechaFinal)})`;
+                    }
+                }
+
+                console.log('🎯 Datos finales para mostrar:', datosFiltrados);
+                
+                // Actualizar datos y gráfica
+                datosSimulados.intereses = datosFiltrados;
+                
+                // Actualizar la gráfica del modal
+                const modal = document.getElementById("chartModal");
+                if (modal && modal.classList.contains('show')) {
+                    console.log('🔄 Actualizando gráfica en modal...');
+                    
+                    // Actualizar título del modal
+                    const modalTitle = document.getElementById("modalTitle");
+                    if (modalTitle) {
+                        modalTitle.innerHTML = `<i class="fas fa-expand"></i> ${titulo}`;
+                    }
+                    
+                    // Actualizar la gráfica
+                    const tipoGraficaActual = document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica');
+                    actualizarGraficaModal(tipoGraficaActual, titulo);
+                }
+
+                // Mostrar resumen
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Filtro aplicado',
+                    text: `Se encontraron ${totalVisitantes} visitantes en el rango seleccionado`,
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+
+            } catch (error) {
+                console.error('💥 Error aplicando filtro de intereses:', error);
+                Swal.close();
+                mostrarMensajeSinDatos('Error al cargar los datos: ' + error.message);
+            }
+        }
+
+
+        // CIERRA FUNCIONES MES Y AÑO
                 
 
         // Función corregida para crear gráficas - ACTUALIZADA
@@ -2547,7 +3387,6 @@ async function cargarDatosDesdeUsuarios(generos) {
             console.log('=== GRÁFICAS CREADAS EXITOSAMENTE ===');
         }
                  
-
 
         // Función para abrir modal (VERSIÓN MEJORADA)
         function abrirModal(tipoGrafica) {
@@ -3475,98 +4314,100 @@ async function cargarDatosDesdeUsuarios(generos) {
                     break;
                 
                 case 'mes':
-                    // Para mes específico con filtro de año
-                    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-                    const añosDisponiblesMes = [...new Set(datosSimulados.anio.labels)].sort((a, b) => b - a);
+                    // PARA MES: Usar el mismo formato que fecha pero para meses
+                    const fechaInicialMes = new Date(añoActual, mesActual, 1);
+                    const fechaFinalMes = new Date(añoActual, mesActual + 1, 0);
                     
                     filtrosHTML = `
                         <div class="filtro-grupo">
-                            <label for="filtroAnioMes"><i class="fas fa-calendar-alt"></i> Año:</label>
-                            <select id="filtroAnioMes" onchange="actualizarMesesDisponibles()">
-                                <option value="todos">Todos los años</option>
-                                ${añosDisponiblesMes.map(año => 
-                                    `<option value="${año}">${año}</option>`
-                                ).join('')}
-                            </select>
+                            <label for="filtroFechaInicialMes"><i class="fas fa-calendar-alt"></i> Fecha Inicial:</label>
+                            <input type="date" id="filtroFechaInicialMes" value="${fechaInicialMes.toISOString().split('T')[0]}">
                         </div>
                         <div class="filtro-grupo">
-                            <label for="filtroMesEspecifico"><i class="fas fa-calendar-week"></i> Mes:</label>
-                            <select id="filtroMesEspecifico" onchange="aplicarFiltroMesEspecifico()">
-                                <option value="todos">Todos los meses</option>
-                                ${meses.map((mes, index) => 
-                                    `<option value="${index}">${mes}</option>`
-                                ).join('')}
-                            </select>
+                            <label for="filtroFechaFinalMes"><i class="fas fa-calendar-alt"></i> Fecha Final:</label>
+                            <input type="date" id="filtroFechaFinalMes" value="${fechaFinalMes.toISOString().split('T')[0]}">
                         </div>
                         <div class="filtro-grupo">
                             <label for="filtroGeneroMes"><i class="fas fa-venus-mars"></i> Género:</label>
-                            <select id="filtroGeneroMes" onchange="aplicarFiltroMesEspecifico()">
+                            <select id="filtroGeneroMes">
                                 <option value="todos">Todos los géneros</option>
-                                ${datosOriginales.genero.labels.map(genero => 
-                                    `<option value="${genero}">${formatearGenero(genero)}</option>`
-                                ).join('')}
+                                <option value="Masculino">Masculino</option>
+                                <option value="Femenino">Femenino</option>
+                                <option value="Otro">Otro</option>
+                                <option value="Prefiero no decir">Prefiero no decir</option>
                             </select>
+                        </div>
+                        <div class="filtro-grupo">
+                            <button class="btn-aplicar-filtro" onclick="aplicarFiltroRangoMeses()">
+                                <i class="fas fa-filter"></i> Aplicar Filtro
+                            </button>
                         </div>
                     `;
                     break;
                                 
                 case 'anio':
-                    // Para año específico
-                    const añosDisponibles = [...new Set(datosSimulados.anio.labels)].sort((a, b) => b - a);
+                    // PARA AÑO: Usar el mismo formato que fecha pero para años
+                    const fechaInicialAnio = new Date(añoActual, 0, 1);
+                    const fechaFinalAnio = new Date(añoActual, 11, 31);
                     
                     filtrosHTML = `
                         <div class="filtro-grupo">
-                            <label for="filtroAnioEspecifico"><i class="fas fa-calendar-alt"></i> Año específico:</label>
-                            <select id="filtroAnioEspecifico" onchange="aplicarFiltroAnioEspecifico()">
-                                <option value="todos">Todos los años</option>
-                                ${añosDisponibles.map(año => 
-                                    `<option value="${año}" ${año == añoActual ? 'selected' : ''}>${año}</option>`
-                                ).join('')}
-                            </select>
+                            <label for="filtroFechaInicialAnio"><i class="fas fa-calendar-alt"></i> Fecha Inicial:</label>
+                            <input type="date" id="filtroFechaInicialAnio" value="${fechaInicialAnio.toISOString().split('T')[0]}">
+                        </div>
+                        <div class="filtro-grupo">
+                            <label for="filtroFechaFinalAnio"><i class="fas fa-calendar-alt"></i> Fecha Final:</label>
+                            <input type="date" id="filtroFechaFinalAnio" value="${fechaFinalAnio.toISOString().split('T')[0]}">
                         </div>
                         <div class="filtro-grupo">
                             <label for="filtroGeneroAnio"><i class="fas fa-venus-mars"></i> Género:</label>
-                            <select id="filtroGeneroAnio" onchange="aplicarFiltroAnioEspecifico()">
+                            <select id="filtroGeneroAnio">
                                 <option value="todos">Todos los géneros</option>
-                                ${datosOriginales.genero.labels.map(genero => 
-                                    `<option value="${genero}">${formatearGenero(genero)}</option>`
-                                ).join('')}
+                                <option value="Masculino">Masculino</option>
+                                <option value="Femenino">Femenino</option>
+                                <option value="Otro">Otro</option>
+                                <option value="Prefiero no decir">Prefiero no decir</option>
                             </select>
+                        </div>
+                        <div class="filtro-grupo">
+                            <button class="btn-aplicar-filtro" onclick="aplicarFiltroRangoAnios()">
+                                <i class="fas fa-filter"></i> Aplicar Filtro
+                            </button>
                         </div>
                     `;
                     break;
                 
+                // En la función crearFiltrosModal, actualiza el caso 'intereses':
                 case 'intereses':
-                    const añosDisponiblesIntereses = [...new Set(datosSimulados.anio.labels)].sort((a, b) => b - a);
-                    const mesesIntereses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                    // PARA INTERESES: Usar el mismo formato que fecha pero para intereses
+                    const fechaInicialIntereses = new Date();
+                    fechaInicialIntereses.setDate(fechaInicialIntereses.getDate() - 30); // Últimos 30 días
+                    const fechaFinalIntereses = new Date();
                     
                     filtrosHTML = `
                         <div class="filtro-grupo">
-                            <label for="filtroAnioIntereses"><i class="fas fa-calendar-alt"></i> Año:</label>
-                            <select id="filtroAnioIntereses" onchange="aplicarFiltroIntereses()">
-                                <option value="todos">Todos los años</option>
-                                ${añosDisponiblesIntereses.map(año => 
-                                    `<option value="${año}">${año}</option>`
-                                ).join('')}
-                            </select>
+                            <label for="filtroFechaInicialIntereses"><i class="fas fa-calendar-alt"></i> Fecha Inicial:</label>
+                            <input type="date" id="filtroFechaInicialIntereses" value="${fechaInicialIntereses.toISOString().split('T')[0]}">
                         </div>
                         <div class="filtro-grupo">
-                            <label for="filtroMesIntereses"><i class="fas fa-calendar-week"></i> Mes:</label>
-                            <select id="filtroMesIntereses" onchange="aplicarFiltroIntereses()">
-                                <option value="todos">Todos los meses</option>
-                                ${mesesIntereses.map((mes, index) => 
-                                    `<option value="${index}">${mes}</option>`
-                                ).join('')}
-                            </select>
+                            <label for="filtroFechaFinalIntereses"><i class="fas fa-calendar-alt"></i> Fecha Final:</label>
+                            <input type="date" id="filtroFechaFinalIntereses" value="${fechaFinalIntereses.toISOString().split('T')[0]}">
                         </div>
                         <div class="filtro-grupo">
-                            <label for="filtroInteres"><i class="fas fa-heart"></i> Interés:</label>
-                            <select id="filtroInteres" onchange="aplicarFiltroIntereses()">
+                            <label for="filtroInteresEspecifico"><i class="fas fa-heart"></i> Interés:</label>
+                            <select id="filtroInteresEspecifico">
                                 <option value="todos">Todos los intereses</option>
-                                ${datosSimulados.intereses.labels.map(interes => 
-                                    `<option value="${interes}">${interes}</option>`
-                                ).join('')}
+                                <option value="Observación">Observación</option>
+                                <option value="Fotografía">Fotografía</option>
+                                <option value="Investigación">Investigación</option>
+                                <option value="Educación">Educación</option>
+                                <option value="Recreación">Recreación</option>
                             </select>
+                        </div>
+                        <div class="filtro-grupo">
+                            <button class="btn-aplicar-filtro" onclick="aplicarFiltroIntereses()">
+                                <i class="fas fa-filter"></i> Aplicar Filtro
+                            </button>
                         </div>
                     `;
                     break;
@@ -4148,51 +4989,107 @@ async function cargarDatosDesdeUsuarios(generos) {
         }
 
         function limpiarFiltro() {
-            // Restaurar todos los datos originales
-            Object.keys(datosOriginales).forEach(key => {
-                if (datosOriginales[key]) {
-                    datosSimulados[key] = JSON.parse(JSON.stringify(datosOriginales[key]));
-                }
-            });
+            if (tipoActual === 'intereses') {
+                // Recargar datos de intereses (últimos 30 días)
+                const fechaInicial = new Date();
+                fechaInicial.setDate(fechaInicial.getDate() - 30);
+                const fechaFinal = new Date();
+                
+                cargarDatosInteresesPorTiempo(
+                    fechaInicial.toISOString().split('T')[0],
+                    fechaFinal.toISOString().split('T')[0],
+                    'todos'
+                ).then(datosActuales => {
+                    datosSimulados.intereses = datosActuales;
+                    datosOriginales.intereses = JSON.parse(JSON.stringify(datosActuales));
+                    actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
+                }).catch(error => {
+                    console.error('Error recargando datos de intereses:', error);
+                    actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
+                });
+            } else {
+                // Para otros tipos, restaurar datos originales
+                Object.keys(datosOriginales).forEach(key => {
+                    if (datosOriginales[key]) {
+                        datosSimulados[key] = JSON.parse(JSON.stringify(datosOriginales[key]));
+                    }
+                });
+                // Recargar gráfica inmediatamente para otros tipos
+                actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
+            }
             
-            // Restablecer todos los selects a "todos"
+            // Restablecer todos los selects a valores por defecto
             const selects = [
                 'filtroGenero', 'filtroFechaInicial', 'filtroFechaFinal', 'filtroGeneroFecha',
-                'filtroDiaEspecifico', 'filtroAnioMes', 'filtroMesEspecifico', 'filtroGeneroMes', 
-                'filtroAnioEspecifico', 'filtroGeneroAnio', 'filtroAnioIntereses', 
+                'filtroFechaInicialMes', 'filtroFechaFinalMes', 'filtroGeneroMes',
+                'filtroFechaInicialAnio', 'filtroFechaFinalAnio', 'filtroGeneroAnio',
+                'filtroFechaInicialIntereses', 'filtroFechaFinalIntereses', 'filtroInteresEspecifico',
+                'filtroDiaEspecifico', 'filtroAnioMes', 'filtroMesEspecifico', 
+                'filtroAnioEspecifico', 'filtroAnioIntereses', 
                 'filtroMesIntereses', 'filtroInteres'
             ];
             
+            const ahora = new Date();
             selects.forEach(selectId => {
                 const elemento = document.getElementById(selectId);
                 if (elemento) {
                     if (elemento.type === 'date') {
-                        // Para inputs de fecha, restaurar valores por defecto (últimos 30 días)
-                        if (selectId === 'filtroFechaInicial') {
-                            const fechaPorDefectoInicial = new Date();
-                            fechaPorDefectoInicial.setDate(fechaPorDefectoInicial.getDate() - 30);
-                            elemento.value = fechaPorDefectoInicial.toISOString().split('T')[0];
-                        } else if (selectId === 'filtroFechaFinal') {
-                            elemento.value = new Date().toISOString().split('T')[0];
+                        // Para inputs de fecha, restaurar valores por defecto según el tipo
+                        if (selectId.includes('Mes')) {
+                            // Para mes: primer y último día del mes actual
+                            const fechaInicialMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+                            const fechaFinalMes = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0);
+                            if (selectId.includes('Inicial')) {
+                                elemento.value = fechaInicialMes.toISOString().split('T')[0];
+                            } else {
+                                elemento.value = fechaFinalMes.toISOString().split('T')[0];
+                            }
+                        } else if (selectId.includes('Anio')) {
+                            // Para año: primer y último día del año actual
+                            const fechaInicialAnio = new Date(ahora.getFullYear(), 0, 1);
+                            const fechaFinalAnio = new Date(ahora.getFullYear(), 11, 31);
+                            if (selectId.includes('Inicial')) {
+                                elemento.value = fechaInicialAnio.toISOString().split('T')[0];
+                            } else {
+                                elemento.value = fechaFinalAnio.toISOString().split('T')[0];
+                            }
+                        } else if (selectId.includes('Intereses')) {
+                            // Para intereses: últimos 30 días
+                            if (selectId.includes('Inicial')) {
+                                const fechaPorDefectoInicial = new Date();
+                                fechaPorDefectoInicial.setDate(fechaPorDefectoInicial.getDate() - 30);
+                                elemento.value = fechaPorDefectoInicial.toISOString().split('T')[0];
+                            } else {
+                                elemento.value = new Date().toISOString().split('T')[0];
+                            }
+                        } else {
+                            // Para fecha general: últimos 30 días
+                            if (selectId.includes('Inicial')) {
+                                const fechaPorDefectoInicial = new Date();
+                                fechaPorDefectoInicial.setDate(fechaPorDefectoInicial.getDate() - 30);
+                                elemento.value = fechaPorDefectoInicial.toISOString().split('T')[0];
+                            } else {
+                                elemento.value = new Date().toISOString().split('T')[0];
+                            }
                         }
                     } else {
+                        // Para selects normales, poner en "todos"
                         elemento.value = 'todos';
                     }
                 }
             });
             
-            // Recargar gráfica con datos originales
-            actualizarGraficaModal(document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica'));
-            
             // Mostrar mensaje de confirmación
             Swal.fire({
                 icon: 'success',
                 title: 'Filtros limpiados',
-                text: 'Todos los filtros han sido restablecidos',
+                text: tipoActual === 'intereses' ? 'Datos restablecidos a intereses (últimos 30 días)' : 
+                    'Todos los filtros han sido restablecidos',
                 timer: 2000,
                 showConfirmButton: false
             });
         }
+                                    
                       
         // Función para formatear fecha - AGREGAR ESTA FUNCIÓN
         function formatearFecha(fechaStr) {
@@ -4353,16 +5250,12 @@ async function cargarDatosDesdeUsuarios(generos) {
                             ` : ''}
                         </div>
                     </div>
-                    // En la sección de botones de tipo de gráfica, REEMPLAZAR este código:
                     <div class="chart-type-buttons btn-group" style="margin-top: 12px">
                         <button class="chart-btn active" data-type="genero">
                             <i class="fas fa-venus-mars"></i> Por Género
                         </button>
                         <button class="chart-btn" data-type="fecha">
                             <i class="fas fa-calendar-day"></i> Por Fecha
-                        </button>
-                        <button class="chart-btn" data-type="dia">
-                            <i class="fas fa-calendar"></i> Por Día
                         </button>
                         <button class="chart-btn" data-type="mes">
                             <i class="fas fa-calendar-week"></i> Por Mes
@@ -4825,7 +5718,6 @@ async function cargarDatosDesdeUsuarios(generos) {
             }, 1000);
         }
 
-    // Ejecuta esta función en la consola del navegador para diagnosticar
 
             // Inicializar
             document.addEventListener('DOMContentLoaded', function() {
