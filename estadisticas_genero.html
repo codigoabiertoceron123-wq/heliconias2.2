@@ -2712,10 +2712,10 @@ async function cargarDatosDesdeUsuarios(generos) {
                         const valor = datos.values[i];
                         const porcentaje = total > 0 ? ((valor / total) * 100).toFixed(1) : 0;
                         const labelFormateado = tipoActual === 'genero' ? formatearGenero(l) : 
-                                            tipoActual === 'fecha' ? formatearFecha(l) : l;
+                                            tipoActual === 'fecha' ? formatearGenero(l) : l;
                         
                         // Para género, agregar badge
-                        if (tipoActual === 'genero') {
+                        if (tipoActual === 'genero' || tipoActual === 'fecha') { // ← Y AQUÍ INCLUIR 'fecha'
                             const claseGenero = obtenerClaseGenero(l);
                             return `<tr>
                                 <td>
