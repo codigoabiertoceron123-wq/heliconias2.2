@@ -41,10 +41,10 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: white; /* Fondo blanco */
+            background: white;
             z-index: -1;
         }
-        /* Header Styles */
+
         /* Header Styles */
         .header {
             background: linear-gradient(135deg, #ffffff, #ffffff);
@@ -64,9 +64,9 @@
         }
 
         .logo {
-            display: flex;           /* Activar flexbox */
-            align-items: center;     /* Centrar verticalmente el contenido */
-            gap: 15px;               /* Espacio entre logo y título */
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
         .logo-img {
@@ -83,11 +83,11 @@
             display: block;
             width: 100%;
             height: 100%;
-            background-image: url("img/logo.png"); /* Tu logo real */
+            background-image: url("img/logo.png");
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
-            font-size: 0; /* Oculta el ícono de fontawesome */
+            font-size: 0;
             color: transparent;
         }
 
@@ -99,11 +99,11 @@
         
         .top-bar {
             display: flex;
-            justify-content: space-between; /* izquierda - derecha */
-            align-items: center;            /* misma línea */
+            justify-content: space-between;
+            align-items: center;
             width: 100%;
             margin-bottom: 10px;
-            margin-top: 15px; 
+            margin-top: 15px;
         }
 
         .system-date {
@@ -113,14 +113,14 @@
             gap: 10px;
             font-weight: 500;
             color: #000000;
-            background: rgba(255, 255, 255, 0.15); /* efecto cristal */
+            background: rgba(255, 255, 255, 0.15);
             padding: 10px 18px;
             border-radius: 25px;
-            backdrop-filter: blur(6px);  /* efecto vidrio borroso */
+            backdrop-filter: blur(6px);
             -webkit-backdrop-filter: blur(6px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.25);
             font-size: 15px;
-            letter-spacing: 0.5px;        /* más elegante */
+            letter-spacing: 0.5px;
         }
 
         /* Navigation Styles */
@@ -135,7 +135,7 @@
         .main-nav {
             display: flex;
             gap: 5px;
-            left: 50px;/* ajusta el valor para mover más a la izquierda o derecha */
+            left: 50px;
         }
 
         .nav-item {
@@ -147,32 +147,31 @@
             text-decoration: none;
             border-radius: 6px;
             position: relative;
-            background: transparent; /* quitar fondo */
+            background: transparent;
             transition: all 0.3s ease;
         }
 
-        /* Línea inferior al pasar el mouse */
         .nav-item::after {
             content: '';
             position: absolute;
             bottom: 0;
-            left: 10%;           /* margen izquierdo de la línea */
-            width: 80%;          /* ancho de la línea */
-            height: 2px;         /* grosor de la línea */
+            left: 10%;
+            width: 80%;
+            height: 2px;
             background: linear-gradient(135deg, #2e7d32, #4caf50);
-            transform: scaleX(0); /* inicialmente invisible */
+            transform: scaleX(0);
             transition: transform 0.3s ease;
             transform-origin: center;
         }
 
         .nav-item:hover::after {
-            transform: scaleX(1); /* línea aparece */
+            transform: scaleX(1);
         }
 
         .user-actions {
-            display: flex;        /* ya estaba flex */
-            justify-content: flex-end;  /* esto los lleva a la derecha */
-            gap: 10px; 
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
         }
 
         .btn {
@@ -187,17 +186,16 @@
             gap: 6px;
             transition: all 0.3s ease;
             position: relative;
-            left: -20px; /* mueve cada botón 20px hacia la izquierda */
+            left: -20px;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #2e7d32, #4caf50); /* verde degradado */
+            background: linear-gradient(135deg, #2e7d32, #4caf50);
             color: white;
         }
 
-
         .btn-accent {
-            background: linear-gradient(135deg, #e74c3c, #fe5926); 
+            background: linear-gradient(135deg, #e74c3c, #fe5926);
             color: white;
         }
 
@@ -615,14 +613,6 @@
             margin: 0;
         }
 
-        .table-section {
-            display: none;
-        }
-
-        .table-section.active {
-            display: block;
-        }
-
         .filter-section {
             background: white;
             border-radius: 12px;
@@ -761,65 +751,64 @@
 </head>
 <body>
     <!-- Header -->
-    <!-- Header -->
-        <header class="header">
-            <div class="top-section">
-                <div class="logo">
-                    <div class="logo-img">
-                        <i class="fas fa-leaf"></i>
-                    </div>
-                    <h1>Heliconias Reports</h1>
+    <header class="header">
+        <div class="top-section">
+            <div class="logo">
+                <div class="logo-img">
+                    <i class="fas fa-leaf"></i>
                 </div>
-                    <!-- Navegación horizontal -->
-                <nav class="main-nav">
-                    <a href="principal.html" class="nav-item active tooltip">
-                        <i class="fas fa-home"></i>
-                        <span>Inicio</span>
-                    </a>
-                    <a href="eventos.html" class="nav-item tooltip">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span>Eventos</span>
-                    </a>
-                    <a href="actividad.html" class="nav-item tooltip">
-                        <i class="fas fa-hiking"></i>
-                        <span>Actividades</span>
-                    </a>
-                    <a href="reportes.html" class="nav-item tooltip">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Reportes</span>
-                    </a>
-                    <a href="#" class="nav-item tooltip">
-                        <i class="fas fa-history"></i>
-                        <span>Historial</span>
-                    </a>
-                    <a href="configuracion.html" class="nav-item tooltip">
-                        <i class="fas fa-cog"></i>
-                        <span>Configuración</span>
-                    </a>
-                </nav>
+                <h1>Heliconias Reports</h1>
             </div>
-        </header>
-
-        <div class="top-bar">
-            <div class="system-date">
-                <i class="fas fa-clock"></i>
-                <span id="current-date-time">Cargando fecha y hora...</span>
-            </div>
-
-            <div class="user-actions">
-                <a href="soporte.html" class="btn btn-primary tooltip">
-                    <i class="fas fa-headset"></i> Soporte
+            <nav class="main-nav">
+                <a href="principal.html" class="nav-item active tooltip">
+                    <i class="fas fa-home"></i>
+                    <span>Inicio</span>
                 </a>
-
-                <button class="btn btn-primary tooltip" id="help-btn">
-                    <i class="fas fa-question-circle"></i> Ayuda
-                </button>
-
-                <button class="btn btn-accent tooltip" id="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Salir
-                </button>
-            </div>
+                <a href="eventos.html" class="nav-item tooltip">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Eventos</span>
+                </a>
+                <a href="actividad.html" class="nav-item tooltip">
+                    <i class="fas fa-hiking"></i>
+                    <span>Actividades</span>
+                </a>
+                <a href="reportes.html" class="nav-item tooltip">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Reportes</span>
+                </a>
+                <a href="#" class="nav-item tooltip">
+                    <i class="fas fa-history"></i>
+                    <span>Historial</span>
+                </a>
+                <a href="configuracion.html" class="nav-item tooltip">
+                    <i class="fas fa-cog"></i>
+                    <span>Configuración</span>
+                </a>
+            </nav>
         </div>
+    </header>
+
+    <div class="top-bar">
+        <div class="system-date">
+            <i class="fas fa-clock"></i>
+            <span id="current-date-time">Cargando fecha y hora...</span>
+        </div>
+
+        <div class="user-actions">
+            <a href="soporte.html" class="btn btn-primary tooltip">
+                <i class="fas fa-headset"></i> Soporte
+            </a>
+
+            <button class="btn btn-primary tooltip" id="help-btn">
+                <i class="fas fa-question-circle"></i> Ayuda
+            </button>
+
+            <button class="btn btn-accent tooltip" id="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Salir
+            </button>
+        </div>
+    </div>
+
     <main>
         <div class="content-area">
             <div class="stats-cards">
@@ -829,74 +818,19 @@
                     <p class="stat-description">Visitantes registrados en total</p>
                 </div>
                 <div class="stat-card">
-                    <h3><i class="fas fa-money-bill-wave"></i> Gasto Promedio</h3>
-                    <div class="stat-number" id="gasto-promedio">$0</div>
-                    <p class="stat-description">Gasto promedio por visitante</p>
+                    <h3><i class="fas fa-calendar-alt"></i> Reservas Activas</h3>
+                    <div class="stat-number" id="total-reservas">0</div>
+                    <p class="stat-description">Reservas confirmadas</p>
                 </div>
                 <div class="stat-card">
-                    <h3><i class="fas fa-clock"></i> Tiempo Promedio</h3>
-                    <div class="stat-number" id="tiempo-promedio">0h</div>
-                    <p class="stat-description">Tiempo promedio de estancia</p>
+                    <h3><i class="fas fa-user-friends"></i> Participantes Promedio</h3>
+                    <div class="stat-number" id="participantes-promedio">0</div>
+                    <p class="stat-description">Por reserva</p>
                 </div>
                 <div class="stat-card">
-                    <h3><i class="fas fa-star"></i> Satisfacción</h3>
+                    <h3><i class="fas fa-star"></i> Satisfacción Promedio</h3>
                     <div class="stat-number" id="satisfaccion-promedio">0/5</div>
                     <p class="stat-description">Nivel promedio de satisfacción</p>
-                </div>
-            </div>
-
-            <!-- Filtros -->
-            <div class="filter-section">
-                <h3 style="margin: 0 0 12px 0; display: flex; align-items: center; gap: 6px">
-                    <i class="fas fa-filter"></i> Filtros Avanzados
-                </h3>
-                <div class="filter-grid">
-                    <div class="filter-group">
-                        <label class="filter-label">Tipo de Entrada</label>
-                        <select class="filter-select" id="filtro-tipo-entrada">
-                            <option value="">Todos los tipos</option>
-                            <option value="Adulto">Adulto</option>
-                            <option value="Niño">Niño</option>
-                            <option value="Estudiante">Estudiante</option>
-                            <option value="Adulto Mayor">Adulto Mayor</option>
-                            <option value="Grupo">Grupo</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">Temporada</label>
-                        <select class="filter-select" id="filtro-temporada">
-                            <option value="">Todas las temporadas</option>
-                            <option value="Baja">Baja</option>
-                            <option value="Media">Media</option>
-                            <option value="Alta">Alta</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">Actividad</label>
-                        <select class="filter-select" id="filtro-actividad">
-                            <option value="">Todas las actividades</option>
-                            <option value="Recorrido Guiado">Recorrido Guiado</option>
-                            <option value="Auto-guiado">Auto-guiado</option>
-                            <option value="Taller">Taller</option>
-                            <option value="Investigación">Investigación</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">Guía Turístico</label>
-                        <select class="filter-select" id="filtro-guia">
-                            <option value="">Todos</option>
-                            <option value="true">Con guía</option>
-                            <option value="false">Sin guía</option>
-                        </select>
-                    </div>
-                </div>
-                <div style="margin-top: 15px; display: flex; gap: 10px;">
-                    <button class="btn btn-primary" onclick="aplicarFiltros()">
-                        <i class="fas fa-check"></i> Aplicar Filtros
-                    </button>
-                    <button class="btn" onclick="limpiarFiltros()" style="background: #e74c3c; color: white;">
-                        <i class="fas fa-times"></i> Limpiar Filtros
-                    </button>
                 </div>
             </div>
 
@@ -922,6 +856,39 @@
                         </div>
                     </div>
 
+                    <!-- Filtros dentro del modal -->
+                    <div class="filter-section" style="margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 12px 0; display: flex; align-items: center; gap: 6px">
+                            <i class="fas fa-filter"></i> Filtros para esta Vista
+                        </h4>
+                        <div class="filter-grid">
+                            <div class="filter-group">
+                                <label class="filter-label">Fecha Inicial</label>
+                                <input type="date" class="filter-select" id="modal-filtro-fecha-inicio">
+                            </div>
+                            <div class="filter-group">
+                                <label class="filter-label">Fecha Final</label>
+                                <input type="date" class="filter-select" id="modal-filtro-fecha-fin">
+                            </div>
+                            <div class="filter-group">
+                                <label class="filter-label">Tipo de Reserva</label>
+                                <select class="filter-select" id="modal-filtro-tipo-reserva">
+                                    <option value="todas">Todas las reservas</option>
+                                    <option value="individual">Individual</option>
+                                    <option value="grupal">Grupal</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            <button class="btn btn-primary" onclick="aplicarFiltrosModal()">
+                                <i class="fas fa-check"></i> Aplicar Filtros
+                            </button>
+                            <button class="btn" onclick="limpiarFiltrosModal()" style="background: #e74c3c; color: white;">
+                                <i class="fas fa-times"></i> Limpiar Filtros
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="modal-chart-container">
                         <canvas id="chartAmpliado"></canvas>
                     </div>
@@ -942,7 +909,9 @@
                         </table>
                     </div>
                 </div>
-            </div>
+            </div>        
+    </div>
+</div>
         </div>
     </main>
 
@@ -950,24 +919,43 @@
     <script>
         // Variables globales
         let chartBar, chartPie, chartAmpliado;
-        let tipoActual = "tipo_entrada";
+        let tipoActual = "tipo_reserva";
         let datosVisitantes = [];
         let datosSimulados = {};
         let filtrosActivos = {};
 
-        // Paletas de colores
+        // Paletas de colores actualizadas
         const colorPalettes = {
-            tipo_entrada: ['#3498db', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c'],
-            temporada: ['#27ae60', '#f39c12', '#e74c3c'],
+            tipo_reserva: ['#3498db', '#e74c3c'],
+            tipo_reserva_tiempo: ['#3498db', '#e74c3c', '#2ecc71'], 
+            estado: ['#27ae60', '#f39c12', '#e74c3c'],
             actividad: ['#3498db', '#e67e22', '#9b59b6', '#2ecc71'],
-            transporte: ['#e74c3c', '#3498db', '#f39c12', '#27ae60'],
-            intereses: ['#27ae60', '#3498db', '#f39c12', '#9b59b6', '#e74c3c'],
+            institucion: ['#e74c3c', '#3498db', '#f39c12', '#27ae60'],
             satisfaccion: ['#e74c3c', '#e67e22', '#f39c12', '#2ecc71', '#27ae60'],
+            intereses: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'],
+            temporada: ['#27ae60', '#f39c12', '#e74c3c'],
             fecha: ['#3498db', '#e67e22', '#9b59b6', '#1abc9c', '#e74c3c'],
-            dia: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'],
             mes: ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6'],
             anio: ['#3498db', '#e67e22', '#2ecc71', '#9b59b6', '#f1c40f']
         };
+
+        // Función para determinar temporada basada en el mes
+        function determinarTemporada(fecha) {
+            const mes = new Date(fecha).getMonth() + 1; // Mes 1-12
+            
+            // Alta: Diciembre-Enero-Febrero (vacaciones)
+            if (mes === 12 || mes === 1 || mes === 2) {
+                return 'Alta';
+            }
+            // Media: Junio-Julio (vacaciones mitad de año)
+            else if (mes === 6 || mes === 7) {
+                return 'Media';
+            }
+            // Baja: Resto del año
+            else {
+                return 'Baja';
+            }
+        }
 
         // Función para actualizar fecha y hora
         function updateDateTime() {
@@ -991,46 +979,67 @@
             try {
                 Swal.fire({
                     title: 'Cargando datos...',
-                    text: 'Obteniendo información completa de visitantes',
+                    text: 'Obteniendo información de reservas y participantes',
                     allowOutsideClick: false,
                     didOpen: () => {
                         Swal.showLoading();
                     }
                 });
 
-                console.log('Consultando datos completos de visitantes...');
+                console.log('Consultando datos de reservas y participantes...');
                 
-                // Consultar todos los campos de la tabla visitantes
-                const { data: visitantes, error } = await supabase
-                    .from('visitantes')
+                // Construir consulta base
+                  let query = supabase
+                    .from('participantes_reserva')
                     .select(`
                         *,
-                        pais: pais_id (*)
-                    `)
-                    .order('fecha_visita', { ascending: false });
+                        reservas(
+                            *,
+                            actividades(*),
+                            instituciones(*)
+                        ),
+                        intereses(*)
+                    `);
+
+                // Aplicar filtros
+                if (filtrosActivos.tipo_reserva) {
+                    query = query.eq('reservas.tipo_reserva', filtrosActivos.tipo_reserva);
+                }
+                if (filtrosActivos.estado) {
+                    query = query.eq('reservas.estado', filtrosActivos.estado);
+                }
+                if (filtrosActivos.temporada) {
+                    // El filtro de temporada se aplicará en el procesamiento
+                }
+                if (filtrosActivos.anio) {
+                    query = query.filter('fecha_visita', 'gte', `${filtrosActivos.anio}-01-01`)
+                                 .filter('fecha_visita', 'lte', `${filtrosActivos.anio}-12-31`);
+                }
+
+                const { data: participantes, error } = await query;
 
                 if (error) {
                     console.error('Error en consulta:', error);
                     throw new Error(`Error de base de datos: ${error.message}`);
                 }
 
-                console.log('Datos de visitantes recibidos:', visitantes);
+                console.log('Datos de participantes recibidos:', participantes);
 
-                if (visitantes && visitantes.length > 0) {
-                    procesarDatosCompletos(visitantes);
+                if (participantes && participantes.length > 0) {
+                    procesarDatosCompletos(participantes);
                     mostrarDatos();
                 } else {
-                    console.log('No se encontraron visitantes');
+                    console.log('No se encontraron reservas');
                     mostrarDatosDemo();
                 }
 
                 Swal.close();
                 
             } catch (error) {
-                console.error('Error cargando visitantes:', error);
+                console.error('Error cargando datos:', error);
                 Swal.close();
                 
-                let mensajeError = 'No se pudieron cargar los datos de visitantes';
+                let mensajeError = 'No se pudieron cargar los datos';
                 if (error.message.includes('JWT')) {
                     mensajeError = 'Error de autenticación. Verifica la configuración de Supabase.';
                 } else if (error.message.includes('network') || error.message.includes('fetch')) {
@@ -1051,143 +1060,181 @@
         }
 
         // Función para procesar todos los datos
-        function procesarDatosCompletos(visitantes) {
-            console.log('Procesando datos completos de visitantes...');
+        function procesarDatosCompletos(participantes) {
+            console.log('Procesando datos completos de participantes...');
+            console.log('Participantes recibidos:', participantes);
             
-            datosVisitantes = visitantes;
+            datosVisitantes = participantes;
 
-            // Calcular estadísticas generales
-            const totalVisitantes = visitantes.length;
-            const gastoTotal = visitantes.reduce((sum, visita) => sum + (visita.gasto_aproximado || 0), 0);
-            const gastoPromedio = totalVisitantes > 0 ? gastoTotal / totalVisitantes : 0;
+            const totalParticipantes = participantes.length;
             
-            const tiempoTotal = visitantes.reduce((sum, visita) => sum + (visita.tiempo_estancia || 0), 0);
-            const tiempoPromedio = totalVisitantes > 0 ? tiempoTotal / totalVisitantes : 0;
+            // ✅ MEJORADO: Contar reservas únicas correctamente
+            const idsReservasUnicas = [...new Set(participantes
+                .filter(p => p.id_reserva) // Solo participantes con reserva válida
+                .map(p => p.id_reserva))];
             
-            const satisfaccionTotal = visitantes.reduce((sum, visita) => sum + (visita.satisfaccion || 0), 0);
-            const satisfaccionPromedio = totalVisitantes > 0 ? satisfaccionTotal / totalVisitantes : 0;
+            const reservasUnicas = idsReservasUnicas.length;
+            
+            // ✅ MEJORADO: Contar reservas confirmadas
+            const reservasConfirmadas = [...new Set(participantes
+                .filter(p => p.reservas && p.reservas.estado === 'confirmada')
+                .map(p => p.id_reserva))].length;
+                
+            const tasaConfirmacion = reservasUnicas > 0 ? (reservasConfirmadas / reservasUnicas) * 100 : 0;
+            const participantesPromedio = reservasUnicas > 0 ? totalParticipantes / reservasUnicas : 0;
+
+            // Calcular satisfacción promedio (simulada por ahora)
+            const satisfaccionPromedio = 4.2;
+            const totalReservas = reservasUnicas;
+
+            // ✅ MEJORADO: Logs detallados para diagnóstico
+            console.log('📊 Estadísticas calculadas:', {
+                totalParticipantes,
+                reservasUnicas,
+                reservasConfirmadas,
+                tasaConfirmacion: tasaConfirmacion.toFixed(1) + '%',
+                participantesPromedio: participantesPromedio.toFixed(1),
+                totalReservas
+            });
 
             // Actualizar estadísticas
-            document.getElementById('total-visitantes').textContent = totalVisitantes.toLocaleString();
-            document.getElementById('gasto-promedio').textContent = '$' + gastoPromedio.toFixed(2);
-            document.getElementById('tiempo-promedio').textContent = tiempoPromedio.toFixed(1) + 'h';
+            document.getElementById('total-visitantes').textContent = totalParticipantes.toLocaleString();
+            document.getElementById('total-reservas').textContent = totalReservas.toLocaleString();
+            document.getElementById('participantes-promedio').textContent = participantesPromedio.toFixed(1);
             document.getElementById('satisfaccion-promedio').textContent = satisfaccionPromedio.toFixed(1) + '/5';
 
             // Procesar datos por categorías
-            procesarDatosPorCategorias(visitantes);
+            procesarDatosPorCategorias(participantes);
         }
 
         // Función para procesar datos por categorías
-        function procesarDatosPorCategorias(visitantes) {
-            // Tipo de entrada
-            const tipoEntrada = {
-                'Adulto': 0, 'Niño': 0, 'Estudiante': 0, 'Adulto Mayor': 0, 'Grupo': 0
+        function procesarDatosPorCategorias(participantes) {
+            // Tipo de reserva
+            const tipoReserva = {
+                'individual': 0, 'grupal': 0
             };
+
+            // Estado de reserva
+            const estado = {
+                'confirmada': 0, 'pendiente': 0, 'cancelada': 0
+            };
+
+            // Actividad
+            const actividad = {};
+            
+            // Institución
+            const institucion = {};
 
             // Temporada
             const temporada = {
-                'Baja': 0, 'Media': 0, 'Alta': 0
+                'Alta': 0, 'Media': 0, 'Baja': 0
             };
 
-            // Actividad realizada
-            const actividad = {
-                'Recorrido Guiado': 0, 'Auto-guiado': 0, 'Taller': 0, 'Investigación': 0
-            };
-
-            // Transporte
-            const transporte = {
-                'Privado': 0, 'Tour': 0, 'Público': 0, 'Caminando': 0
+            // Satisfacción (datos simulados - necesitarías una tabla de encuestas)
+            const satisfaccion = {
+                '1': 0, '2': 0, '3': 0, '4': 0, '5': 0
             };
 
             // Intereses
-            const intereses = {
-                'Observación': 0, 'Fotografía': 0, 'Investigación': 0, 'Educación': 0, 'Recreación': 0
-            };
+            const intereses = {};
 
-            // Satisfacción
-            const satisfaccion = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 };
+            // Procesar cada reserva
+            participantes.forEach(participante => {
 
-            // Género
-            const genero = {
-                'masculino': 0, 'femenino': 0, 'otro': 0, 'prefiero-no-decir': 0
-            };
+                const reserva = participante.reservas;  // ← Acceder mediante relación
+                if (!reserva) return;
 
-            // Procesar cada visitante
-            visitantes.forEach(visita => {
-                // Tipo de entrada
-                if (visita.tipo_entrada && tipoEntrada.hasOwnProperty(visita.tipo_entrada)) {
-                    tipoEntrada[visita.tipo_entrada]++;
+                // Tipo de reserva
+                if (reserva.tipo_reserva && tipoReserva.hasOwnProperty(reserva.tipo_reserva)) {
+                    tipoReserva[reserva.tipo_reserva]++;
                 }
 
-                // Temporada
-                if (visita.temporada && temporada.hasOwnProperty(visita.temporada)) {
-                    temporada[visita.temporada]++;
+                // Estado
+                if (reserva.estado && estado.hasOwnProperty(reserva.estado)) {
+                    estado[reserva.estado]++;
                 }
 
                 // Actividad
-                if (visita.actividad_realizada && actividad.hasOwnProperty(visita.actividad_realizada)) {
-                    actividad[visita.actividad_realizada]++;
-                }
-
-                // Transporte
-                if (visita.transporte_parque && transporte.hasOwnProperty(visita.transporte_parque)) {
-                    transporte[visita.transporte_parque]++;
-                }
-
-                // Intereses
-                if (visita.intereses_heliconias && intereses.hasOwnProperty(visita.intereses_heliconias)) {
-                    intereses[visita.intereses_heliconias]++;
-                }
-
-                // Satisfacción
-                if (visita.satisfaccion && satisfaccion.hasOwnProperty(visita.satisfaccion.toString())) {
-                    satisfaccion[visita.satisfaccion.toString()]++;
-                }
-
-                // Género
-                if (visita.genero) {
-                    const generoStr = visita.genero.toString().toLowerCase();
-                    if (genero.hasOwnProperty(generoStr)) {
-                        genero[generoStr]++;
+                if (reserva.actividades && reserva.actividades.nombre_actividad) {
+                    const actividadNombre = reserva.actividades.nombre_actividad;
+                    if (!actividad[actividadNombre]) {
+                        actividad[actividadNombre] = 0;
                     }
+                    actividad[actividadNombre]++;
                 }
+
+                // Institución
+                if (reserva.instituciones && reserva.instituciones.nombre_institucion) {
+                    const institucionNombre = reserva.instituciones.nombre_institucion;
+                    if (!institucion[institucionNombre]) {
+                        institucion[institucionNombre] = 0;
+                    }
+                    institucion[institucionNombre]++;
+                } else if (!reserva.id_institucion) {
+                    const individual = 'Individual/Sin institución';
+                    if (!institucion[individual]) {
+                        institucion[individual] = 0;
+                    }
+                    institucion[individual]++;
+                }
+
+                // Temporada
+                const fechaVisita = participante.fecha_visita; 
+
+                if (fechaVisita) {
+                    const temp = determinarTemporada(fechaVisita);
+                    temporada[temp]++;
+                }
+
+                // Intereses de los participantes
+                if (participante.intereses && participante.intereses.nombre_interes) {
+                const interesNombre = participante.intereses.nombre_interes;
+                if (!intereses[interesNombre]) {
+                    intereses[interesNombre] = 0;
+                }
+                intereses[interesNombre]++;
+             }
+            });
+
+            // Generar datos de satisfacción simulados (hasta que tengas la tabla real)
+            Object.keys(satisfaccion).forEach(nivel => {
+                satisfaccion[nivel] = Math.floor(Math.random() * 20) + 5;
             });
 
             // Procesar datos por tiempo
-            const datosTiempo = procesarDatosPorTiempo(visitantes);
+            const datosTiempo = procesarDatosPorTiempo(participantes);
 
             // Preparar datos para gráficas
             datosSimulados = {
-                tipo_entrada: {
-                    labels: Object.keys(tipoEntrada),
-                    values: Object.values(tipoEntrada)
+                tipo_reserva: {
+                    labels: Object.keys(tipoReserva),
+                    values: Object.values(tipoReserva)
                 },
-                temporada: {
-                    labels: Object.keys(temporada),
-                    values: Object.values(temporada)
+                estado: {
+                    labels: Object.keys(estado),
+                    values: Object.values(estado)
                 },
                 actividad: {
-                    labels: Object.keys(actividad),
-                    values: Object.values(actividad)
+                    labels: Object.keys(actividad).slice(0, 5),
+                    values: Object.values(actividad).slice(0, 5)
                 },
-                transporte: {
-                    labels: Object.keys(transporte),
-                    values: Object.values(transporte)
-                },
-                intereses: {
-                    labels: Object.keys(intereses),
-                    values: Object.values(intereses)
+                institucion: {
+                    labels: Object.keys(institucion).slice(0, 5),
+                    values: Object.values(institucion).slice(0, 5)
                 },
                 satisfaccion: {
                     labels: ['1 ★', '2 ★', '3 ★', '4 ★', '5 ★'],
                     values: Object.values(satisfaccion)
                 },
-                genero: {
-                    labels: Object.keys(genero),
-                    values: Object.values(genero)
+                intereses: {
+                    labels: Object.keys(intereses).slice(0, 6),
+                    values: Object.values(intereses).slice(0, 6)
+                },
+                temporada: {
+                    labels: Object.keys(temporada),
+                    values: Object.values(temporada)
                 },
                 fecha: datosTiempo.fecha,
-                dia: datosTiempo.dia,
                 mes: datosTiempo.mes,
                 anio: datosTiempo.anio
             };
@@ -1195,146 +1242,1061 @@
             console.log('Datos completos procesados:', datosSimulados);
         }
 
-        // Función para procesar datos por tiempo
-        function procesarDatosPorTiempo(visitantes) {
-            // Por fecha
-            const visitasPorFecha = {};
-            // Por día de la semana
-            const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-            const visitasPorDia = {
-                'Lunes': 0, 'Martes': 0, 'Miércoles': 0, 'Jueves': 0, 
-                'Viernes': 0, 'Sábado': 0, 'Domingo': 0
+        //Funciones fitro
+
+        // Funciones para filtros de fecha en el modal
+       function aplicarFiltrosModal() {
+            const fechaInicio = document.getElementById('modal-filtro-fecha-inicio').value;
+            const fechaFin = document.getElementById('modal-filtro-fecha-fin').value;
+            // Obtener el valor del filtro de tipo de reserva
+            const tipoReserva = document.getElementById('modal-filtro-tipo-reserva').value;
+            
+            // Validaciones básicas
+            if (fechaInicio && fechaFin && fechaInicio > fechaFin) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error en fechas',
+                    text: 'La fecha inicial no puede ser mayor que la fecha final',
+                    confirmButtonColor: '#e74c3c'
+                });
+                return;
+            }
+            // Aplicar filtros según el tipo actual
+            aplicarFiltrosCombinados(fechaInicio, fechaFin, tipoReserva);
+        }
+
+        // Función para actualizar gráficas cuando cambia el filtro de tipo de reserva
+        function actualizarGraficasConFiltroTipoReserva() {
+            const tipoReservaSeleccionado = document.getElementById('modal-filtro-tipo-reserva');
+            
+            // Verificar que el elemento existe
+            if (!tipoReservaSeleccionado) return;
+            
+            const valor = tipoReservaSeleccionado.value;
+            console.log('Filtro tipo reserva cambiado a:', valor);
+            
+            // Si estamos en un gráfico temporal, actualizar
+            if (tipoActual === 'fecha' || tipoActual === 'mes' || tipoActual === 'anio') {
+                console.log('Actualizando gráficas temporales con filtro:', valor);
+                // Actualizar gráfica principal
+                crearGraficas(tipoActual);
+                
+                // Si el modal está abierto, actualizar también
+                if (document.getElementById('chartModal').classList.contains('show')) {
+                    const tipoGraficaActual = document.querySelector('.modal-chart-container') ? 
+                                            document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica') : 'bar';
+                    console.log('Actualizando modal con tipo:', tipoGraficaActual);
+                    actualizarGraficaModal(tipoGraficaActual);
+                }
+            }
+        }
+
+       function limpiarFiltrosModal() {
+            // Limpiar inputs de fecha
+            document.getElementById('modal-filtro-fecha-inicio').value = '';
+            document.getElementById('modal-filtro-fecha-fin').value = '';
+            // Limpiar filtro de tipo de reserva
+            document.getElementById('modal-filtro-tipo-reserva').value = 'todas';
+            
+            // Limpiar filtros específicos según el tipo actual
+            switch(tipoActual) {
+                case 'tipo_reserva':
+                    document.getElementById('modal-filtro-tipo-reserva').value = 'todas';
+                    break;
+                case 'estado':
+                    document.getElementById('modal-filtro-estado').value = 'todos';
+                    break;
+            }
+            
+            // Recargar datos sin filtros
+            cargarDatosSinFiltros();
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Filtros limpiados',
+                text: 'Se muestran todos los datos disponibles',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+
+        // Función para diagnosticar la estructura de datos
+        async function diagnosticarEstructuraDatos() {
+            console.log('🔍 DIAGNÓSTICO DE ESTRUCTURA DE DATOS');
+            
+            try {
+                // Verificar estructura de participantes_reserva
+                const { data: participantes, error } = await supabase
+                    .from('participantes_reserva')
+                    .select('*')
+                    .limit(3);
+
+                if (error) {
+                    console.error('❌ Error consultando participantes_reserva:', error);
+                    return;
+                }
+
+                console.log('📋 ESTRUCTURA de participantes_reserva:');
+                if (participantes && participantes.length > 0) {
+                    console.log('Campos disponibles:', Object.keys(participantes[0]));
+                    console.log('Ejemplo de registro:', participantes[0]);
+                }
+
+                // Verificar estructura de reservas
+                const { data: reservas, error: errorReservas } = await supabase
+                    .from('reservas')
+                    .select('*')
+                    .limit(3);
+
+                if (errorReservas) {
+                    console.error('❌ Error consultando reservas:', errorReservas);
+                    return;
+                }
+
+                console.log('📋 ESTRUCTURA de reservas:');
+                if (reservas && reservas.length > 0) {
+                    console.log('Campos disponibles:', Object.keys(reservas[0]));
+                    console.log('Ejemplo de registro:', reservas[0]);
+                }
+
+            } catch (err) {
+                console.error('❌ Error en diagnóstico:', err);
+            }
+        }
+
+        // Ejecutar en consola: diagnosticarEstructuraDatos()
+        // Función mejorada con mejor diagnóstico
+        async function aplicarFiltrosCombinados(fechaInicio, fechaFin, tipoReserva) {
+            try {
+                Swal.fire({
+                    title: 'Aplicando filtros...',
+                    text: 'Filtrando datos por criterios seleccionados',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                console.log('🎯 APLICANDO FILTROS - DIAGNÓSTICO COMPLETO:');
+                console.log('Fechas:', { fechaInicio, fechaFin });
+                console.log('Tipo reserva:', tipoReserva);
+                console.log('Tipo actual:', tipoActual);
+
+                // Guardar datos anteriores para comparar
+                const participantesAnteriores = datosVisitantes.length;
+                const reservasAnteriores = [...new Set(datosVisitantes.map(p => p.id_reserva))].length;
+
+                // Construir consulta base
+                let query = supabase
+                    .from('participantes_reserva')
+                    .select(`
+                        *,
+                        reservas(
+                            *,
+                            actividades(*),
+                            instituciones(*)
+                        ),
+                        intereses(*)
+                    `);
+
+                let filtrosAplicados = [];
+                let consultaSQL = 'SELECT * FROM participantes_reserva';
+
+                // Aplicar filtro de fechas
+                if (fechaInicio && fechaFin) {
+                    console.log(`🔍 FILTRO FECHA: ${fechaInicio} a ${fechaFin}`);
+                    
+                    // Probar diferentes enfoques:
+                    
+                    // Opción A: Filtro por fecha_reserva (timestamp)
+                    query = query.gte('reservas.fecha_reserva', fechaInicio + 'T00:00:00')
+                                .lte('reservas.fecha_reserva', fechaFin + 'T23:59:59');
+                    
+                    consultaSQL += ` WHERE reservas.fecha_reserva BETWEEN '${fechaInicio} 00:00:00' AND '${fechaFin} 23:59:59'`;
+                    filtrosAplicados.push(`Fecha: ${fechaInicio} a ${fechaFin}`);
+                    
+                } else if (fechaInicio) {
+                    query = query.gte('reservas.fecha_reserva', fechaInicio + 'T00:00:00');
+                    filtrosAplicados.push(`Desde: ${fechaInicio}`);
+                } else if (fechaFin) {
+                    query = query.lte('reservas.fecha_reserva', fechaFin + 'T23:59:59');
+                    filtrosAplicados.push(`Hasta: ${fechaFin}`);
+                }
+
+                // Aplicar filtros específicos
+                switch(tipoActual) {
+                    case 'tipo_reserva':
+                        if (tipoReserva && tipoReserva !== 'todas') {
+                            query = query.eq('reservas.tipo_reserva', tipoReserva);
+                            filtrosAplicados.push(`Tipo: ${tipoReserva}`);
+                        }
+                        break;
+                    case 'estado':
+                        const estado = document.getElementById('modal-filtro-estado')?.value;
+                        if (estado && estado !== 'todos') {
+                            query = query.eq('reservas.estado', estado);
+                            filtrosAplicados.push(`Estado: ${estado}`);
+                        }
+                        break;
+                }
+
+                console.log('📋 FILTROS APLICADOS:', filtrosAplicados);
+                console.log('🔍 CONSULTA SIMULADA:', consultaSQL);
+
+                const { data: participantesFiltrados, error } = await query;
+
+                if (error) {
+                    console.error('❌ ERROR en consulta:', error);
+                    throw error;
+                }
+
+                Swal.close();
+
+                // ✅ DIAGNÓSTICO DETALLADO DE RESULTADOS
+                console.log('📊 RESULTADOS DEL FILTRO:');
+                console.log('Participantes anteriores:', participantesAnteriores);
+                console.log('Participantes filtrados:', participantesFiltrados?.length || 0);
+                console.log('Reservas anteriores:', reservasAnteriores);
+                
+                const reservasFiltradas = [...new Set((participantesFiltrados || []).map(p => p.id_reserva))].length;
+                console.log('Reservas filtradas:', reservasFiltradas);
+
+                // Verificar si realmente hubo cambio
+                const huboCambio = participantesFiltrados?.length !== participantesAnteriores;
+
+                if (participantesFiltrados && participantesFiltrados.length > 0) {
+                    // Solo procesar si hay cambios reales
+                    if (huboCambio) {
+                        procesarDatosCompletos(participantesFiltrados);
+                        actualizarGraficasConFiltros();
+                    }
+
+                    // ✅ MENSAJE MEJORADO Y PRECISO
+                    let mensaje = '';
+                    
+                    if (filtrosAplicados.length > 0) {
+                        if (huboCambio) {
+                            mensaje = `Filtros aplicados: ${filtrosAplicados.join(', ')}\n`;
+                            mensaje += `Resultados: ${reservasFiltradas} reservas y ${participantesFiltrados.length} participantes`;
+                        } else {
+                            mensaje = `Los filtros no modificaron los resultados\n`;
+                            mensaje += `Se mantienen: ${reservasFiltradas} reservas y ${participantesFiltrados.length} participantes`;
+                        }
+                    } else {
+                        mensaje = 'No se aplicaron filtros - mostrando todos los datos';
+                    }
+                    
+                    Swal.fire({
+                        icon: huboCambio ? 'success' : 'info',
+                        title: huboCambio ? 'Filtros aplicados' : 'Sin cambios',
+                        text: mensaje,
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+
+                } else {
+                    // ✅ MENSAJE MEJORADO PARA SIN RESULTADOS
+                    let mensaje = 'No se encontraron datos';
+                    if (filtrosAplicados.length > 0) {
+                        mensaje += ` para los filtros: ${filtrosAplicados.join(', ')}`;
+                    }
+                    
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Sin resultados',
+                        text: mensaje,
+                        confirmButtonColor: '#3498db'
+                    });
+                    
+                    mostrarDatosDemoFiltrados();
+                }
+
+            } catch (error) {
+                console.error('❌ ERROR aplicando filtros:', error);
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudieron aplicar los filtros: ' + error.message,
+                    confirmButtonColor: '#e74c3c'
+                });
+            }
+        }                   
+        // Función principal para aplicar filtros por fechas
+        async function aplicarFiltroPorFechas(fechaInicio, fechaFin) {
+            try {
+                Swal.fire({
+                    title: 'Aplicando filtros...',
+                    text: 'Filtrando datos por rango de fechas',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                console.log('Aplicando filtro de fechas:', fechaInicio, 'a', fechaFin);
+
+                // Construir consulta base según el tipo actual
+                let query = supabase
+                    .from('participantes_reserva')  // ← CAMBIADO
+                    .select(`
+                        *,
+                        reservas(
+                        *,
+                        actividades(*),
+                        instituciones(*)
+                        ),
+                        intereses(*)
+                    `);
+
+                // Aplicar filtro de fechas si están definidas
+                if (fechaInicio) {
+                    query = query.gte('fecha_visita', fechaInicio);
+                }
+                if (fechaFin) {
+                    query = query.lte('fecha_visita', fechaFin);
+                }
+
+                // Aplicar otros filtros activos si existen
+                if (filtrosActivos.tipo_reserva) {
+                    query = query.eq('tipo_reserva', filtrosActivos.tipo_reserva);
+                }
+                if (filtrosActivos.estado) {
+                    query = query.eq('estado', filtrosActivos.estado);
+                }
+                if (filtrosActivos.anio) {
+                    query = query.filter('fecha_visita', 'gte', `${filtrosActivos.anio}-01-01`)
+                                .filter('fecha_visita', 'lte', `${filtrosActivos.anio}-12-31`);
+                }
+
+                const { data: reservasFiltradas, error } = await query;
+
+                if (error) {
+                    console.error('Error en consulta filtrada:', error);
+                    throw error;
+                }
+
+                Swal.close();
+
+                if (reservasFiltradas && reservasFiltradas.length > 0) {
+                    // Procesar datos filtrados
+                    procesarDatosCompletos(reservasFiltradas);
+                    
+                    // Actualizar gráficas con datos filtrados
+                    actualizarGraficasConFiltros();
+                    
+                    // Mostrar mensaje de éxito
+                    const totalFiltrado = reservasFiltradas.reduce((sum, reserva) => {
+                        return sum + (reserva.participantes_reserva ? reserva.participantes_reserva.length : 0);
+                    }, 0);
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Filtros aplicados',
+                        text: `Se encontraron ${reservasFiltradas.length} reservas y ${totalFiltrado} participantes en el rango seleccionado`,
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Sin resultados',
+                        text: 'No se encontraron datos para el rango de fechas seleccionado',
+                        confirmButtonColor: '#3498db'
+                    });
+                }
+
+            } catch (error) {
+                console.error('Error aplicando filtros:', error);
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudieron aplicar los filtros: ' + error.message,
+                    confirmButtonColor: '#e74c3c'
+                });
+            }
+        }
+
+        // filtro tipo cantidad
+        // Función para crear filtros específicos por tipo de gráfica
+        function crearFiltrosEspecificos(tipo) {
+            const filtrosContainer = document.getElementById('filtros-especificos');
+            if (!filtrosContainer) return;
+
+            let filtrosHTML = '';
+
+            switch(tipo) {
+                case 'tipo_reserva':
+                    filtrosHTML = `
+                        <div class="filter-group">
+                            <label class="filter-label">Tipo de Reserva</label>
+                            <select class="filter-select" id="filtro-tipo-reserva-especifico" onchange="aplicarFiltroTipoReserva()">
+                                <option value="todos">Todos los tipos</option>
+                                <option value="individual">Individual</option>
+                                <option value="grupal">Grupal</option>
+                            </select>
+                        </div>
+                    `;
+                    break;
+                // Puedes agregar más casos para otros tipos de gráficas aquí
+                default:
+                    filtrosHTML = '';
+                    break;
+            }
+
+            filtrosContainer.innerHTML = filtrosHTML;
+        }
+
+        // Función mejorada para aplicar filtro de tipo de reserva
+        async function aplicarFiltroTipoReserva() {
+            const tipoSeleccionado = document.getElementById('filtro-tipo-reserva-especifico').value;
+            
+            try {
+                Swal.fire({
+                    title: 'Aplicando filtro...',
+                    text: 'Filtrando datos por tipo de reserva',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                let query = supabase
+                    .from('participantes_reserva')
+                    .select(`
+                        *,
+                        reservas(*)
+                    `);
+
+                // Aplicar filtro si no es "todos"
+                if (tipoSeleccionado !== 'todos') {
+                    query = query.eq('reservas.tipo_reserva', tipoSeleccionado);
+                }
+
+                const { data: participantesFiltrados, error } = await query;
+
+                if (error) throw error;
+
+                Swal.close();
+
+                if (participantesFiltrados && participantesFiltrados.length > 0) {
+                    // Procesar datos filtrados
+                    procesarDatosTipoReservaFiltrado(participantesFiltrados,  tipoSeleccionado);
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Filtro aplicado',
+                        text: `Mostrando reservas ${tipoSeleccionado !== 'todos' ? 'de tipo ' + tipoSeleccionado : 'de todos los tipos'}`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Sin resultados',
+                        text: 'No se encontraron reservas para el tipo seleccionado',
+                        confirmButtonColor: '#3498db'
+                    });
+                }
+
+            } catch (error) {
+                console.error('Error aplicando filtro:', error);
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo aplicar el filtro: ' + error.message,
+                    confirmButtonColor: '#e74c3c'
+                });
+            }
+        }
+
+        // Función para procesar datos filtrados de tipo reserva
+        function procesarDatosTipoReservaFiltrado(reservas, tipoFiltro) {
+            let individualCount = 0;
+            let grupalCount = 0;
+
+            reservas.forEach(reserva => {
+                if (reserva.tipo_reserva === 'individual') {
+                    individualCount++;
+                } else if (reserva.tipo_reserva === 'grupal') {
+                    grupalCount++;
+                }
+            });
+
+            // Preparar datos según el filtro aplicado
+            if (tipoFiltro === 'todos') {
+                datosSimulados.tipo_reserva = {
+                    labels: ['Individual', 'Grupal'],
+                    values: [individualCount, grupalCount]
+                };
+            } else if (tipoFiltro === 'individual') {
+                datosSimulados.tipo_reserva = {
+                    labels: ['Individual'],
+                    values: [individualCount]
+                };
+            } else if (tipoFiltro === 'grupal') {
+                datosSimulados.tipo_reserva = {
+                    labels: ['Grupal'],
+                    values: [grupalCount]
+                };
+            }
+
+            // Actualizar gráficas
+            actualizarGraficasConFiltroEspecifico();
+        }
+
+        // Función para obtener datos completos de tipo reserva
+        function obtenerDatosCompletosTipoReserva() {
+            // Esta función debería retornar los datos originales sin filtrar
+            // Por ahora usamos datos simulados, pero puedes adaptarla a tus datos reales
+            return {
+                labels: ['Individual', 'Grupal'],
+                values: [65, 35]
             };
-            // Por mes
+        }
+
+        // Función para filtrar datos por tipo de reserva
+        function filtrarDatosPorTipoReserva(tipo) {
+            // Datos de ejemplo - reemplaza con tus datos reales
+            const datosCompletos = obtenerDatosCompletosTipoReserva();
+            
+            if (tipo === 'individual') {
+                return {
+                    labels: ['Individual'],
+                    values: [datosCompletos.values[0]]
+                };
+            } else if (tipo === 'grupal') {
+                return {
+                    labels: ['Grupal'],
+                    values: [datosCompletos.values[1]]
+                };
+            }
+            
+            return datosCompletos;
+        }
+
+
+        // Función para crear filtros en el modal - VERSIÓN MEJORADA
+        function crearFiltrosModal() {
+            const modalHeader = document.querySelector('.modal-header');
+            
+            // Eliminar filtros anteriores si existen
+            const filtrosAnteriores = document.getElementById('filtrosModal');
+            if (filtrosAnteriores) {
+                filtrosAnteriores.remove();
+            }
+
+            let filtrosHTML = '';
+            
+            // Filtros base (fecha inicial y final) para todos los tipos
+            let filtrosBaseHTML = `
+                <div class="filter-group">
+                    <label class="filter-label">Fecha Inicial</label>
+                    <input type="date" class="filter-select" id="modal-filtro-fecha-inicio">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Fecha Final</label>
+                    <input type="date" class="filter-select" id="modal-filtro-fecha-fin">
+                </div>
+            `;
+
+            // Filtros específicos según el tipo actual
+            let filtrosEspecificosHTML = '';
+            
+            switch(tipoActual) {
+                case 'tipo_reserva':
+                    filtrosEspecificosHTML = `
+                        <div class="filter-group">
+                            <label class="filter-label">Tipo de Reserva</label>
+                            <select class="filter-select" id="modal-filtro-tipo-reserva" onchange="actualizarGraficasConFiltroTipoReserva()">
+                                <option value="todas">Todas las reservas</option>
+                                <option value="individual">Individual</option>
+                                <option value="grupal">Grupal</option>
+                            </select>
+                        </div>
+                    `;
+                    break;
+                case 'estado':
+                    filtrosEspecificosHTML = `
+                        <div class="filter-group">
+                            <label class="filter-label">Estado</label>
+                            <select class="filter-select" id="modal-filtro-estado">
+                                <option value="todos">Todos los estados</option>
+                                <option value="confirmada">Confirmada</option>
+                                <option value="pendiente">Pendiente</option>
+                                <option value="cancelada">Cancelada</option>
+                            </select>
+                        </div>
+                    `;
+                    break;
+                default:
+                    filtrosEspecificosHTML = '';
+                    break;
+            }
+
+            // Combinar todos los filtros
+            filtrosHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 12px;">
+                    ${filtrosBaseHTML}
+                    ${filtrosEspecificosHTML}
+                </div>
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="aplicarFiltrosModal()">
+                        <i class="fas fa-check"></i> Aplicar Filtros
+                    </button>
+                    <button class="btn" onclick="limpiarFiltrosModal()" style="background: #e74c3c; color: white;">
+                        <i class="fas fa-times"></i> Limpiar Filtros
+                    </button>
+                </div>
+            `;
+
+            const filtrosContainer = document.createElement('div');
+            filtrosContainer.id = 'filtrosModal';
+            filtrosContainer.style.cssText = `
+                margin-bottom: 20px;
+                padding: 15px;
+                background: #f8f9fa;
+                border-radius: 8px;
+                border: 1px solid #e9ecef;
+            `;
+            filtrosContainer.innerHTML = `
+                <h4 style="margin: 0 0 12px 0; display: flex; align-items: center; gap: 6px">
+                    <i class="fas fa-filter"></i> Filtros para ${obtenerTituloDescriptivo(tipoActual)}
+                </h4>
+                ${filtrosHTML}
+            `;
+
+            // Insertar después del modal-header
+            modalHeader.parentNode.insertBefore(filtrosContainer, modalHeader.nextSibling);
+            
+            // Inicializar fechas
+            inicializarFechasModal();
+        }
+
+        // Función para actualizar gráficas con filtro específico
+        function actualizarGraficasConFiltroEspecifico() {
+            if (tipoActual === 'tipo_reserva') {
+                crearGraficas('tipo_reserva');
+                
+                // Si el modal está abierto, actualizarlo también
+                if (document.getElementById('chartModal').classList.contains('show')) {
+                    actualizarGraficaModal('bar');
+                }
+            }
+        }
+
+        // Función para limpiar filtros específicos
+        function limpiarFiltrosEspecificos() {
+            const filtroTipo = document.getElementById('filtro-tipo-reserva-especifico');
+            if (filtroTipo) {
+                filtroTipo.value = 'todos';
+            }
+            
+            // Restaurar datos completos
+            datosSimulados.tipo_reserva = obtenerDatosCompletosTipoReserva();
+            
+            // Actualizar gráficas
+            actualizarGraficasConFiltroEspecifico();
+        }
+        // cierra filtro cantidad
+
+        // Función para cargar datos sin filtros
+        async function cargarDatosSinFiltros() {
+            try {
+                Swal.fire({
+                    title: 'Limpiando filtros...',
+                    text: 'Cargando todos los datos',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Limpiar filtros activos
+                filtrosActivos = {};
+
+                // Recargar datos completos
+                await cargarDatosVisitantes();
+                
+                Swal.close();
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Filtros limpiados',
+                    text: 'Se muestran todos los datos disponibles',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+            } catch (error) {
+                console.error('Error cargando datos sin filtros:', error);
+                Swal.close();
+            }
+        }
+
+        // Función para actualizar gráficas con datos filtrados
+        function actualizarGraficasConFiltros() {
+            // Actualizar la gráfica actual con los nuevos datos
+            const tipoGraficaActual = document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica') || tipoActual;
+            
+            if (tipoGraficaActual) {
+                // Si estamos en el modal, actualizar la gráfica del modal
+                if (document.getElementById('chartModal').classList.contains('show')) {
+                    actualizarGraficaModal('bar'); // Puedes cambiar 'bar' por el tipo de gráfica que prefieras
+                } else {
+                    // Si estamos en la vista principal, actualizar las gráficas principales
+                    mostrarGraficas(tipoActual);
+                }
+            }
+        }
+
+        // Función para actualizar gráficas cuando cambia el filtro de tipo de reserva
+        function actualizarGraficasConFiltroTipoReserva() {
+            const tipoReservaSeleccionado = document.getElementById('modal-filtro-tipo-reserva').value;
+            
+            // Si estamos en un gráfico temporal, actualizar
+            if (tipoActual === 'fecha' || tipoActual === 'mes' || tipoActual === 'anio') {
+                // Actualizar gráfica principal
+                crearGraficas(tipoActual);
+                
+                // Si el modal está abierto, actualizar también
+                if (document.getElementById('chartModal').classList.contains('show')) {
+                    const tipoGraficaActual = document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica') || 'bar';
+                    actualizarGraficaModal(tipoGraficaActual);
+                }
+            }
+        }
+
+        // Función para inicializar fechas en los filtros del modal
+        function inicializarFechasModal() {
+            const hoy = new Date();
+            const haceUnMes = new Date();
+            haceUnMes.setMonth(hoy.getMonth() - 1);
+            
+            // Formatear fechas para inputs type="date"
+            const formatoFecha = (fecha) => fecha.toISOString().split('T')[0];
+            
+            // Establecer valores por defecto (último mes)
+            document.getElementById('modal-filtro-fecha-inicio').value = formatoFecha(haceUnMes);
+            document.getElementById('modal-filtro-fecha-fin').value = formatoFecha(hoy);
+        }
+
+        // Actualizar la función abrirModal para inicializar fechas
+        function abrirModal(tipoGrafica) {
+            const modal = document.getElementById("chartModal");
+            modal.classList.add("show");
+
+            // Guardar tipo de gráfica
+            document.querySelector('.modal-chart-container').setAttribute('data-tipo-grafica', tipoGrafica);
+
+            // Crear filtros específicos para este tipo
+            crearFiltrosModal();
+            
+            // Crear gráfica inicial
+            actualizarGraficaModal(tipoGrafica);
+        }
+
+        // Función auxiliar para formatear fecha
+        function formatearFecha(fechaStr) {
+            if (!fechaStr) return 'Fecha no especificada';
+            
+            try {
+                const fecha = new Date(fechaStr);
+                return fecha.toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            } catch (error) {
+                console.error('Error formateando fecha:', fechaStr, error);
+                return 'Fecha inválida';
+            }
+        }
+                // CIERRA FUNCIONES FILTRO
+        // Función para procesar datos por tiempo - CORREGIDA
+        function procesarDatosPorTiempo(participantes) {
+            // Por fecha - ahora desglosado por tipo de reserva
+            const visitasPorFecha = {
+                'individual': {},
+                'grupal': {},
+                'total': {}
+            };
+            
+            // Por mes - desglosado por tipo de reserva
             const meses = [
                 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
                 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
             ];
-            const visitasPorMes = {};
-            // Por año
-            const visitasPorAnio = {};
+            const visitasPorMes = {
+                'individual': {},
+                'grupal': {},
+                'total': {}
+            };
+            
+            // Por año - desglosado por tipo de reserva
+            const visitasPorAnio = {
+                'individual': {},
+                'grupal': {},
+                'total': {}
+            };
 
-            visitantes.forEach(visita => {
-                const fecha = new Date(visita.fecha_visita);
+            // Inicializar objetos
+            meses.forEach(mes => {
+                visitasPorMes.individual[mes] = 0;
+                visitasPorMes.grupal[mes] = 0;
+                visitasPorMes.total[mes] = 0;
+            });
+
+            participantes.forEach(participante => {
+                const reserva = participante.reservas;
+                if (!reserva) return;
                 
-                // Por fecha
+                // ✅ CORREGIDO: Usar fecha_reserva en lugar de fecha_visita
+                const fechaReserva = reserva.fecha_reserva;
+                if (!fechaReserva) return;
+                
+                const fecha = new Date(fechaReserva);
+                const tipo = reserva.tipo_reserva || 'individual';
+                
+                // Por fecha (solo fecha, sin hora)
                 const fechaStr = fecha.toISOString().split('T')[0];
-                if (!visitasPorFecha[fechaStr]) {
-                    visitasPorFecha[fechaStr] = 0;
-                }
-                visitasPorFecha[fechaStr]++;
                 
-                // Por día de la semana
-                const dia = diasSemana[fecha.getDay()];
-                visitasPorDia[dia]++;
+                if (!visitasPorFecha.individual[fechaStr]) visitasPorFecha.individual[fechaStr] = 0;
+                if (!visitasPorFecha.grupal[fechaStr]) visitasPorFecha.grupal[fechaStr] = 0;
+                if (!visitasPorFecha.total[fechaStr]) visitasPorFecha.total[fechaStr] = 0;
+                
+                if (tipo === 'individual') {
+                    visitasPorFecha.individual[fechaStr]++;
+                } else if (tipo === 'grupal') {
+                    visitasPorFecha.grupal[fechaStr]++;
+                }
+                visitasPorFecha.total[fechaStr]++;
                 
                 // Por mes
                 const mes = meses[fecha.getMonth()];
-                if (!visitasPorMes[mes]) {
-                    visitasPorMes[mes] = 0;
+                if (tipo === 'individual') {
+                    visitasPorMes.individual[mes]++;
+                } else if (tipo === 'grupal') {
+                    visitasPorMes.grupal[mes]++;
                 }
-                visitasPorMes[mes]++;
+                visitasPorMes.total[mes]++;
                 
                 // Por año
                 const anio = fecha.getFullYear().toString();
-                if (!visitasPorAnio[anio]) {
-                    visitasPorAnio[anio] = 0;
+
+                if (!visitasPorAnio.individual[anio]) visitasPorAnio.individual[anio] = 0;
+                if (!visitasPorAnio.grupal[anio]) visitasPorAnio.grupal[anio] = 0;
+                if (!visitasPorAnio.total[anio]) visitasPorAnio.total[anio] = 0;
+                
+                if (tipo === 'individual') {
+                    visitasPorAnio.individual[anio]++;
+                } else if (tipo === 'grupal') {
+                    visitasPorAnio.grupal[anio]++;
                 }
-                visitasPorAnio[anio]++;
+                visitasPorAnio.total[anio]++;
             });
+
+            const aniosOrdenados = Object.keys(visitasPorAnio.total).sort((a, b) => parseInt(a) - parseInt(b));
 
             return {
                 fecha: {
-                    labels: Object.keys(visitasPorFecha).slice(0, 10),
-                    values: Object.values(visitasPorFecha).slice(0, 10)
-                },
-                dia: {
-                    labels: Object.keys(visitasPorDia),
-                    values: Object.values(visitasPorDia)
+                    labels: Object.keys(visitasPorFecha.total).slice(0, 10),
+                    individual: Object.values(visitasPorFecha.individual).slice(0, 10),
+                    grupal: Object.values(visitasPorFecha.grupal).slice(0, 10),
+                    total: Object.values(visitasPorFecha.total).slice(0, 10)
                 },
                 mes: {
-                    labels: Object.keys(visitasPorMes),
-                    values: Object.values(visitasPorMes)
+                    labels: Object.keys(visitasPorMes.total),
+                    individual: Object.values(visitasPorMes.individual),
+                    grupal: Object.values(visitasPorMes.grupal),
+                    total: Object.values(visitasPorMes.total)
                 },
                 anio: {
-                    labels: Object.keys(visitasPorAnio),
-                    values: Object.values(visitasPorAnio)
+                    labels: aniosOrdenados,
+                    individual: aniosOrdenados.map(anio => visitasPorAnio.individual[anio] || 0),
+                    grupal: aniosOrdenados.map(anio => visitasPorAnio.grupal[anio] || 0),
+                    total: aniosOrdenados.map(anio => visitasPorAnio.total[anio] || 0)
                 }
             };
         }
-
         // Función para mostrar datos de demostración
         function mostrarDatosDemo() {
             console.log('Mostrando datos de demostración');
             
             datosSimulados = {
-                tipo_entrada: {
-                    labels: ['Adulto', 'Niño', 'Estudiante', 'Adulto Mayor', 'Grupo'],
-                    values: [45, 32, 28, 15, 25]
+                tipo_reserva: {
+                    labels: ['Individual', 'Grupal'],
+                    values: [65, 35]
                 },
-                temporada: {
-                    labels: ['Baja', 'Media', 'Alta'],
-                    values: [35, 60, 50]
+                estado: {
+                    labels: ['Confirmada', 'Pendiente', 'Cancelada'],
+                    values: [70, 20, 10]
                 },
                 actividad: {
-                    labels: ['Recorrido Guiado', 'Auto-guiado', 'Taller', 'Investigación'],
-                    values: [55, 40, 25, 15]
+                    labels: ['Recorrido Guiado', 'Observación Aves', 'Taller Plantas', 'Investigación', 'Fotografía'],
+                    values: [45, 30, 15, 8, 2]
                 },
-                transporte: {
-                    labels: ['Privado', 'Tour', 'Público', 'Caminando'],
-                    values: [40, 35, 45, 25]
-                },
-                intereses: {
-                    labels: ['Observación', 'Fotografía', 'Investigación', 'Educación', 'Recreación'],
-                    values: [35, 42, 18, 28, 32]
+                institucion: {
+                    labels: ['Universidad Nacional', 'Colegio Andino', 'Individual', 'Empresa XYZ', 'Escuela Rural'],
+                    values: [25, 18, 35, 12, 10]
                 },
                 satisfaccion: {
                     labels: ['1 ★', '2 ★', '3 ★', '4 ★', '5 ★'],
-                    values: [5, 12, 35, 45, 28]
+                    values: [5, 12, 25, 45, 63]
                 },
-                genero: {
-                    labels: ['masculino', 'femenino', 'otro', 'prefiero-no-decir'],
-                    values: [65, 70, 8, 7]
+                intereses: {
+                    labels: ['Observación Aves', 'Fotografía', 'Botánica', 'Investigación', 'Ecoturismo', 'Educación'],
+                    values: [45, 38, 32, 28, 42, 35]
+                },
+                temporada: {
+                    labels: ['Alta', 'Media', 'Baja'],
+                    values: [45, 35, 20]
                 },
                 fecha: {
                     labels: ['2024-01-15', '2024-01-16', '2024-01-17', '2024-01-18', '2024-01-19'],
                     values: [12, 18, 15, 22, 19]
-                },
-                dia: {
-                    labels: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
-                    values: [25, 30, 28, 32, 40, 55, 48]
                 },
                 mes: {
                     labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'],
                     values: [120, 135, 110, 125, 140, 155]
                 },
                 anio: {
-                    labels: ['2020', '2021', '2022', '2023', '2024'],
-                    values: [450, 520, 480, 610, 280]
+                    labels: ['2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024'],
+                    individual: [120, 135, 110, 125, 140, 155, 160, 170, 180, 190],
+                    grupal: [80, 90, 95, 100, 110, 120, 130, 140, 150, 160],
+                    total: [200, 225, 205, 225, 250, 275, 290, 310, 330, 350]
                 }
             };
 
             // Actualizar estadísticas de demostración
-            document.getElementById('total-visitantes').textContent = '145';
-            document.getElementById('gasto-promedio').textContent = '$45.50';
-            document.getElementById('tiempo-promedio').textContent = '3.2h';
-            document.getElementById('satisfaccion-promedio').textContent = '4.1/5';
+            document.getElementById('total-visitantes').textContent = '850';
+            document.getElementById('total-reservas').textContent = '145';
+            document.getElementById('participantes-promedio').textContent = '5.9';
+            document.getElementById('satisfaccion-promedio').textContent = '4.2/5';
 
             mostrarDatos();
+        }
+
+        // Función para mostrar datos cuando no hay resultados con filtros
+        function mostrarDatosDemoFiltrados() {
+            console.log('Mostrando datos de demostración para filtros sin resultados');
+            
+            // Crear datos vacíos o reducidos basados en los filtros
+            datosSimulados = {
+                tipo_reserva: {
+                    labels: ['Individual', 'Grupal'],
+                    values: [0, 0]
+                },
+                estado: {
+                    labels: ['Confirmada', 'Pendiente', 'Cancelada'],
+                    values: [0, 0, 0]
+                },
+                actividad: {
+                    labels: ['Sin datos'],
+                    values: [0]
+                },
+                institucion: {
+                    labels: ['Sin datos'],
+                    values: [0]
+                },
+                satisfaccion: {
+                    labels: ['1 ★', '2 ★', '3 ★', '4 ★', '5 ★'],
+                    values: [0, 0, 0, 0, 0]
+                },
+                intereses: {
+                    labels: ['Sin datos'],
+                    values: [0]
+                },
+                temporada: {
+                    labels: ['Alta', 'Media', 'Baja'],
+                    values: [0, 0, 0]
+                },
+                fecha: {
+                    labels: ['Sin datos'],
+                    values: [0]
+                },
+                mes: {
+                    labels: ['Sin datos'],
+                    values: [0]
+                },
+                anio: {
+                    labels: ['Sin datos'],
+                    values: [0]
+                }
+            };
+
+            // Actualizar estadísticas a cero
+            document.getElementById('total-visitantes').textContent = '0';
+            document.getElementById('total-reservas').textContent = '0';
+            document.getElementById('participantes-promedio').textContent = '0';
+            document.getElementById('satisfaccion-promedio').textContent = '0/5';
+
+            // Actualizar gráficas
+            if (tipoActual) {
+                crearGraficas(tipoActual);
+            }
+        }
+
+        // Función para diagnosticar problemas de filtros
+        function diagnosticarFiltros() {
+            const fechaInicio = document.getElementById('modal-filtro-fecha-inicio').value;
+            const fechaFin = document.getElementById('modal-filtro-fecha-fin').value;
+            const tipoReserva = document.getElementById('modal-filtro-tipo-reserva').value;
+            
+            console.log('🔍 DIAGNÓSTICO DE FILTROS:');
+            console.log('Fecha inicio:', fechaInicio);
+            console.log('Fecha fin:', fechaFin);
+            console.log('Tipo reserva:', tipoReserva);
+            console.log('Tipo actual:', tipoActual);
+            
+            // Verificar formato de fechas
+            if (fechaInicio) {
+                const fechaInicioObj = new Date(fechaInicio);
+                console.log('Fecha inicio (Date):', fechaInicioObj);
+            }
+            if (fechaFin) {
+                const fechaFinObj = new Date(fechaFin);
+                console.log('Fecha fin (Date):', fechaFinObj);
+            }
+        }
+
+        // Llamar esta función en aplicarFiltrosModal
+        function aplicarFiltrosModal() {
+            const fechaInicio = document.getElementById('modal-filtro-fecha-inicio').value;
+            const fechaFin = document.getElementById('modal-filtro-fecha-fin').value;
+            const tipoReserva = document.getElementById('modal-filtro-tipo-reserva').value;
+            
+            // Ejecutar diagnóstico
+            diagnosticarFiltros();
+            
+            // Validaciones básicas
+            if (fechaInicio && fechaFin && fechaInicio > fechaFin) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error en fechas',
+                    text: 'La fecha inicial no puede ser mayor que la fecha final',
+                    confirmButtonColor: '#e74c3c'
+                });
+                return;
+            }
+            
+            // Aplicar filtros según el tipo actual
+            aplicarFiltrosCombinados(fechaInicio, fechaFin, tipoReserva);
         }
 
         // Función para obtener etiqueta descriptiva
         function obtenerEtiquetaDescriptiva(tipo) {
             const etiquetas = {
-                tipo_entrada: 'Tipo de Entrada',
-                temporada: 'Temporada',
-                actividad: 'Actividad Realizada',
-                transporte: 'Transporte al Parque',
-                intereses: 'Interés Principal',
+                tipo_reserva: 'Tipo de Reserva',
+                estado: 'Estado de Reserva',
+                actividad: 'Actividad',
+                institucion: 'Institución',
                 satisfaccion: 'Nivel de Satisfacción',
-                genero: 'Género',
+                intereses: 'Interés Principal',
+                temporada: 'Temporada',
                 fecha: 'Fecha de Visita',
-                dia: 'Día de la Semana',
                 mes: 'Mes del Año',
                 anio: 'Año'
             };
@@ -1344,35 +2306,23 @@
         // Función para obtener título descriptivo
         function obtenerTituloDescriptivo(tipo) {
             const titulos = {
-                tipo_entrada: 'Visitantes por Tipo de Entrada',
-                temporada: 'Visitantes por Temporada',
-                actividad: 'Visitantes por Actividad Realizada',
-                transporte: 'Visitantes por Tipo de Transporte',
-                intereses: 'Visitantes por Interés en Heliconias',
-                satisfaccion: 'Niveles de Satisfacción de Visitantes',
-                genero: 'Visitantes por Género',
-                fecha: 'Visitantes por Fecha',
-                dia: 'Visitantes por Día de la Semana',
-                mes: 'Visitantes por Mes',
-                anio: 'Visitantes por Año'
+                tipo_reserva: 'Reservas por Tipo',
+                estado: 'Reservas por Estado',
+                actividad: 'Reservas por Actividad',
+                institucion: 'Reservas por Institución',
+                satisfaccion: 'Niveles de Satisfacción',
+                intereses: 'Intereses de los Visitantes',
+                temporada: 'Reservas por Temporada',
+                fecha: 'Reservas por Fecha',
+                mes: 'Reservas por Mes',
+                anio: 'Reservas por Año'
             };
-            return titulos[tipo] || 'Distribución de Visitantes';
-        }
-
-        // Función para formatear género
-        function formatearGenero(genero) {
-            const formatos = {
-                'masculino': 'Masculino',
-                'femenino': 'Femenino',
-                'otro': 'Otro',
-                'prefiero-no-decir': 'Prefiero no decir'
-            };
-            return formatos[genero] || genero;
+            return titulos[tipo] || 'Distribución de Reservas';
         }
 
         // Función para generar colores
         function generarColores(tipo, labels) {
-            const palette = colorPalettes[tipo] || colorPalettes.tipo_entrada;
+            const palette = colorPalettes[tipo] || colorPalettes.tipo_reserva;
             const cols = [];
             for(let i = 0; i < labels.length; i++) {
                 cols.push(palette[i % palette.length]);
@@ -1388,143 +2338,355 @@
 
         // Función para crear gráficas
         function crearGraficas(tipo) {
-            const { labels, values } = datosSimulados[tipo];
-            const colors = generarColores(tipo, labels);
+            const datos = datosSimulados[tipo];
             const etiquetaDescriptiva = obtenerEtiquetaDescriptiva(tipo);
             const tituloDescriptivo = obtenerTituloDescriptivo(tipo);
-
-            // Formatear labels para género
-            const labelsParaGrafica = tipo === 'genero' ? labels.map(formatearGenero) : labels;
 
             // Configurar barras
             const ctxBar = document.getElementById("chartBar").getContext("2d");
             if (chartBar) chartBar.destroy();
             
-            chartBar = new Chart(ctxBar, {
-                type: "bar",
-                data: {
-                    labels: labelsParaGrafica,
-                    datasets: [
+            // En la parte de gráficos de tiempo dentro de crearGraficas, reemplaza con:
+            if (tipo === 'fecha' || tipo === 'mes' || tipo === 'anio') {
+                // Obtener el tipo de reserva seleccionado en el modal
+                const tipoReservaSeleccionado = document.getElementById('modal-filtro-tipo-reserva') ? 
+                                            document.getElementById('modal-filtro-tipo-reserva').value : 'todas';
+                
+                let datasets = [];
+                const colors = ['#3498db', '#e74c3c', '#2ecc71']; // individual, grupal, total
+                
+                if (tipoReservaSeleccionado === 'todas') {
+                    // Mostrar todas las reservas
+                    datasets = [
                         {
-                            label: "Total de Visitantes",
-                            data: values,
-                            backgroundColor: colors,
+                            label: "Individual",
+                            data: datos.individual,
+                            backgroundColor: colors[0],
                             borderRadius: 6,
                             barThickness: 18,
                         },
-                    ],
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        title: {
-                            display: true,
-                            text: tituloDescriptivo,
-                            font: { size: 16, weight: 'bold' },
-                            padding: 20
+                        {
+                            label: "Grupal",
+                            data: datos.grupal,
+                            backgroundColor: colors[1],
+                            borderRadius: 6,
+                            barThickness: 18,
                         },
-                        tooltip: {
-                            backgroundColor: 'rgba(0,0,0,0.7)',
-                            titleFont: { size: 13 },
-                            bodyFont: { size: 13 },
-                            padding: 10,
-                            cornerRadius: 6,
-                            callbacks: {
-                                title: function(tooltipItems) {
-                                    return tooltipItems[0].label;
-                                },
-                                label: function(context) {
-                                    return `Visitantes: ${context.parsed.y.toLocaleString()}`;
+                        {
+                            label: "Total",
+                            data: datos.total,
+                            backgroundColor: colors[2],
+                            borderRadius: 6,
+                            barThickness: 18,
+                        }
+                    ];
+                } else if (tipoReservaSeleccionado === 'individual') {
+                    // Mostrar solo individuales
+                    datasets = [
+                        {
+                            label: "Individual",
+                            data: datos.individual,
+                            backgroundColor: colors[0],
+                            borderRadius: 6,
+                            barThickness: 18,
+                        }
+                    ];
+                } else if (tipoReservaSeleccionado === 'grupal') {
+                    // Mostrar solo grupales
+                    datasets = [
+                        {
+                            label: "Grupal",
+                            data: datos.grupal,
+                            backgroundColor: colors[1],
+                            borderRadius: 6,
+                            barThickness: 18,
+                        }
+                    ];
+                }
+                
+                chartBar = new Chart(ctxBar, {
+                    type: "bar",
+                    data: {
+                        labels: datos.labels,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { 
+                                display: true,
+                                position: 'top'
+                            },
+                            title: {
+                                display: true,
+                                text: tituloDescriptivo + (tipoReservaSeleccionado !== 'todas' ? ` - ${tipoReservaSeleccionado}` : ''),
+                                font: { size: 16, weight: 'bold' },
+                                padding: 20
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0,0,0,0.7)',
+                                titleFont: { size: 13 },
+                                bodyFont: { size: 13 },
+                                padding: 10,
+                                cornerRadius: 6,
+                                callbacks: {
+                                    title: function(tooltipItems) {
+                                        return tooltipItems[0].label;
+                                    },
+                                    label: function(context) {
+                                        return `${context.dataset.label}: ${context.parsed.y.toLocaleString()} visitantes`;
+                                    }
                                 }
                             }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(0,0,0,0.05)' },
-                            title: {
-                                display: true,
-                                text: 'Cantidad de Visitantes',
-                                font: { weight: 'bold' }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(0,0,0,0.05)' },
+                                title: {
+                                    display: true,
+                                    text: 'Cantidad de Visitantes',
+                                    font: { weight: 'bold' }
+                                }
+                            },
+                            x: {
+                                grid: { display: false },
+                                title: {
+                                    display: true,
+                                    text: etiquetaDescriptiva,
+                                    font: { weight: 'bold' }
+                                },
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 0
+                                }
                             }
                         },
-                        x: {
-                            grid: { display: false },
+                    },
+                });
+            }else {
+                // Usar datos normales para otros tipos de gráficos
+                const { labels, values } = datos;
+                const colors = generarColores(tipo, labels);
+                
+                chartBar = new Chart(ctxBar, {
+                    type: "bar",
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: "Total de Visitantes",
+                                data: values,
+                                backgroundColor: colors,
+                                borderRadius: 6,
+                                barThickness: 18,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
                             title: {
                                 display: true,
-                                text: etiquetaDescriptiva,
-                                font: { weight: 'bold' }
+                                text: tituloDescriptivo,
+                                font: { size: 16, weight: 'bold' },
+                                padding: 20
                             },
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 0
+                            tooltip: {
+                                backgroundColor: 'rgba(0,0,0,0.7)',
+                                titleFont: { size: 13 },
+                                bodyFont: { size: 13 },
+                                padding: 10,
+                                cornerRadius: 6,
+                                callbacks: {
+                                    title: function(tooltipItems) {
+                                        return tooltipItems[0].label;
+                                    },
+                                    label: function(context) {
+                                        return `Visitantes: ${context.parsed.y.toLocaleString()}`;
+                                    }
+                                }
                             }
-                        }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(0,0,0,0.05)' },
+                                title: {
+                                    display: true,
+                                    text: 'Cantidad de Visitantes',
+                                    font: { weight: 'bold' }
+                                }
+                            },
+                            x: {
+                                grid: { display: false },
+                                title: {
+                                    display: true,
+                                    text: etiquetaDescriptiva,
+                                    font: { weight: 'bold' }
+                                },
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 0
+                                }
+                            }
+                        },
                     },
-                },
-            });
+                });
+            }
 
-            // Configurar circular
+
+            // Configurar circular - AHORA PARA TODOS LOS TIPOS INCLUYENDO TEMPORALES
             const ctxPie = document.getElementById("chartPie").getContext("2d");
             if (chartPie) chartPie.destroy();
-            chartPie = new Chart(ctxPie, {
-                type: "doughnut",
-                data: {
-                    labels: labelsParaGrafica,
-                    datasets: [
-                        {
-                            data: values,
-                            backgroundColor: colors,
-                            borderWidth: 2,
-                            borderColor: '#fff'
-                        },
-                    ],
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                padding: 8,
-                                usePointStyle: true,
-                                pointStyle: 'circle',
-                                boxWidth: 8,
-                                font: { size: 10 }
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: tituloDescriptivo,
-                            font: { size: 16, weight: 'bold' },
-                            padding: 20
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0,0,0,0.7)',
-                            titleFont: { size: 11 },
-                            bodyFont: { size: 11 },
-                            padding: 6,
-                            cornerRadius: 4,
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label || '';
-                                    const value = context.parsed || 0;
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = Math.round((value / total) * 100);
-                                    return `${label}: ${value.toLocaleString()} visitantes (${percentage}%)`;
+
+            if (tipo === 'fecha' || tipo === 'mes' || tipo === 'anio') {
+                // Para gráficos de tiempo, crear gráfica circular REAL con datos
+                const tipoReservaSeleccionado = document.getElementById('modal-filtro-tipo-reserva') ? 
+                                            document.getElementById('modal-filtro-tipo-reserva').value : 'todas';
+                
+                let datosCircular = [];
+                let labelsCircular = [];
+                let colorsCircular = [];
+                
+                if (tipoReservaSeleccionado === 'individual') {
+                    // Mostrar distribución individual por período
+                    labelsCircular = datos.labels || [];
+                    datosCircular = datos.individual || [];
+                    colorsCircular = generarColores(tipo, labelsCircular);
+                } else if (tipoReservaSeleccionado === 'grupal') {
+                    // Mostrar distribución grupal por período
+                    labelsCircular = datos.labels || [];
+                    datosCircular = datos.grupal || [];
+                    colorsCircular = generarColores(tipo, labelsCircular);
+                } else {
+                    // Para "todas", crear datos combinados Individual vs Grupal
+                    labelsCircular = ['Individual', 'Grupal'];
+                    const totalIndividual = datos.individual ? datos.individual.reduce((a, b) => a + b, 0) : 0;
+                    const totalGrupal = datos.grupal ? datos.grupal.reduce((a, b) => a + b, 0) : 0;
+                    datosCircular = [totalIndividual, totalGrupal];
+                    colorsCircular = ['#3498db', '#e74c3c']; // individual, grupal
+                }
+                
+                chartPie = new Chart(ctxPie, {
+                    type: "doughnut",
+                    data: {
+                        labels: labelsCircular,
+                        datasets: [
+                            {
+                                data: datosCircular,
+                                backgroundColor: colorsCircular,
+                                borderWidth: 2,
+                                borderColor: '#fff'
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    padding: 8,
+                                    usePointStyle: true,
+                                    pointStyle: 'circle',
+                                    boxWidth: 8,
+                                    font: { size: 10 }
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: tituloDescriptivo + (tipoReservaSeleccionado !== 'todas' ? ` - ${tipoReservaSeleccionado}` : ' - Distribución'),
+                                font: { size: 16, weight: 'bold' },
+                                padding: 20
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0,0,0,0.7)',
+                                titleFont: { size: 11 },
+                                bodyFont: { size: 11 },
+                                padding: 6,
+                                cornerRadius: 4,
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                        return `${label}: ${value.toLocaleString()} visitantes (${percentage}%)`;
+                                    }
                                 }
                             }
-                        }
+                        },
+                        cutout: '70%',
+                        spacing: 2
                     },
-                    cutout: '70%',
-                    spacing: 2
-                },
-            });
-        }
+                });
+            } else {
+                // Gráfica circular normal para otros tipos
+                const { labels, values } = datos;
+                const colors = generarColores(tipo, labels);
+                
+                chartPie = new Chart(ctxPie, {
+                    type: "doughnut",
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                data: values,
+                                backgroundColor: colors,
+                                borderWidth: 2,
+                                borderColor: '#fff'
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    padding: 8,
+                                    usePointStyle: true,
+                                    pointStyle: 'circle',
+                                    boxWidth: 8,
+                                    font: { size: 10 }
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: tituloDescriptivo,
+                                font: { size: 16, weight: 'bold' },
+                                padding: 20
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0,0,0,0.7)',
+                                titleFont: { size: 11 },
+                                bodyFont: { size: 11 },
+                                padding: 6,
+                                cornerRadius: 4,
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = Math.round((value / total) * 100);
+                                        return `${label}: ${value.toLocaleString()} visitantes (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        },
+                        cutout: '70%',
+                        spacing: 2
+                    },
+                });
+            }
+        }                   
+                             
 
         // Función para abrir modal
         function abrirModal(tipoGrafica) {
@@ -1535,13 +2697,47 @@
             actualizarGraficaModal(tipoGrafica);
         }
 
-        // Función para actualizar la gráfica del modal
+        // MODIFICAR la función actualizarGraficaModal
         function actualizarGraficaModal(tipoGrafica) {
             const ctx = document.getElementById("chartAmpliado").getContext("2d");
             
-            const { labels, values } = datosSimulados[tipoActual];
+            const datos = datosSimulados[tipoActual];
+            
+            // VERIFICAR que los datos existen
+            if (!datos) {
+                console.error('No hay datos para:', tipoActual);
+                return;
+            }
+
+            // En la función actualizarGraficaModal, modifica la parte de datos:
+            let labels, values, total;
+
+            // MANEJAR diferentes estructuras de datos
+            if (tipoActual === 'fecha' || tipoActual === 'mes' || tipoActual === 'anio') {
+                // Obtener el tipo de reserva seleccionado
+                const tipoReservaSeleccionado = document.getElementById('modal-filtro-tipo-reserva') ? 
+                                            document.getElementById('modal-filtro-tipo-reserva').value : 'todas';
+                
+                if (tipoReservaSeleccionado === 'individual') {
+                    labels = datos.labels || [];
+                    values = datos.individual || [];
+                } else if (tipoReservaSeleccionado === 'grupal') {
+                    labels = datos.labels || [];
+                    values = datos.grupal || [];
+                } else {
+                    // Para "todas", usar el total
+                    labels = datos.labels || [];
+                    values = datos.total || [];
+                }
+                total = values.reduce((a, b) => a + b, 0);
+               } else {
+                            // Para datos normales
+                labels = datos.labels || [];
+                values = datos.values || [];
+                total = values.reduce((a, b) => a + b, 0);
+            }
+
             const colors = generarColores(tipoActual, labels);
-            const total = values.reduce((a, b) => a + b, 0);
             const etiquetaDescriptiva = obtenerEtiquetaDescriptiva(tipoActual);
             const tituloDescriptivo = obtenerTituloDescriptivo(tipoActual);
 
@@ -1551,13 +2747,10 @@
             const modalTitle = document.getElementById("modalTitle");
             modalTitle.innerHTML = `<i class="fas fa-expand"></i> ${tituloDescriptivo}`;
 
-            // Formatear labels para género
-            const labelsParaGrafica = tipoActual === 'genero' ? labels.map(formatearGenero) : labels;
-
             chartAmpliado = new Chart(ctx, {
                 type: tipoGrafica === "bar" ? "bar" : "doughnut",
                 data: {
-                    labels: labelsParaGrafica,
+                    labels: labels,
                     datasets: [
                         {
                             label: "Total de Visitantes",
@@ -1601,8 +2794,7 @@
                                 label: function(context) {
                                     const label = context.label || '';
                                     const value = context.parsed.y || context.parsed;
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = Math.round((value / total) * 100);
+                                    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
                                     return `${label}: ${value.toLocaleString()} visitantes (${percentage}%)`;
                                 }
                             }
@@ -1635,23 +2827,29 @@
                 },
             });
 
-            // Llenar tabla con porcentajes
+            // Llenar tabla con porcentajes - CON VALIDACIÓN
             const tbody = document.querySelector("#tablaDatos tbody");
-            tbody.innerHTML = labelsParaGrafica
-                .map((l, i) => {
-                    const porcentaje = ((values[i] / total) * 100).toFixed(1);
-                    return `<tr>
-                        <td><strong>${l}</strong></td>
-                        <td style="text-align: center;"><strong>${values[i].toLocaleString()}</strong></td>
-                        <td style="text-align: center; color: #2c3e50; font-weight: bold">${porcentaje}%</td>
-                    </tr>`;
-                })
-                .join("");
+            if (tbody) {
+                tbody.innerHTML = labels
+                    .map((l, i) => {
+                        const valor = values[i] || 0;
+                        const porcentaje = total > 0 ? ((valor / total) * 100).toFixed(1) : '0.0';
+                        return `<tr>
+                            <td><strong>${l}</strong></td>
+                            <td style="text-align: center;"><strong>${valor.toLocaleString()}</strong></td>
+                            <td style="text-align: center; color: #2c3e50; font-weight: bold">${porcentaje}%</td>
+                        </tr>`;
+                    })
+                    .join("");
+            }
 
             setTimeout(() => {
-                chartAmpliado.resize();
+                if (chartAmpliado) {
+                    chartAmpliado.resize();
+                }
             }, 200);
         }
+
 
         // Función para cerrar modal
         function cerrarModal() {
@@ -1668,12 +2866,11 @@
 
         function descargarExcel() {
             const { labels, values } = datosSimulados[tipoActual];
-            const labelsFormateados = tipoActual === 'genero' ? labels.map(formatearGenero) : labels;
             
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.aoa_to_sheet([
                 [obtenerEtiquetaDescriptiva(tipoActual), "Total de Visitantes"],
-                ...labelsFormateados.map((l, i) => [l, values[i]]),
+                ...labels.map((l, i) => [l, values[i]]),
             ]);
             XLSX.utils.book_append_sheet(wb, ws, "Datos");
             XLSX.writeFile(wb, `datos_${tipoActual}.xlsx`);
@@ -1688,16 +2885,16 @@
 
         // Funciones de filtros
         function aplicarFiltros() {
-            const tipoEntrada = document.getElementById('filtro-tipo-entrada').value;
+            const tipoReserva = document.getElementById('filtro-tipo-reserva').value;
+            const estado = document.getElementById('filtro-estado').value;
             const temporada = document.getElementById('filtro-temporada').value;
-            const actividad = document.getElementById('filtro-actividad').value;
-            const guia = document.getElementById('filtro-guia').value;
+            const anio = document.getElementById('filtro-anio').value;
 
             filtrosActivos = {
-                tipo_entrada: tipoEntrada,
+                tipo_reserva: tipoReserva,
+                estado: estado,
                 temporada: temporada,
-                actividad_realizada: actividad,
-                guia_turistico: guia
+                anio: anio
             };
 
             // Recargar datos con filtros
@@ -1705,16 +2902,47 @@
         }
 
         function limpiarFiltros() {
-            document.getElementById('filtro-tipo-entrada').value = '';
+            document.getElementById('filtro-tipo-reserva').value = '';
+            document.getElementById('filtro-estado').value = '';
             document.getElementById('filtro-temporada').value = '';
-            document.getElementById('filtro-actividad').value = '';
-            document.getElementById('filtro-guia').value = '';
+            document.getElementById('filtro-anio').value = '';
             
             filtrosActivos = {};
             cargarDatosVisitantes();
         }
 
+        // Función para cargar años disponibles
+        async function cargarAniosDisponibles() {
+            try {
+                const { data:  participantes, error } = await supabase
+                    .from('participantes_reserva')
+                    .select('fecha_visita')
+                    .order('fecha_visita', { ascending: false });
+
+                if (participantes && participantes.length > 0) {
+                    const anios = [...new Set(participantes.filter(p => p.fecha_visita).map(p => new Date(p.fecha_visita).getFullYear()))];
+                    const selectAnio = document.getElementById('filtro-anio');
+                    
+                    // Limpiar opciones excepto la primera
+                    while (selectAnio.options.length > 1) {
+                        selectAnio.remove(1);
+                    }
+                    
+                    // Agregar años
+                    anios.forEach(anio => {
+                        const option = document.createElement('option');
+                        option.value = anio;
+                        option.textContent = anio;
+                        selectAnio.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error cargando años:', error);
+            }
+        }
+
         // Mostrar datos en la interfaz
+        // Actualiza la función mostrarDatos() para incluir mejor el filtro
         function mostrarDatos() {
             const container = document.getElementById('data-container');
             container.innerHTML = `
@@ -1728,36 +2956,43 @@
                         </button>
                     </div>
 
+                    <!-- Filtros específicos con mejor diseño -->
+                    <div id="filtros-especificos-container" style="margin-top: 15px; display: none;">
+                        <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #e9ecef;">
+                            <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 6px; color: #2c3e50; font-size: 0.95rem;">
+                                <i class="fas fa-filter"></i> Filtros Específicos
+                            </h4>
+                            <div id="filtros-especificos"></div>
+                        </div>
+                    </div>
+
                     <div class="chart-type-buttons btn-group" style="margin-top: 12px">
-                        <button class="chart-btn active" data-type="tipo_entrada">
-                            <i class="fas fa-ticket-alt"></i> Tipo Entrada
+                        <button class="chart-btn active" data-type="tipo_reserva">
+                            <i class="fas fa-ticket-alt"></i> Tipo Reserva
                         </button>
-                        <button class="chart-btn" data-type="temporada">
-                            <i class="fas fa-calendar"></i> Temporada
+                        <button class="chart-btn" data-type="estado">
+                            <i class="fas fa-check-circle"></i> Estado
                         </button>
                         <button class="chart-btn" data-type="actividad">
                             <i class="fas fa-hiking"></i> Actividad
                         </button>
-                        <button class="chart-btn" data-type="transporte">
-                            <i class="fas fa-bus"></i> Transporte
-                        </button>
-                        <button class="chart-btn" data-type="intereses">
-                            <i class="fas fa-heart"></i> Intereses
+                        <button class="chart-btn" data-type="institucion">
+                            <i class="fas fa-university"></i> Institución
                         </button>
                         <button class="chart-btn" data-type="satisfaccion">
                             <i class="fas fa-star"></i> Satisfacción
                         </button>
-                        <button class="chart-btn" data-type="genero">
-                            <i class="fas fa-venus-mars"></i> Género
+                        <button class="chart-btn" data-type="intereses">
+                            <i class="fas fa-heart"></i> Intereses
+                        </button>
+                        <button class="chart-btn" data-type="temporada">
+                            <i class="fas fa-calendar"></i> Temporada
                         </button>
                         <button class="chart-btn" data-type="fecha">
                             <i class="fas fa-calendar-day"></i> Fecha
                         </button>
-                        <button class="chart-btn" data-type="dia">
-                            <i class="fas fa-calendar"></i> Día
-                        </button>
                         <button class="chart-btn" data-type="mes">
-                            <i class="fas fa-calendar-week"></i> Mes
+                            <i class="fas fa-calendar"></i> Mes
                         </button>
                         <button class="chart-btn" data-type="anio">
                             <i class="fas fa-calendar-alt"></i> Año
@@ -1794,11 +3029,96 @@
             `;
 
             // Inicializar gráficas
-            mostrarGraficas("tipo_entrada");
+            mostrarGraficas("tipo_reserva");
 
             // Configurar eventos
             configurarEventos();
         }
+
+        // Actualiza la función crearFiltrosEspecificos para mejor diseño
+        function crearFiltrosEspecificos(tipo) {
+            const filtrosContainer = document.getElementById('filtros-especificos');
+            const filtrosEspecificosContainer = document.getElementById('filtros-especificos-container');
+            
+            if (!filtrosContainer || !filtrosEspecificosContainer) return;
+
+            let filtrosHTML = '';
+
+            switch(tipo) {
+                case 'tipo_reserva':
+                    filtrosHTML = `
+                        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                            <div class="filter-group" style="margin: 0;">
+                                <label class="filter-label" style="margin-bottom: 5px; font-size: 0.85rem;">Filtrar por tipo:</label>
+                                <select class="filter-select" id="filtro-tipo-reserva-especifico" onchange="aplicarFiltroTipoReserva()" style="min-width: 150px;">
+                                    <option value="todos">Todos los tipos</option>
+                                    <option value="individual">Individual</option>
+                                    <option value="grupal">Grupal</option>
+                                </select>
+                            </div>
+                            <button class="btn" onclick="limpiarFiltrosEspecificos()" style="background: #95a5a6; color: white; padding: 6px 12px; font-size: 0.8rem; margin-top: 20px;">
+                                <i class="fas fa-times"></i> Limpiar
+                            </button>
+                        </div>
+                    `;
+                    break;
+                // Puedes agregar más casos para otros tipos de gráficas aquí
+                default:
+                    filtrosHTML = '';
+                    break;
+            }
+
+            filtrosContainer.innerHTML = filtrosHTML;
+            
+            // Mostrar u ocultar el contenedor según si hay filtros
+            if (filtrosHTML) {
+                filtrosEspecificosContainer.style.display = 'block';
+            } else {
+                filtrosEspecificosContainer.style.display = 'none';
+            }
+        }
+
+        // También actualiza la función configurarEventos para manejar mejor los filtros
+        function configurarEventos() {
+            // Botones de tipo de gráfica
+            document.querySelectorAll('.chart-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    const tipo = this.getAttribute('data-type');
+                    mostrarGraficas(tipo);
+                    
+                    // Crear filtros específicos para este tipo
+                    crearFiltrosEspecificos(tipo);
+                });
+            });
+
+            // Botón de descarga
+            document.getElementById('downloadChartBtn').addEventListener('click', descargarGraficoPrincipal);
+            
+            // Crear filtros específicos iniciales
+            crearFiltrosEspecificos('tipo_reserva');
+        }
+
+        // Actualiza la función limpiarFiltrosEspecificos
+        function limpiarFiltrosEspecificos() {
+            const filtroTipo = document.getElementById('filtro-tipo-reserva-especifico');
+            if (filtroTipo) {
+                filtroTipo.value = 'todos';
+            }
+            
+            // Recargar datos sin filtro
+            aplicarFiltroTipoReserva();
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Filtro limpiado',
+                text: 'Se muestran todos los tipos de reserva',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }
+        
 
         // Configurar eventos
         function configurarEventos() {
@@ -1807,24 +3127,19 @@
                 btn.addEventListener('click', function() {
                     document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
-                    mostrarGraficas(this.getAttribute('data-type'));
+                    const tipo = this.getAttribute('data-type');
+                    mostrarGraficas(tipo);
+                    
+                    // Crear filtros específicos para este tipo
+                    crearFiltrosEspecificos(tipo);
                 });
             });
 
             // Botón de descarga
             document.getElementById('downloadChartBtn').addEventListener('click', descargarGraficoPrincipal);
-        }
-
-        // Mostrar mensaje cuando no hay datos
-        function mostrarSinDatos() {
-            const container = document.getElementById('data-container');
-            container.innerHTML = `
-                <div class="no-data">
-                    <i class="fas fa-users"></i>
-                    <h3>No hay datos de visitantes disponibles</h3>
-                    <p>No se encontraron visitantes registrados en la base de datos.</p>
-                </div>
-            `;
+            
+            // Crear filtros específicos iniciales
+            crearFiltrosEspecificos('tipo_reserva');
         }
 
         // Inicializar
