@@ -15,16 +15,9 @@
         const supabaseUrl = 'https://umncnddwzmjxgmvisvqz.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtbmNuZGR3em1qeGdtdmlzdnF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NDIyNzksImV4cCI6MjA3ODExODI3OX0.ODvus28cTCTD8gGewQ2sAZ8PcXbEe4CIy_zv6bip8J0';
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-        
     </script>
     <link rel="stylesheet" href="css/styless2.css">
     <link rel="stylesheet" href="css/responsive.css">
-    <style>
-        
-
-
-    </style>
 </head>
 <body>
     <!-- Header -->
@@ -187,19 +180,27 @@
                     </div>
                 </div>
             </div>        
-    </div>
-</div>
         </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-   <!-- Al final del body, antes de cerrar </body> -->
-<script src="js/data-processor.js"></script>
-<script src="js/data-loader.js"></script>
-<script src="js/chart-manager.js"></script>
-<script src="js/ui-manager.js"></script>
-<script src="js/app.js"></script>
+    <!-- Módulos base -->
+    <script src="js/data-processor.js"></script>
+    <script src="js/data-loader.js"></script>
+    <script src="js/chart-manager.js"></script>
+    <script src="js/ui-manager.js"></script>
+
+    <!-- HOTFIX para errores críticos -->
+    <!-- <script src="js/hotfix.js"></script> -->
+
+    <!-- Módulos adicionales -->
+    <script src="js/export-manager.js"></script>
+    <script src="js/modal-manager.js"></script>
+    <script src="js/filter-manager.js"></script>
+
+    <!-- App principal (DEBE IR AL FINAL) -->
+    <script src="js/app.js"></script>
 
 </body>
 </html>

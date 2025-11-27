@@ -1,4 +1,4 @@
-* {
+* { /*CSS PARA ESTADISTICAS VISITANTES*/
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -60,17 +60,30 @@
             justify-content: center;
         }
 
+
         .logo-img i {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #2e7d32, #4caf50);
+            color: white;
+            font-size: 24px;
+            border-radius: 50%;
+        }
+
+        /*  CÓDIGO CORREGIDO */
+        /* .logo-img i {
             display: block;
             width: 100%;
             height: 100%;
-            background-image: url("img/logo.png");
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            font-size: 0;
-            color: transparent;
-        }
+            background: linear-gradient(135deg, #2e7d32, #4caf50);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white !important;
+            font-size: 24px !important;
+        } */
 
         .logo h1 {
             font-size: 24px;

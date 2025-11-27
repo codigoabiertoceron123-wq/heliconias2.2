@@ -1,7 +1,17 @@
-// Módulo para carga de datos
+// Módulo para carga de datos - VERSIÓN COMPLETAMENTE CORREGIDA
 class DataLoader {
     constructor() {
         this.filtrosActivos = {};
+        this.app = null;
+        this.dataProcessor = null;
+    }
+
+    setApp(app) {
+        this.app = app;
+        // Obtener referencia al dataProcessor desde la app
+        if (app && app.modules.dataProcessor) {
+            this.dataProcessor = app.modules.dataProcessor;
+        }
     }
 
     async cargarDatosVisitantes() {
@@ -26,15 +36,19 @@ class DataLoader {
                     intereses(*)
                 `);
 
-            if (this.filtrosActivos.tipo_reserva) {
-                query = query.eq('reservas.tipo_reserva', this.filtrosActivos.tipo_reserva);
-            }
-            if (this.filtrosActivos.estado) {
-                query = query.eq('reservas.estado', this.filtrosActivos.estado);
-            }
-            if (this.filtrosActivos.anio) {
-                query = query.filter('fecha_visita', 'gte', `${this.filtrosActivos.anio}-01-01`)
-                            .filter('fecha_visita', 'lte', `${this.filtrosActivos.anio}-12-31`);
+            // Aplicar filtros activos desde la app principal
+            if (this.app) {
+                const filtros = this.app.getFiltrosActivos();
+                if (filtros.tipo_reserva) {
+                    query = query.eq('reservas.tipo_reserva', filtros.tipo_reserva);
+                }
+                if (filtros.estado) {
+                    query = query.eq('reservas.estado', filtros.estado);
+                }
+                if (filtros.anio) {
+                    query = query.filter('fecha_visita', 'gte', `${filtros.anio}-01-01`)
+                                .filter('fecha_visita', 'lte', `${filtros.anio}-12-31`);
+                }
             }
 
             const { data: participantes, error } = await query;
@@ -47,9 +61,16 @@ class DataLoader {
             this.ocultarCarga();
 
             if (participantes && participantes.length > 0) {
-                dataProcessor.procesarDatosCompletos(participantes);
-                if (typeof uiManager !== 'undefined') {
-                    uiManager.mostrarDatos();
+                // ✅ CORRECTO: Solo procesar datos, NO notificar
+                if (this.dataProcessor) {
+                    this.dataProcessor.procesarDatosCompletos(participantes);
+                    // ❌ NO llamar a notificarCambioDatos() aquí
+                } else {
+                    // Fallback a la versión global si existe
+                    if (typeof dataProcessor !== 'undefined') {
+                        dataProcessor.procesarDatosCompletos(participantes);
+                        // En versión global, UI se actualiza automáticamente
+                    }
                 }
             } else {
                 console.log('No se encontraron reservas');
@@ -59,6 +80,7 @@ class DataLoader {
         } catch (error) {
             console.error('Error cargando datos:', error);
             this.ocultarCarga();
+            this.cargarDatosDemo();
             
             let mensajeError = 'No se pudieron cargar los datos';
             if (error.message.includes('JWT')) {
@@ -75,11 +97,7 @@ class DataLoader {
                     title: 'Error',
                     text: mensajeError,
                     confirmButtonColor: '#e74c3c'
-                }).then(() => {
-                    this.cargarDatosDemo();
                 });
-            } else {
-                this.cargarDatosDemo();
             }
         }
     }
@@ -107,15 +125,29 @@ class DataLoader {
 
     cargarDatosDemo() {
         console.log('Cargando datos de demostración...');
-        dataProcessor.mostrarDatosDemo();
+        // ✅ CORREGIDO: Solo mostrar datos demo, NO notificar
+        if (this.dataProcessor) {
+            this.dataProcessor.mostrarDatosDemo();
+            // ❌ ELIMINADO: this.app.notificarCambioDatos();
+        } else if (typeof dataProcessor !== 'undefined') {
+            // Fallback a versión global
+            dataProcessor.mostrarDatosDemo();
+        }
     }
 
     setFiltros(filtros) {
         this.filtrosActivos = { ...this.filtrosActivos, ...filtros };
+        // También actualizar en la app principal
+        if (this.app) {
+            this.app.setFiltrosActivos(filtros);
+        }
     }
 
     limpiarFiltros() {
         this.filtrosActivos = {};
+        if (this.app) {
+            this.app.setFiltrosActivos({});
+        }
     }
 
     async aplicarFiltrosCombinados(fechaInicio, fechaFin, tipoReserva) {
@@ -133,7 +165,8 @@ class DataLoader {
 
             console.log('Aplicando filtros:', { fechaInicio, fechaFin, tipoReserva });
 
-            const participantesAnteriores = dataProcessor.datosVisitantes.length;
+            const participantesAnteriores = this.dataProcessor ? 
+                this.dataProcessor.datosVisitantes.length : 0;
 
             let query = supabase
                 .from('participantes_reserva')
@@ -163,30 +196,36 @@ class DataLoader {
             this.ocultarCarga();
 
             if (participantesFiltrados && participantesFiltrados.length > 0) {
-                dataProcessor.procesarDatosCompletos(participantesFiltrados);
-                
-                if (typeof chartManager !== 'undefined') {
-                    chartManager.mostrarGraficas(chartManager.tipoActual);
-                }
-
-                const huboCambio = participantesFiltrados.length !== participantesAnteriores;
-                const reservasFiltradas = [...new Set(participantesFiltrados.map(p => p.id_reserva))].length;
-
-                if (typeof Swal !== 'undefined') {
-                    let mensaje = '';
-                    if (huboCambio) {
-                        mensaje = `Filtros aplicados\nResultados: ${reservasFiltradas} reservas y ${participantesFiltrados.length} participantes`;
-                    } else {
-                        mensaje = `Los filtros no modificaron los resultados\nSe mantienen: ${reservasFiltradas} reservas y ${participantesFiltrados.length} participantes`;
-                    }
+                // ✅ CORREGIDO: Solo procesar datos filtrados
+                if (this.dataProcessor) {
+                    this.dataProcessor.procesarDatosCompletos(participantesFiltrados);
                     
-                    Swal.fire({
-                        icon: huboCambio ? 'success' : 'info',
-                        title: huboCambio ? 'Filtros aplicados' : 'Sin cambios',
-                        text: mensaje,
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
+                    // ❌ ELIMINADO: Notificación directa a chartManager
+                    // Dejar que App coordine la notificación
+
+                    const huboCambio = participantesFiltrados.length !== participantesAnteriores;
+                    const reservasFiltradas = [...new Set(participantesFiltrados.map(p => p.id_reserva))].length;
+
+                    if (typeof Swal !== 'undefined') {
+                        let mensaje = '';
+                        if (huboCambio) {
+                            mensaje = `Filtros aplicados\nResultados: ${reservasFiltradas} reservas y ${participantesFiltrados.length} participantes`;
+                        } else {
+                            mensaje = `Los filtros no modificaron los resultados\nSe mantienen: ${reservasFiltradas} reservas y ${participantesFiltrados.length} participantes`;
+                        }
+                        
+                        Swal.fire({
+                            icon: huboCambio ? 'success' : 'info',
+                            title: huboCambio ? 'Filtros aplicados' : 'Sin cambios',
+                            text: mensaje,
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+                    }
+                } else {
+                    // Fallback a versión global
+                    dataProcessor.procesarDatosCompletos(participantesFiltrados);
+                    // En versión global, las gráficas se actualizan automáticamente
                 }
             } else {
                 if (typeof Swal !== 'undefined') {
