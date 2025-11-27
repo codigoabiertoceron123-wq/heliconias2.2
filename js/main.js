@@ -1,9 +1,21 @@
-// Inicializar
-document.addEventListener('DOMContentLoaded', function() {
+// Función para inicializar la aplicación
+function inicializarAplicacion() {
     updateDateTime();
     setInterval(updateDateTime, 1000);
     cargarDatosGeneros();
-});
+}
+
+// Esperar a que todo el DOM y los scripts estén cargados
+if (document.readyState === 'loading') {
+    // El documento aún se está cargando
+    document.addEventListener('DOMContentLoaded', function() {
+        // Pequeño delay para asegurar que todos los scripts estén cargados
+        setTimeout(inicializarAplicacion, 100);
+    });
+} else {
+    // El documento ya está cargado
+    setTimeout(inicializarAplicacion, 100);
+}
 
 // Funciones de descarga
 function descargarPNG() {
