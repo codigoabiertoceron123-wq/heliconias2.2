@@ -1,6 +1,18 @@
-// Módulo para gestión de interfaz
+// Módulo para gestión de interfaz - VERSIÓN CON FILTROS MEJORADOS
 class UIManager {
+    constructor() {
+        this.dataLoader = null;
+        this.chartManager = null;
+        this.dataProcessor = null;
+        this.app = null;
+    }
+
+    setApp(app) {
+        this.app = app;
+    }
+
     mostrarDatos() {
+        console.log('🎨 Mostrando interfaz de datos...');
         const container = document.getElementById('data-container');
         if (!container) {
             console.error('Contenedor data-container no encontrado');
@@ -18,22 +30,9 @@ class UIManager {
                     </button>
                 </div>
 
-                <!-- Filtros específicos con mejor diseño -->
-                <div id="filtros-especificos-container" style="margin-top: 15px; display: none;">
-                    <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #e9ecef;">
-                        <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 6px; color: #2c3e50; font-size: 0.95rem;">
-                            <i class="fas fa-filter"></i> Filtros Específicos
-                        </h4>
-                        <div id="filtros-especificos"></div>
-                    </div>
-                </div>
-
                 <div class="chart-type-buttons btn-group" style="margin-top: 12px">
                     <button class="chart-btn active" data-type="tipo_reserva">
                         <i class="fas fa-ticket-alt"></i> Tipo Reserva
-                    </button>
-                    <button class="chart-btn" data-type="estado">
-                        <i class="fas fa-check-circle"></i> Estado
                     </button>
                     <button class="chart-btn" data-type="actividad">
                         <i class="fas fa-hiking"></i> Actividad
@@ -41,11 +40,11 @@ class UIManager {
                     <button class="chart-btn" data-type="institucion">
                         <i class="fas fa-university"></i> Institución
                     </button>
-                    <button class="chart-btn" data-type="satisfaccion">
-                        <i class="fas fa-star"></i> Satisfacción
-                    </button>
                     <button class="chart-btn" data-type="intereses">
                         <i class="fas fa-heart"></i> Intereses
+                    </button>
+                    <button class="chart-btn" data-type="genero">
+                        <i class="fas fa-venus-mars"></i> Género
                     </button>
                     <button class="chart-btn" data-type="temporada">
                         <i class="fas fa-calendar"></i> Temporada
@@ -91,30 +90,53 @@ class UIManager {
         `;
 
         // Inicializar gráficas
-        if (typeof chartManager !== 'undefined') {
+        if (this.chartManager && typeof this.chartManager.mostrarGraficas === 'function') {
+            console.log('📊 Solicitando gráficas a ChartManager');
+            const tipoInicial = this.chartManager.tipoActual || 'tipo_reserva';
+            this.chartManager.mostrarGraficas(tipoInicial);
+        } else if (typeof chartManager !== 'undefined' && typeof chartManager.mostrarGraficas === 'function') {
+            console.log('📊 Usando ChartManager global');
             chartManager.mostrarGraficas("tipo_reserva");
+        } else {
+            console.error('❌ No hay ChartManager disponible');
         }
+
         this.configurarEventos();
     }
 
     configurarEventos() {
+        console.log('🎯 Configurando eventos de UI...');
+        
         // Botones de tipo de gráfica
         const chartButtons = document.querySelectorAll('.chart-btn');
         if (chartButtons.length > 0) {
             chartButtons.forEach(btn => {
+                // Remover event listeners anteriores para evitar duplicados
+                btn.replaceWith(btn.cloneNode(true));
+            });
+
+            // Re-seleccionar después del clone
+            document.querySelectorAll('.chart-btn').forEach(btn => {
                 btn.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    
                     // Remover clase active de todos los botones
                     chartButtons.forEach(b => b.classList.remove('active'));
                     // Agregar clase active al botón clickeado
                     event.currentTarget.classList.add('active');
                     
                     const tipo = event.currentTarget.getAttribute('data-type');
-                    if (typeof chartManager !== 'undefined') {
+                    console.log('🎯 Cambiando a categoría:', tipo);
+
+                    if (this.chartManager && typeof this.chartManager.mostrarGraficas === 'function') {
+                        console.log('📊 Llamando a chartManager.mostrarGraficas');
+                        this.chartManager.mostrarGraficas(tipo);
+                    } else if (typeof chartManager !== 'undefined' && typeof chartManager.mostrarGraficas === 'function') {
+                        console.log('📊 Llamando a chartManager global');
                         chartManager.mostrarGraficas(tipo);
+                    } else {
+                        console.error('❌ No hay ChartManager disponible');
                     }
-                    
-                    // Crear filtros específicos para este tipo
-                    this.crearFiltrosEspecificos(tipo);
                 });
             });
         }
@@ -137,141 +159,8 @@ class UIManager {
         if (cardCircular) {
             cardCircular.addEventListener('click', () => this.abrirModal('pie'));
         }
-
-        // Crear filtros específicos iniciales
-        this.crearFiltrosEspecificos('tipo_reserva');
-    }
-
-    crearFiltrosEspecificos(tipo) {
-        const filtrosContainer = document.getElementById('filtros-especificos');
-        const filtrosEspecificosContainer = document.getElementById('filtros-especificos-container');
         
-        if (!filtrosContainer || !filtrosEspecificosContainer) return;
-
-        let filtrosHTML = '';
-
-        switch(tipo) {
-            case 'tipo_reserva':
-                filtrosHTML = `
-                    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-                        <div class="filter-group" style="margin: 0;">
-                            <label class="filter-label" style="margin-bottom: 5px; font-size: 0.85rem;">Filtrar por tipo:</label>
-                            <select class="filter-select" id="filtro-tipo-reserva-especifico" style="min-width: 150px;">
-                                <option value="todos">Todos los tipos</option>
-                                <option value="individual">Individual</option>
-                                <option value="grupal">Grupal</option>
-                            </select>
-                        </div>
-                        <button class="btn" id="limpiar-filtros-especificos-btn" style="background: #95a5a6; color: white; padding: 6px 12px; font-size: 0.8rem; margin-top: 20px;">
-                            <i class="fas fa-times"></i> Limpiar
-                        </button>
-                    </div>
-                `;
-                break;
-            default:
-                filtrosHTML = '';
-                break;
-        }
-
-        filtrosContainer.innerHTML = filtrosHTML;
-        
-        // Configurar eventos de los filtros específicos
-        if (filtrosHTML) {
-            filtrosEspecificosContainer.style.display = 'block';
-            
-            // Evento para el select de tipo de reserva
-            const selectTipoReserva = document.getElementById('filtro-tipo-reserva-especifico');
-            if (selectTipoReserva) {
-                selectTipoReserva.addEventListener('change', () => {
-                    this.aplicarFiltroTipoReserva();
-                });
-            }
-            
-            // Evento para el botón limpiar
-            const btnLimpiar = document.getElementById('limpiar-filtros-especificos-btn');
-            if (btnLimpiar) {
-                btnLimpiar.addEventListener('click', () => {
-                    this.limpiarFiltrosEspecificos();
-                });
-            }
-        } else {
-            filtrosEspecificosContainer.style.display = 'none';
-        }
-    }
-
-    aplicarFiltroTipoReserva() {
-        const tipoSeleccionado = document.getElementById('filtro-tipo-reserva-especifico');
-        if (!tipoSeleccionado) return;
-        
-        const valor = tipoSeleccionado.value;
-        
-        try {
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    title: 'Aplicando filtro...',
-                    text: 'Filtrando datos por tipo de reserva',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-            }
-
-            // Aquí iría la lógica de filtrado real
-            // Por ahora simulamos con un timeout
-            setTimeout(() => {
-                if (typeof Swal !== 'undefined') {
-                    Swal.close();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Filtro aplicado',
-                        text: `Mostrando reservas ${valor !== 'todos' ? 'de tipo ' + valor : 'de todos los tipos'}`,
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
-                }
-                
-                // Actualizar gráficas si es necesario
-                if (typeof chartManager !== 'undefined') {
-                    chartManager.mostrarGraficas(chartManager.tipoActual);
-                }
-            }, 1000);
-
-        } catch (error) {
-            console.error('Error aplicando filtro:', error);
-            if (typeof Swal !== 'undefined') {
-                Swal.close();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudo aplicar el filtro: ' + error.message,
-                    confirmButtonColor: '#e74c3c'
-                });
-            }
-        }
-    }
-
-    limpiarFiltrosEspecificos() {
-        const filtroTipo = document.getElementById('filtro-tipo-reserva-especifico');
-        if (filtroTipo) {
-            filtroTipo.value = 'todos';
-        }
-        
-        // Recargar datos sin filtro
-        if (typeof dataLoader !== 'undefined') {
-            dataLoader.limpiarFiltros();
-            dataLoader.cargarDatosVisitantes();
-        }
-        
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'success',
-                title: 'Filtro limpiado',
-                text: 'Se muestran todos los tipos de reserva',
-                timer: 1500,
-                showConfirmButton: false
-            });
-        }
+        console.log('✅ Eventos de UI configurados correctamente');
     }
 
     abrirModal(tipoGrafica) {
@@ -286,11 +175,35 @@ class UIManager {
             modalChartContainer.setAttribute('data-tipo-grafica', tipoGrafica);
         }
 
-        // Crear filtros específicos para este tipo
+        // LIMPIEZA COMPLETA: Eliminar cualquier sección de filtros duplicada
+        this.limpiarFiltrosDuplicados();
+
+        // Crear filtros del modal según el tipo de categoría
         this.crearFiltrosModal();
-        
+
         // Crear gráfica inicial
         this.actualizarGraficaModal(tipoGrafica);
+    }
+
+    limpiarFiltrosDuplicados() {
+        // Eliminar cualquier sección de filtros que no sea la principal
+        const seccionesFiltros = document.querySelectorAll('#filtrosModal, .filters-section, [class*="filtro"], [class*="filter"]');
+        seccionesFiltros.forEach(seccion => {
+            if (seccion.id !== 'filtrosModal' && seccion.closest('.modal-content')) {
+                seccion.remove();
+            }
+        });
+
+        // Limpiar también cualquier contenido duplicado en el modal-header
+        const modalHeader = document.querySelector('.modal-header');
+        if (modalHeader) {
+            const elementosDuplicados = modalHeader.querySelectorAll('h4, .filter-group, .btn');
+            elementosDuplicados.forEach(elemento => {
+                if (!elemento.closest('#filtrosModal')) {
+                    elemento.remove();
+                }
+            });
+        }
     }
 
     crearFiltrosModal() {
@@ -303,58 +216,57 @@ class UIManager {
             filtrosAnteriores.remove();
         }
 
+        const tipoActual = this.chartManager ? this.chartManager.tipoActual : 'tipo_reserva';
+        
         let filtrosHTML = '';
         
-        // Filtros base (fecha inicial y final) para todos los tipos
-        let filtrosBaseHTML = `
-            <div class="filter-group">
-                <label class="filter-label">Fecha Inicial</label>
-                <input type="date" class="filter-select" id="modal-filtro-fecha-inicio">
-            </div>
-            <div class="filter-group">
-                <label class="filter-label">Fecha Final</label>
-                <input type="date" class="filter-select" id="modal-filtro-fecha-fin">
-            </div>
-        `;
-
-        // Filtros específicos según el tipo actual
-        let filtrosEspecificosHTML = '';
-        
-        if (typeof chartManager !== 'undefined') {
-            switch(chartManager.tipoActual) {
-                case 'tipo_reserva':
-                    filtrosEspecificosHTML = `
-                        <div class="filter-group">
-                            <label class="filter-label">Tipo de Reserva</label>
-                            <select class="filter-select" id="modal-filtro-tipo-reserva">
-                                <option value="todas">Todas las reservas</option>
-                                <option value="individual">Individual</option>
-                                <option value="grupal">Grupal</option>
-                            </select>
-                        </div>
-                    `;
-                    break;
-                default:
-                    filtrosEspecificosHTML = '';
-                    break;
-            }
+        if (tipoActual === 'tipo_reserva') {
+            filtrosHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 12px;">
+                    <div class="filter-group">
+                        <label class="filter-label">Fecha Inicial</label>
+                        <input type="date" class="filter-select" id="modal-filtro-fecha-inicio">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Fecha Final</label>
+                        <input type="date" class="filter-select" id="modal-filtro-fecha-fin">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Tipo de Reserva</label>
+                        <select class="filter-select" id="modal-filtro-tipo-reserva">
+                            <option value="">No seleccionado</option>
+                            <option value="todas">Todas las reservas</option>
+                            <option value="individual">Individual</option>
+                            <option value="grupal">Grupal</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Estado de Reserva</label>
+                        <select class="filter-select" id="modal-filtro-estado">
+                            <option value="">No seleccionado</option>
+                            <option value="todas">Todos los estados</option>
+                            <option value="confirmada">Confirmadas</option>
+                            <option value="pendiente">Pendientes</option>
+                            <option value="cancelada">Canceladas</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Filtros básicos para otras categorías
+            filtrosHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 12px;">
+                    <div class="filter-group">
+                        <label class="filter-label">Fecha Inicial</label>
+                        <input type="date" class="filter-select" id="modal-filtro-fecha-inicio">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Fecha Final</label>
+                        <input type="date" class="filter-select" id="modal-filtro-fecha-fin">
+                    </div>
+                </div>
+            `;
         }
-
-        // Combinar todos los filtros
-        filtrosHTML = `
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 12px;">
-                ${filtrosBaseHTML}
-                ${filtrosEspecificosHTML}
-            </div>
-            <div style="margin-top: 15px; display: flex; gap: 10px;">
-                <button class="btn btn-primary" id="aplicar-filtros-modal-btn">
-                    <i class="fas fa-check"></i> Aplicar Filtros
-                </button>
-                <button class="btn" id="limpiar-filtros-modal-btn" style="background: #e74c3c; color: white;">
-                    <i class="fas fa-times"></i> Limpiar Filtros
-                </button>
-            </div>
-        `;
 
         const filtrosContainer = document.createElement('div');
         filtrosContainer.id = 'filtrosModal';
@@ -366,16 +278,21 @@ class UIManager {
             border: 1px solid #e9ecef;
         `;
         
-        let tituloDescriptivo = 'Filtros';
-        if (typeof chartManager !== 'undefined') {
-            tituloDescriptivo = chartManager.obtenerTituloDescriptivo(chartManager.tipoActual);
-        }
+        const tituloFiltros = tipoActual === 'tipo_reserva' ? 'Filtros para Tipo de Reserva' : 'Filtros por Fecha';
         
         filtrosContainer.innerHTML = `
             <h4 style="margin: 0 0 12px 0; display: flex; align-items: center; gap: 6px">
-                <i class="fas fa-filter"></i> Filtros para ${tituloDescriptivo}
+                <i class="fas fa-filter"></i> ${tituloFiltros}
             </h4>
             ${filtrosHTML}
+            <div style="margin-top: 15px; display: flex; gap: 10px;">
+                <button class="btn btn-primary" id="aplicar-filtros-modal-btn">
+                    <i class="fas fa-check"></i> Aplicar Filtros
+                </button>
+                <button class="btn" id="limpiar-filtros-modal-btn" style="background: #e74c3c; color: white;">
+                    <i class="fas fa-times"></i> Limpiar Filtros
+                </button>
+            </div>
         `;
 
         // Insertar después del modal-header
@@ -396,13 +313,23 @@ class UIManager {
                 this.limpiarFiltrosModal();
             });
         }
-        
-        // Configurar evento para el select de tipo de reserva en el modal
-        const selectTipoReservaModal = document.getElementById('modal-filtro-tipo-reserva');
-        if (selectTipoReservaModal) {
-            selectTipoReservaModal.addEventListener('change', () => {
-                this.actualizarGraficasConFiltroTipoReserva();
-            });
+
+        // Configurar eventos para filtros que actualizan automáticamente
+        if (tipoActual === 'tipo_reserva') {
+            const tipoReservaSelect = document.getElementById('modal-filtro-tipo-reserva');
+            const estadoSelect = document.getElementById('modal-filtro-estado');
+            
+            if (tipoReservaSelect) {
+                tipoReservaSelect.addEventListener('change', () => {
+                    this.actualizarGraficaModalDesdeFiltros();
+                });
+            }
+            
+            if (estadoSelect) {
+                estadoSelect.addEventListener('change', () => {
+                    this.actualizarGraficaModalDesdeFiltros();
+                });
+            }
         }
 
         // Inicializar fechas
@@ -427,41 +354,188 @@ class UIManager {
         const fechaInicio = document.getElementById('modal-filtro-fecha-inicio');
         const fechaFin = document.getElementById('modal-filtro-fecha-fin');
         const tipoReserva = document.getElementById('modal-filtro-tipo-reserva');
+        const estado = document.getElementById('modal-filtro-estado');
         
-        if (fechaInicio && fechaFin && tipoReserva) {
-            // Validaciones básicas
-            if (fechaInicio.value && fechaFin.value && fechaInicio.value > fechaFin.value) {
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error en fechas',
-                        text: 'La fecha inicial no puede ser mayor que la fecha final',
-                        confirmButtonColor: '#e74c3c'
-                    });
-                }
-                return;
+        // Validaciones básicas
+        if (fechaInicio.value && fechaFin.value && fechaInicio.value > fechaFin.value) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error en fechas',
+                    text: 'La fecha inicial no puede ser mayor que la fecha final',
+                    confirmButtonColor: '#e74c3c'
+                });
             }
-            
-            if (typeof dataLoader !== 'undefined') {
+            return;
+        }
+        
+        // Obtener valores de filtros
+        const filtros = {
+            fechaInicio: fechaInicio.value,
+            fechaFin: fechaFin.value
+        };
+        
+        if (tipoReserva) filtros.tipoReserva = tipoReserva.value;
+        if (estado && estado.value) filtros.estado = estado.value;
+
+        console.log('🎯 Aplicando filtros:', filtros);
+
+        // Aplicar filtros según el tipo de categoría
+        const tipoActual = this.chartManager ? this.chartManager.tipoActual : 'tipo_reserva';
+        
+        if (tipoActual === 'tipo_reserva') {
+            this.aplicarFiltrosTipoReserva(filtros);
+        } else {
+            // Para otras categorías, usar filtros básicos de fecha
+            if (this.dataLoader) {
+                this.dataLoader.aplicarFiltrosCombinados(
+                    filtros.fechaInicio, 
+                    filtros.fechaFin
+                );
+            } else if (typeof dataLoader !== 'undefined') {
                 dataLoader.aplicarFiltrosCombinados(
-                    fechaInicio.value, 
-                    fechaFin.value, 
-                    tipoReserva.value
+                    filtros.fechaInicio, 
+                    filtros.fechaFin
                 );
             }
         }
     }
 
+    async aplicarFiltrosTipoReserva(filtros) {
+        try {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Aplicando filtros...',
+                    text: 'Filtrando datos por criterios seleccionados',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            }
+
+            console.log('🎯 Aplicando filtros para tipo_reserva:', filtros);
+
+            let query = supabase
+                .from('participantes_reserva')
+                .select(`
+                    *,
+                    reservas(
+                        *,
+                        actividades(*),
+                        instituciones(*)
+                    ),
+                    intereses(*)
+                `);
+
+            // Aplicar filtros de fecha
+            if (filtros.fechaInicio && filtros.fechaFin) {
+                query = query.gte('reservas.fecha_reserva', filtros.fechaInicio + 'T00:00:00')
+                            .lte('reservas.fecha_reserva', filtros.fechaFin + 'T23:59:59');
+            }
+
+            // Aplicar filtro de tipo de reserva (solo si no está vacío)
+            if (filtros.tipoReserva && filtros.tipoReserva !== '') {
+                if (filtros.tipoReserva !== 'todas') {
+                    query = query.eq('reservas.tipo_reserva', filtros.tipoReserva);
+                }
+                // Si es "todas", no aplicamos filtro específico
+            }
+
+            // Aplicar filtro de estado (solo si no está vacío)
+            if (filtros.estado && filtros.estado !== '') {
+                if (filtros.estado !== 'todas') {
+                    query = query.eq('reservas.estado', filtros.estado);
+                }
+                // Si es "todas", no aplicamos filtro específico
+            }
+
+            const { data: participantesFiltrados, error } = await query;
+
+            if (error) throw error;
+
+            if (typeof Swal !== 'undefined') {
+                Swal.close();
+            }
+
+            if (participantesFiltrados && participantesFiltrados.length > 0) {
+                // Procesar datos filtrados con información de los filtros aplicados
+                if (this.dataProcessor) {
+                    // Pasar información de filtros al dataProcessor para que pueda generar gráficas específicas
+                    this.dataProcessor.procesarDatosConFiltros(participantesFiltrados, filtros);
+                    
+                    // Actualizar gráfica en el modal
+                    const tipoGrafica = document.querySelector('.modal-chart-container')?.getAttribute('data-tipo-grafica') || 'bar';
+                    this.actualizarGraficaModalConFiltros(tipoGrafica, filtros);
+
+                    if (typeof Swal !== 'undefined') {
+                        const reservasUnicas = [...new Set(participantesFiltrados.map(p => p.id_reserva))].length;
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Filtros aplicados',
+                            text: `Se encontraron ${reservasUnicas} reservas y ${participantesFiltrados.length} participantes`,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    }
+                } else {
+                // Fallback si el método no existe
+                console.warn('procesarDatosConFiltros no disponible, usando procesamiento normal');
+                if (this.dataProcessor) {
+                    this.dataProcessor.procesarDatosCompletos(participantesFiltrados);
+                    
+                    const tipoGrafica = document.querySelector('.modal-chart-container')?.getAttribute('data-tipo-grafica') || 'bar';
+                    this.actualizarGraficaModalConFiltros(tipoGrafica, filtros);
+                    }
+                }
+            } else {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Sin resultados',
+                        text: 'No se encontraron datos para los filtros aplicados',
+                        confirmButtonColor: '#3498db'
+                    });
+                }
+            }
+
+        } catch (error) {
+            console.error('Error aplicando filtros:', error);
+            if (typeof Swal !== 'undefined') {
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudieron aplicar los filtros: ' + error.message,
+                    confirmButtonColor: '#e74c3c'
+                });
+            }
+        }
+    }
+
     limpiarFiltrosModal() {
+        // Limpiar filtros de fecha
         const fechaInicio = document.getElementById('modal-filtro-fecha-inicio');
         const fechaFin = document.getElementById('modal-filtro-fecha-fin');
         const tipoReserva = document.getElementById('modal-filtro-tipo-reserva');
+        const estado = document.getElementById('modal-filtro-estado');
         
         if (fechaInicio) fechaInicio.value = '';
         if (fechaFin) fechaFin.value = '';
-        if (tipoReserva) tipoReserva.value = 'todas';
+        if (tipoReserva) tipoReserva.value = '';
+        if (estado) estado.value = '';
         
-        if (typeof dataLoader !== 'undefined') {
+        // Recargar datos sin filtros
+        if (this.dataLoader) {
+            this.dataLoader.limpiarFiltros();
+            this.dataLoader.cargarDatosVisitantes();
+            
+            // Actualizar gráfica en el modal
+            const tipoGrafica = document.querySelector('.modal-chart-container')?.getAttribute('data-tipo-grafica') || 'bar';
+            setTimeout(() => {
+                this.actualizarGraficaModal(tipoGrafica);
+            }, 500);
+        } else if (typeof dataLoader !== 'undefined') {
             dataLoader.limpiarFiltros();
             dataLoader.cargarDatosVisitantes();
         }
@@ -477,186 +551,380 @@ class UIManager {
         }
     }
 
-    actualizarGraficasConFiltroTipoReserva() {
-        const tipoReservaSeleccionado = document.getElementById('modal-filtro-tipo-reserva');
+    actualizarGraficaModalDesdeFiltros() {
+        // Actualizar la gráfica cuando cambian los filtros de tipo_reserva o estado
+        const tipoActual = this.chartManager ? this.chartManager.tipoActual : 'tipo_reserva';
         
-        if (!tipoReservaSeleccionado) return;
-        
-        const valor = tipoReservaSeleccionado.value;
-        console.log('Filtro tipo reserva cambiado a:', valor);
-        
-        if (typeof chartManager !== 'undefined') {
-            if (chartManager.tipoActual === 'fecha' || chartManager.tipoActual === 'mes' || chartManager.tipoActual === 'anio') {
-                console.log('Actualizando gráficas temporales con filtro:', valor);
-                chartManager.mostrarGraficas(chartManager.tipoActual);
-                
-                const modal = document.getElementById('chartModal');
-                if (modal && modal.classList.contains('show')) {
-                    const tipoGraficaActual = document.querySelector('.modal-chart-container') ? 
-                                            document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica') : 'bar';
-                    console.log('Actualizando modal con tipo:', tipoGraficaActual);
-                    this.actualizarGraficaModal(tipoGraficaActual);
-                }
-            }
+        if (tipoActual === 'tipo_reserva') {
+            const tipoGrafica = document.querySelector('.modal-chart-container')?.getAttribute('data-tipo-grafica') || 'bar';
+            
+            // Obtener valores actuales de los filtros
+            const tipoReserva = document.getElementById('modal-filtro-tipo-reserva');
+            const estado = document.getElementById('modal-filtro-estado');
+            
+            const filtros = {
+                tipoReserva: tipoReserva ? tipoReserva.value : '',
+                estado: estado ? estado.value : ''
+            };
+            
+            this.actualizarGraficaModalConFiltros(tipoGrafica, filtros);
         }
     }
 
-    actualizarGraficaModal(tipoGrafica) {
-        const canvas = document.getElementById("chartAmpliado");
-        if (!canvas) return;
-        
-        const ctx = canvas.getContext("2d");
-        
-        if (typeof chartManager === 'undefined' || typeof dataProcessor === 'undefined') {
-            console.error('Módulos necesarios no disponibles');
-            return;
-        }
-        
-        const datos = dataProcessor.datosSimulados[chartManager.tipoActual];
-        
-        if (!datos) {
-            console.error('No hay datos para:', chartManager.tipoActual);
-            return;
-        }
+   actualizarGraficaModalConFiltros(tipoGrafica, filtros) {
+    const canvas = document.getElementById("chartAmpliado");
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext("2d");
+    
+    const manager = this.chartManager;
+    const processor = this.dataProcessor;
+    
+    if (!manager || !processor) {
+        console.error('❌ Módulos necesarios no disponibles para modal');
+        return;
+    }
+    
+    // Obtener datos procesados con filtros
+    const datos = processor.datosSimulados[manager.tipoActual];
+    
+    if (!datos) {
+        console.error('❌ No hay datos para:', manager.tipoActual);
+        return;
+    }
 
-        if (chartManager.chartAmpliado) {
-            chartManager.chartAmpliado.destroy();
-        }
+    // Destruir gráfica anterior si existe
+    if (manager.chartAmpliado) {
+        manager.chartAmpliado.destroy();
+    }
 
-        let labels, values, total;
+    // Generar título descriptivo basado en los filtros aplicados
+    const tituloDescriptivo = this.generarTituloConFiltros(manager.tipoActual, filtros);
+    const etiquetaDescriptiva = this.generarEtiquetaConFiltros(manager.tipoActual, filtros);
 
-        if (chartManager.tipoActual === 'fecha' || chartManager.tipoActual === 'mes' || chartManager.tipoActual === 'anio') {
-            const tipoReservaSeleccionado = document.getElementById('modal-filtro-tipo-reserva') ? 
-                                        document.getElementById('modal-filtro-tipo-reserva').value : 'todas';
-            
-            if (tipoReservaSeleccionado === 'individual') {
-                labels = datos.labels || [];
-                values = datos.individual || [];
-            } else if (tipoReservaSeleccionado === 'grupal') {
-                labels = datos.labels || [];
-                values = datos.grupal || [];
-            } else {
-                labels = datos.labels || [];
-                values = datos.total || [];
-            }
-            total = values.reduce((a, b) => a + b, 0);
-        } else {
-            labels = datos.labels || [];
-            values = datos.values || [];
-            total = values.reduce((a, b) => a + b, 0);
-        }
+    // Actualizar título del modal
+    const modalTitle = document.getElementById("modalTitle");
+    if (modalTitle) {
+        modalTitle.innerHTML = `<i class="fas fa-expand"></i> ${tituloDescriptivo}`;
+    }
 
-        const colors = chartManager.generarColores(chartManager.tipoActual, labels);
-        const etiquetaDescriptiva = chartManager.obtenerEtiquetaDescriptiva(chartManager.tipoActual);
-        const tituloDescriptivo = chartManager.obtenerTituloDescriptivo(chartManager.tipoActual);
+    // Verificar si es una gráfica agrupada
+    const esGraficaAgrupada = datos.datasets && datos.type === 'grouped';
 
-        // Actualizar título del modal
-        const modalTitle = document.getElementById("modalTitle");
-        if (modalTitle) {
-            modalTitle.innerHTML = `<i class="fas fa-expand"></i> ${tituloDescriptivo}`;
-        }
+    let chartData;
+    let chartOptions;
 
-        chartManager.chartAmpliado = new Chart(ctx, {
-            type: tipoGrafica === "bar" ? "bar" : "doughnut",
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: "Total de Visitantes",
-                        data: values,
-                        backgroundColor: colors,
-                        borderRadius: tipoGrafica === "bar" ? 6 : 0,
-                        borderWidth: tipoGrafica === "bar" ? 0 : 2,
-                        borderColor: tipoGrafica === "bar" ? 'transparent' : '#fff',
-                        barThickness: tipoGrafica === "bar" ? 18 : undefined,
-                        maxBarThickness: tipoGrafica === "bar" ? 30 : undefined,
-                        barPercentage: tipoGrafica === "bar" ? 0.6 : undefined
-                    },
-                ],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: tipoGrafica === "bar" ? 'top' : 'right',
-                        labels: {
-                            padding: 15,
-                            usePointStyle: true,
-                            pointStyle: 'circle',
-                            font: { size: 13 }
-                        }
-                    },
-                    title: {
-                        display: true,
-                        text: tituloDescriptivo,
-                        font: { size: 18, weight: 'bold' },
-                        padding: 25
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0,0,0,0.7)',
-                        titleFont: { size: 14 },
-                        bodyFont: { size: 14 },
-                        padding: 12,
-                        cornerRadius: 8,
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.parsed.y || context.parsed;
-                                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                                return `${label}: ${value.toLocaleString()} visitantes (${percentage}%)`;
-                            }
-                        }
-                    }
+    if (esGraficaAgrupada) {
+        // GRÁFICA AGRUPADA - Múltiples datasets
+        chartData = {
+            labels: datos.labels,
+            datasets: datos.datasets.map(dataset => ({
+                ...dataset,
+                borderRadius: tipoGrafica === "bar" ? 6 : 0,
+                borderWidth: tipoGrafica === "bar" ? 0 : 2,
+                borderColor: tipoGrafica === "bar" ? 'transparent' : '#fff',
+                barThickness: tipoGrafica === "bar" ? 18 : undefined,
+                maxBarThickness: tipoGrafica === "bar" ? 30 : undefined,
+                barPercentage: tipoGrafica === "bar" ? 0.6 : undefined
+            }))
+        };
+
+        chartOptions = this.obtenerOpcionesGraficaAgrupada(tipoGrafica, tituloDescriptivo, etiquetaDescriptiva, filtros);
+    } else {
+        // GRÁFICA SIMPLE - Un solo dataset
+        const labels = datos.labels || [];
+        const values = datos.values || [];
+        const total = values.reduce((a, b) => a + b, 0);
+        const colors = manager.generarColores(manager.tipoActual, labels);
+
+        chartData = {
+            labels: labels,
+            datasets: [
+                {
+                    label: this.generarLabelDataset(filtros),
+                    data: values,
+                    backgroundColor: colors,
+                    borderRadius: tipoGrafica === "bar" ? 6 : 0,
+                    borderWidth: tipoGrafica === "bar" ? 0 : 2,
+                    borderColor: tipoGrafica === "bar" ? 'transparent' : '#fff',
+                    barThickness: tipoGrafica === "bar" ? 18 : undefined,
+                    maxBarThickness: tipoGrafica === "bar" ? 30 : undefined,
+                    barPercentage: tipoGrafica === "bar" ? 0.6 : undefined
                 },
-                scales: tipoGrafica === "bar" ? {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: 'rgba(0,0,0,0.05)' },
-                        title: {
-                            display: true,
-                            text: 'Cantidad de Visitantes',
-                            font: { weight: 'bold', size: 14 }
-                        }
-                    },
-                    x: {
-                        grid: { display: false },
-                        title: {
-                            display: true,
-                            text: etiquetaDescriptiva,
-                            font: { weight: 'bold', size: 14 }
-                        },
-                        ticks: {
-                            maxRotation: 45,
-                            minRotation: 0
-                        }
-                    }
-                } : {},
-                cutout: tipoGrafica === "bar" ? '0%' : '40%'
+            ],
+        };
+
+        chartOptions = this.obtenerOpcionesGraficaSimple(tipoGrafica, tituloDescriptivo, etiquetaDescriptiva, filtros, total);
+    }
+
+    // Crear nueva gráfica
+    manager.chartAmpliado = new Chart(ctx, {
+        type: tipoGrafica === "bar" ? "bar" : "doughnut",
+        data: chartData,
+        options: chartOptions
+    });
+
+    // Llenar tabla con porcentajes
+    this.actualizarTablaConDatos(datos, filtros, esGraficaAgrupada);
+
+    setTimeout(() => {
+        if (manager.chartAmpliado) {
+            manager.chartAmpliado.resize();
+        }
+    }, 200);
+}
+
+obtenerOpcionesGraficaAgrupada(tipoGrafica, tituloDescriptivo, etiquetaDescriptiva, filtros) {
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+                labels: {
+                    padding: 15,
+                    usePointStyle: true,
+                    pointStyle: 'circle',
+                    font: { size: 13 }
+                }
             },
+            title: {
+                display: true,
+                text: tituloDescriptivo,
+                font: { size: 18, weight: 'bold' },
+                padding: 25
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                titleFont: { size: 14 },
+                bodyFont: { size: 14 },
+                padding: 12,
+                cornerRadius: 8,
+                callbacks: {
+                    label: function(context) {
+                        const label = context.dataset.label || '';
+                        const value = context.parsed.y;
+                        return `${label}: ${value.toLocaleString()} reservas`;
+                    }
+                }
+            }
+        },
+        scales: tipoGrafica === "bar" ? {
+            y: {
+                beginAtZero: true,
+                grid: { color: 'rgba(0,0,0,0.05)' },
+                title: {
+                    display: true,
+                    text: 'Cantidad de Reservas',
+                    font: { weight: 'bold', size: 14 }
+                }
+            },
+            x: {
+                grid: { display: false },
+                title: {
+                    display: true,
+                    text: etiquetaDescriptiva,
+                    font: { weight: 'bold', size: 14 }
+                },
+                ticks: {
+                    maxRotation: 45,
+                    minRotation: 0
+                }
+            }
+        } : {},
+        cutout: tipoGrafica === "bar" ? '0%' : '40%'
+    };
+}
+
+obtenerOpcionesGraficaSimple(tipoGrafica, tituloDescriptivo, etiquetaDescriptiva, filtros, total) {
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: tipoGrafica === "bar" ? 'top' : 'right',
+                labels: {
+                    padding: 15,
+                    usePointStyle: true,
+                    pointStyle: 'circle',
+                    font: { size: 13 }
+                }
+            },
+            title: {
+                display: true,
+                text: tituloDescriptivo,
+                font: { size: 18, weight: 'bold' },
+                padding: 25
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                titleFont: { size: 14 },
+                bodyFont: { size: 14 },
+                padding: 12,
+                cornerRadius: 8,
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed.y || context.parsed;
+                        const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                        return `${label}: ${value.toLocaleString()} ${filtros.estado && filtros.estado !== 'todas' ? filtros.estado : 'reservas'} (${percentage}%)`;
+                    }
+                }
+            }
+        },
+        scales: tipoGrafica === "bar" ? {
+            y: {
+                beginAtZero: true,
+                grid: { color: 'rgba(0,0,0,0.05)' },
+                title: {
+                    display: true,
+                    text: this.generarTituloEjeY(filtros),
+                    font: { weight: 'bold', size: 14 }
+                }
+            },
+            x: {
+                grid: { display: false },
+                title: {
+                    display: true,
+                    text: etiquetaDescriptiva,
+                    font: { weight: 'bold', size: 14 }
+                },
+                ticks: {
+                    maxRotation: 45,
+                    minRotation: 0
+                }
+            }
+        } : {},
+        cutout: tipoGrafica === "bar" ? '0%' : '40%'
+    };
+}
+
+actualizarTablaConDatos(datos, filtros, esGraficaAgrupada) {
+    const tbody = document.querySelector("#tablaDatos tbody");
+    if (!tbody) return;
+
+    let tablaHTML = '';
+
+    if (esGraficaAgrupada) {
+        // Tabla para gráfica agrupada
+        const totales = {};
+        datos.datasets.forEach(dataset => {
+            dataset.data.forEach((valor, index) => {
+                const label = datos.labels[index];
+                if (!totales[label]) totales[label] = 0;
+                totales[label] += valor;
+            });
         });
 
-        // Llenar tabla con porcentajes
-        const tbody = document.querySelector("#tablaDatos tbody");
-        if (tbody) {
-            tbody.innerHTML = labels
-                .map((l, i) => {
-                    const valor = values[i] || 0;
-                    const porcentaje = total > 0 ? ((valor / total) * 100).toFixed(1) : '0.0';
-                    return `<tr>
-                        <td><strong>${l}</strong></td>
-                        <td style="text-align: center;"><strong>${valor.toLocaleString()}</strong></td>
-                        <td style="text-align: center; color: #2c3e50; font-weight: bold">${porcentaje}%</td>
-                    </tr>`;
-                })
-                .join("");
-        }
+        const totalGeneral = Object.values(totales).reduce((a, b) => a + b, 0);
 
-        setTimeout(() => {
-            if (chartManager.chartAmpliado) {
-                chartManager.chartAmpliado.resize();
+        tablaHTML = datos.labels.map((label, index) => {
+            let filaHTML = '';
+            let subtotal = 0;
+
+            // Filas para cada dataset (estado)
+            datos.datasets.forEach(dataset => {
+                const valor = dataset.data[index] || 0;
+                subtotal += valor;
+                const porcentaje = totalGeneral > 0 ? ((valor / totalGeneral) * 100).toFixed(1) : '0.0';
+                
+                filaHTML += `<tr>
+                    <td><strong>${label} - ${dataset.label}</strong></td>
+                    <td style="text-align: center;"><strong>${valor.toLocaleString()}</strong></td>
+                    <td style="text-align: center; color: #2c3e50; font-weight: bold">${porcentaje}%</td>
+                </tr>`;
+            });
+
+            // Fila de subtotal
+            const porcentajeSubtotal = totalGeneral > 0 ? ((subtotal / totalGeneral) * 100).toFixed(1) : '0.0';
+            filaHTML += `<tr style="background-color: #f8f9fa;">
+                <td><strong>${label} - TOTAL</strong></td>
+                <td style="text-align: center;"><strong>${subtotal.toLocaleString()}</strong></td>
+                <td style="text-align: center; color: #2c3e50; font-weight: bold">${porcentajeSubtotal}%</td>
+            </tr>`;
+
+            return filaHTML;
+        }).join('');
+
+        // Fila de total general
+        tablaHTML += `<tr style="background-color: #e3f2fd; border-top: 2px solid #2196f3;">
+            <td><strong>TOTAL GENERAL</strong></td>
+            <td style="text-align: center;"><strong>${totalGeneral.toLocaleString()}</strong></td>
+            <td style="text-align: center; color: #2196f3; font-weight: bold">100%</td>
+        </tr>`;
+
+    } else {
+        // Tabla para gráfica simple
+        const labels = datos.labels || [];
+        const values = datos.values || [];
+        const total = values.reduce((a, b) => a + b, 0);
+
+        tablaHTML = labels.map((l, i) => {
+            const valor = values[i] || 0;
+            const porcentaje = total > 0 ? ((valor / total) * 100).toFixed(1) : '0.0';
+            return `<tr>
+                <td><strong>${l}</strong></td>
+                <td style="text-align: center;"><strong>${valor.toLocaleString()}</strong></td>
+                <td style="text-align: center; color: #2c3e50; font-weight: bold">${porcentaje}%</td>
+            </tr>`;
+        }).join("");
+    }
+
+    tbody.innerHTML = tablaHTML;
+}
+
+    generarTituloConFiltros(tipo, filtros) {
+        let tituloBase = 'Reservas por Tipo';
+        
+        const partes = [];
+        
+        if (filtros.tipoReserva && filtros.tipoReserva !== '') {
+            if (filtros.tipoReserva === 'todas') {
+                partes.push('Todos los tipos');
+            } else {
+                partes.push(filtros.tipoReserva === 'individual' ? 'Individuales' : 'Grupales');
             }
-        }, 200);
+        }
+        
+        if (filtros.estado && filtros.estado !== '') {
+            if (filtros.estado === 'todas') {
+                partes.push('todos los estados');
+            } else {
+                partes.push(filtros.estado);
+            }
+        }
+        
+        if (partes.length > 0) {
+            return `${tituloBase} - ${partes.join(' / ')}`;
+        }
+        
+        return tituloBase;
+    }
+
+    generarEtiquetaConFiltros(tipo, filtros) {
+        if (filtros.estado && filtros.estado !== '' && filtros.estado !== 'todas') {
+            return `Tipo de Reserva (Estado: ${filtros.estado})`;
+        }
+        return 'Tipo de Reserva';
+    }
+
+    generarLabelDataset(filtros) {
+        if (filtros.estado && filtros.estado !== '' && filtros.estado !== 'todas') {
+            return `Reservas ${filtros.estado}`;
+        }
+        return 'Total de Reservas';
+    }
+
+    generarTituloEjeY(filtros) {
+        if (filtros.estado && filtros.estado !== '' && filtros.estado !== 'todas') {
+            return `Cantidad de Reservas ${filtros.estado}`;
+        }
+        return 'Cantidad de Reservas';
+    }
+
+    actualizarGraficaModal(tipoGrafica) {
+        // Versión simple sin filtros para cuando no hay filtros aplicados
+        this.actualizarGraficaModalConFiltros(tipoGrafica, {});
     }
 
     descargarGraficoPrincipal() {

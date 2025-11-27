@@ -1,14 +1,23 @@
-// Módulo para gestión de filtros
+// Módulo para gestión de filtros - VERSIÓN MODULAR
 class FilterManager {
     constructor() {
         this.filtrosActivos = {};
+        this.app = null;
+        this.dataLoader = null;
+    }
+
+    setApp(app) {
+        this.app = app;
+        if (app && app.modules) {
+            this.dataLoader = app.modules.dataLoader;
+        }
     }
 
     aplicarFiltros() {
-        const tipoEntrada = document.getElementById('filtro-tipo-entrada').value;
-        const temporada = document.getElementById('filtro-temporada').value;
-        const actividad = document.getElementById('filtro-actividad').value;
-        const guia = document.getElementById('filtro-guia').value;
+        const tipoEntrada = document.getElementById('filtro-tipo-entrada')?.value;
+        const temporada = document.getElementById('filtro-temporada')?.value;
+        const actividad = document.getElementById('filtro-actividad')?.value;
+        const guia = document.getElementById('filtro-guia')?.value;
 
         this.filtrosActivos = {};
         
@@ -17,43 +26,82 @@ class FilterManager {
         if (actividad) this.filtrosActivos.actividad = actividad;
         if (guia) this.filtrosActivos.con_guia = guia === 'true';
 
-        dataLoader.setFiltros(this.filtrosActivos);
-        dataLoader.cargarDatosVisitantes();
-
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'success',
-                title: 'Filtros aplicados',
-                text: 'Los datos se han filtrado correctamente',
-                timer: 2000,
-                showConfirmButton: false
-            });
+        // Usar dataLoader modular si está disponible
+        if (this.dataLoader) {
+            this.dataLoader.setFiltros(this.filtrosActivos);
+            this.dataLoader.cargarDatosVisitantes();
+        } else if (typeof dataLoader !== 'undefined') {
+            // Fallback a dataLoader global
+            dataLoader.setFiltros(this.filtrosActivos);
+            dataLoader.cargarDatosVisitantes();
         } else {
-            console.log('Filtros aplicados correctamente');
+            console.error('No hay DataLoader disponible');
+            return;
         }
+
+        this.mostrarMensajeExito('Filtros aplicados', 'Los datos se han filtrado correctamente');
     }
 
     limpiarFiltros() {
-        document.getElementById('filtro-tipo-entrada').value = '';
-        document.getElementById('filtro-temporada').value = '';
-        document.getElementById('filtro-actividad').value = '';
-        document.getElementById('filtro-guia').value = '';
+        // Limpiar inputs
+        const inputs = [
+            'filtro-tipo-entrada',
+            'filtro-temporada', 
+            'filtro-actividad',
+            'filtro-guia'
+        ];
+        
+        inputs.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) element.value = '';
+        });
 
-        dataLoader.limpiarFiltros();
-        dataLoader.cargarDatosVisitantes();
+        this.filtrosActivos = {};
 
+        // Usar dataLoader modular si está disponible
+        if (this.dataLoader) {
+            this.dataLoader.limpiarFiltros();
+            this.dataLoader.cargarDatosVisitantes();
+        } else if (typeof dataLoader !== 'undefined') {
+            // Fallback a dataLoader global
+            dataLoader.limpiarFiltros();
+            dataLoader.cargarDatosVisitantes();
+        } else {
+            console.error('No hay DataLoader disponible');
+            return;
+        }
+
+        this.mostrarMensajeExito('Filtros limpiados', 'Se muestran todos los datos');
+    }
+
+    aplicarFiltrosModal() {
+        // Alias para compatibilidad
+        this.aplicarFiltros();
+    }
+
+    limpiarFiltrosModal() {
+        // Alias para compatibilidad
+        this.limpiarFiltros();
+    }
+
+    mostrarMensajeExito(titulo, texto) {
         if (typeof Swal !== 'undefined') {
             Swal.fire({
                 icon: 'success',
-                title: 'Filtros limpiados',
-                text: 'Se muestran todos los datos',
+                title: titulo,
+                text: texto,
                 timer: 2000,
                 showConfirmButton: false
             });
         } else {
-            console.log('Filtros limpiados correctamente');
+            console.log(`${titulo}: ${texto}`);
         }
     }
+}
+
+// Asegurar disponibilidad global
+if (typeof FilterManager === 'undefined') {
+    window.FilterManager = FilterManager;
 }
 
 // Crear instancia global
