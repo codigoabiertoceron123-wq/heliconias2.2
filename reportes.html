@@ -1105,7 +1105,7 @@ main {
                     <i class="fas fa-headset"></i> Soporte
                 </a>
 
-                <button class="btn btn-primary tooltip" id="help-btn">
+                <button class="btn btn-primary tooltip" id="help-main-btn">
                     <i class="fas fa-question-circle"></i> Ayuda
                 </button>
 
@@ -1239,6 +1239,9 @@ main {
     <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+
+         // Variable global para el usuario
+    let currentUser = null;
     // Variables globales
     // Función para actualizar fecha y hora
         function updateDateTime() {
@@ -1279,7 +1282,7 @@ let reports = [];
 // Botón cerrar editor - VERSIÓN ACTUALIZADA
 document.getElementById('close-editor-btn').addEventListener('click', closeEditor);
 // Botón de ayuda del header
-document.getElementById('help-btn').addEventListener('click', function() {
+document.getElementById('help-main-btn').addEventListener('click', function() {
     Swal.fire({
         title: '<div style="display: flex; align-items: center; gap: 10px; color: #2c3e50;"><i class="fas fa-file-alt" style="color: #27ae60; font-size: 1.5rem;"></i><span>Sistema de Reportes - Heliconias</span></div>',
         html: `
@@ -2641,8 +2644,15 @@ function getElementContent(element, type) {
         }
 
   // Función para guardar el reporte completo en la base de datos
+// Función para guardar el reporte completo en la base de datos
 async function saveReport() {
     try {
+        // Verificar autenticación antes de guardar
+        const user = await checkAuth();
+        if (!user) {
+            throw new Error('Usuario no autenticado');
+        }
+
         Swal.fire({
             title: 'Guardando...',
             text: 'Procesando el informe',
@@ -2657,10 +2667,16 @@ async function saveReport() {
         const pages = document.querySelectorAll('.page');
         
         pages.forEach((page, index) => {
+            // Limpiar el contenido de elementos draggable para evitar duplicados
+            let cleanContent = page.querySelector('.page-content')?.innerHTML || '';
+            
+            // Remover elementos draggable del contenido principal
+            cleanContent = cleanContent.replace(/<div[^>]*class="[^"]*draggable-element[^"]*"[^>]*>[\s\S]*?<\/div>/g, '');
+            
             const pageContent = {
                 pageNumber: index + 1,
                 title: page.querySelector('.page-header h3')?.textContent || `Página ${index + 1}`,
-                content: page.querySelector('.page-content')?.innerHTML || '',
+                content: cleanContent,
                 type: Array.from(page.classList).find(cls => 
                     ['portada', 'contraportada', 'indice', 'resumen', 'desarrollo', 'normal'].includes(cls)
                 ) || 'normal',
@@ -2697,20 +2713,16 @@ async function saveReport() {
             elementsData.push(elementData);
         });
 
-        // 3. Preparar datos para guardar
+        // 3. Preparar datos para guardar - CON usuario autenticado
         const reportData = {
             titulo: pagesData[0]?.title || 'Informe sin título',
             contenido: JSON.stringify(pagesData),
             elementos: elementsData,
-            metadata: {
-                zoom: currentZoom,
-                orientation: currentOrientation,
-                total_pages: pages.length,
-                created_at: new Date().toISOString()
-            },
             estado: 'borrador',
-            id_usuario: 1 // Esto debería venir de la sesión del usuario
+            id_usuario: user.id // Usar el ID del usuario autenticado
         };
+
+        console.log('Datos a guardar con usuario:', reportData);
 
         // 4. Guardar en Supabase
         const { data, error } = await supabase
@@ -2718,7 +2730,10 @@ async function saveReport() {
             .insert([reportData])
             .select();
 
-        if (error) throw error;
+        if (error) {
+            console.error('Error de Supabase:', error);
+            throw error;
+        }
 
         // 5. Procesar imágenes si existen
         const imageElements = elementsData.filter(el => el.type === 'image');
@@ -2735,17 +2750,18 @@ async function saveReport() {
             }
         }
 
-        // 6. Actualizar el reporte con las URLs de las imágenes
-        if (imageElements.length > 0) {
+        // 6. Actualizar el reporte con las URLs de las imágenes si hubo cambios
+        if (imageElements.some(el => el.content.startsWith('http'))) {
             const { error: updateError } = await supabase
                 .from('reportes')
                 .update({ 
-                    elementos: elementsData,
-                    fecha_modificacion: new Date().toISOString()
+                    elementos: elementsData
                 })
                 .eq('id_reporte', data[0].id_reporte);
 
-            if (updateError) throw updateError;
+            if (updateError) {
+                console.warn('Error actualizando imágenes:', updateError);
+            }
         }
 
         Swal.close();
@@ -2768,6 +2784,9 @@ async function saveReport() {
                         <p style="margin: 0; font-size: 0.95rem; color: #27ae60;">
                             <i class="fas fa-layer-group"></i> ${pages.length} páginas
                         </p>
+                        <p style="margin: 0; font-size: 0.9rem; color: #7f8c8d;">
+                            <i class="fas fa-user"></i> ${user.email}
+                        </p>
                         <p style="margin: 8px 0 0 0; font-size: 0.9rem; color: #7f8c8d;">
                             ID: ${data[0].id_reporte}
                         </p>
@@ -2783,15 +2802,28 @@ async function saveReport() {
             width: 500
         });
 
+        // Recargar la lista de reportes
+        loadReports();
+
         return data[0];
 
     } catch (error) {
         console.error('Error guardando reporte:', error);
         Swal.close();
         
+        let errorMessage = 'No se pudo guardar el informe';
+        
+        if (error.message.includes('Usuario no autenticado')) {
+            errorMessage = 'Debes iniciar sesión para guardar informes.';
+        } else if (error.message.includes('foreign key constraint')) {
+            errorMessage = 'Error: El usuario no existe en la base de datos.';
+        } else {
+            errorMessage = 'No se pudo guardar el informe: ' + error.message;
+        }
+        
         Swal.fire({
             title: 'Error al Guardar',
-            text: 'No se pudo guardar el informe: ' + error.message,
+            text: errorMessage,
             icon: 'error',
             confirmButtonColor: '#e74c3c',
             confirmButtonText: 'Entendido'
@@ -2816,6 +2848,85 @@ function getElementContent(element, type) {
     }
 }
 
+
+// Función para verificar autenticación
+async function checkAuth() {
+    try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error) {
+            console.error('Error verificando autenticación:', error);
+            showLoginModal();
+            return null;
+        }
+        
+        if (!user) {
+            showLoginModal();
+            return null;
+        }
+        
+        currentUser = user;
+        updateUIWithUser(user);
+        return user;
+        
+    } catch (error) {
+        console.error('Error en checkAuth:', error);
+        showLoginModal();
+        return null;
+    }
+}
+
+// Función para mostrar modal de login
+function showLoginModal() {
+    Swal.fire({
+        title: 'Autenticación Requerida',
+        html: `
+            <div style="text-align: center;">
+                <div style="font-size: 4rem; color: #e74c3c; margin-bottom: 20px;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <p style="margin-bottom: 20px; font-size: 1.1rem;">
+                    Debes iniciar sesión para guardar informes.
+                </p>
+                <div style="background: #fff3cd; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                    <p style="margin: 0; color: #856404; font-weight: 600;">
+                        <i class="fas fa-info-circle"></i>
+                        Tu trabajo se perderá si no inicias sesión.
+                    </p>
+                </div>
+            </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión',
+        cancelButtonText: 'Continuar sin guardar',
+        confirmButtonColor: '#27ae60',
+        cancelButtonColor: '#e74c3c',
+        width: 500
+    }).then((result) => {
+        if (result.isConfirmed) {
+            redirectToLogin();
+        }
+    });
+}
+
+// Función para redirigir al login
+function redirectToLogin() {
+    window.location.href = 'login.html'; // Crea esta página después
+}
+
+// Actualizar UI con información del usuario
+function updateUIWithUser(user) {
+    const userInfoElement = document.getElementById('user-info');
+    if (userInfoElement) {
+        userInfoElement.innerHTML = `
+            <span style="display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-user-circle"></i>
+                ${user.email}
+            </span>
+        `;
+    }
+}
 // Función auxiliar para obtener el número de página del elemento
 function getElementPageNumber(element) {
     const page = element.closest('.page');
@@ -2902,7 +3013,7 @@ document.getElementById('save-report-btn').addEventListener('click', async funct
 });
 
         // Botón de ayuda del header
-        document.getElementById('help-btn').addEventListener('click', function() {
+        document.getElementById('help-main-btn').addEventListener('click', function() {
             Swal.fire({
                 title: '<div style="display: flex; align-items: center; gap: 10px; color: #2c3e50;"><i class="fas fa-home" style="color: #27ae60; font-size: 1.5rem;"></i><span>Centro de Ayuda - Panel Principal</span></div>',
                 html: `
