@@ -4,6 +4,7 @@
     
  
     let chartBarEdad, chartPieEdad, chartAmpliadoEdad;
+    
     let tipoActualEdad = "edad";
     let datosSimuladosEdad = {};
     let datosOriginalesEdad = {};
