@@ -16,719 +16,14 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtbmNuZGR3em1qeGdtdmlzdnF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NDIyNzksImV4cCI6MjA3ODExODI3OX0.ODvus28cTCTD8gGewQ2sAZ8PcXbEe4CIy_zv6bip8J0';
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
     </script>
+    <link rel="stylesheet" href="css/styless.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
         
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: white; /* Fondo blanco */
-            z-index: -1;
-        }
-        /* Header Styles */
-        /* Header Styles */
-        .header {
-            background: linear-gradient(135deg, #ffffff, #ffffff);
-            color: #2e7d32;
-            padding: 15px 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .top-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .logo {
-            display: flex;           /* Activar flexbox */
-            align-items: center;     /* Centrar verticalmente el contenido */
-            gap: 15px;               /* Espacio entre logo y título */
-        }
-
-        .logo-img {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .logo-img i {
-            display: block;
-            width: 100%;
-            height: 100%;
-            background-image: url("img/logo.png"); /* Tu logo real */
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            font-size: 0; /* Oculta el ícono de fontawesome */
-            color: transparent;
-        }
-
-        .logo h1 {
-            font-size: 24px;
-            font-weight: 700;
-            margin: 0;
-        }
-        
-        .top-bar {
-            display: flex;
-            justify-content: space-between; /* izquierda - derecha */
-            align-items: center;            /* misma línea */
-            width: 100%;
-            margin-bottom: 10px;
-            margin-top: 15px; 
-        }
-
-        .system-date {
-            display: flex;
-            margin-left: 20px;
-            align-items: center;
-            gap: 10px;
-            font-weight: 500;
-            color: #000000;
-            background: rgba(255, 255, 255, 0.15); /* efecto cristal */
-            padding: 10px 18px;
-            border-radius: 25px;
-            backdrop-filter: blur(6px);  /* efecto vidrio borroso */
-            -webkit-backdrop-filter: blur(6px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-            font-size: 15px;
-            letter-spacing: 0.5px;        /* más elegante */
-        }
-
-        /* Navigation Styles */
-        .nav-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 10px;
-            border-top: 1px solid rgba(255,255,255,0.3);
-        }
-
-        .main-nav {
-            display: flex;
-            gap: 5px;
-            left: 50px;/* ajusta el valor para mover más a la izquierda o derecha */
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            color: #2e7d32;
-            text-decoration: none;
-            border-radius: 6px;
-            position: relative;
-            background: transparent; /* quitar fondo */
-            transition: all 0.3s ease;
-        }
-
-        /* Línea inferior al pasar el mouse */
-        .nav-item::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 10%;           /* margen izquierdo de la línea */
-            width: 80%;          /* ancho de la línea */
-            height: 2px;         /* grosor de la línea */
-            background: linear-gradient(135deg, #2e7d32, #4caf50);
-            transform: scaleX(0); /* inicialmente invisible */
-            transition: transform 0.3s ease;
-            transform-origin: center;
-        }
-
-        .nav-item:hover::after {
-            transform: scaleX(1); /* línea aparece */
-        }
-
-        .user-actions {
-            display: flex;        /* ya estaba flex */
-            justify-content: flex-end;  /* esto los lleva a la derecha */
-            gap: 10px; 
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.3s ease;
-            position: relative;
-            left: -20px; /* mueve cada botón 20px hacia la izquierda */
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #2e7d32, #4caf50); /* verde degradado */
-            color: white;
-        }
-
-
-        .btn-accent {
-            background: linear-gradient(135deg, #e74c3c, #fe5926); 
-            color: white;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        /* Tooltip Styles */
-        .tooltip {
-            position: relative;
-        }
-
-        .tooltip-text {
-            visibility: hidden;
-            width: 140px;
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            text-align: center;
-            border-radius: 6px;
-            padding: 8px;
-            position: absolute;
-            z-index: 1000;
-            bottom: 125%;
-            left: 50%;
-            transform: translateX(-50%);
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-size: 0.8rem;
-            font-weight: normal;
-        }
-
-        .tooltip-text::after {
-            content: "";
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
-        }
-
-        .tooltip:hover .tooltip-text {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        /* Main Content Styles */
-        main {
-            padding: 20px;
-            min-height: calc(100vh - 140px);
-        }
-
-        /* Estadísticas Styles */
-        .stats-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            border-left: 5px solid #2e7d32;
-            transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-        }
-
-        .stat-card h3 {
-            margin: 0 0 8px 0;
-            font-size: 0.95rem;
-            color: #2c3e50;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .stat-number {
-            font-size: 2.2rem;
-            font-weight: 800;
-            color: #2e7d32;
-            margin-bottom: 5px;
-        }
-
-        .stat-description {
-            color: #7f8c8d;
-            font-size: 0.85rem;
-            margin: 0;
-        }
-
-        .chart-controls {
-            background: white;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-
-        .chart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 12px;
-        }
-
-        .chart-type-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .chart-btn {
-            background: #f8f9fa;
-            border: 1px solid #e8f5e8;
-            padding: 8px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .chart-btn:hover {
-            background: #e1f0e5;
-        }
-
-        .chart-btn.active {
-            background: linear-gradient(135deg, #2e7d32, #4caf50); 
-            color: #fff;
-            border-color: #2e7d32;
-        }
-
-        .download-btn {
-            background: linear-gradient(135deg, #2c3e50, #34495e);
-            color: #fff;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 600;
-        }
-
-        .download-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        }
-
-        .charts-grid {
-            display: flex;
-            gap: 18px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-
-        .chart-card {
-            background: white;
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            width: calc(50% - 9px);
-            min-width: 300px;
-            height: 300px;
-            display: flex;
-            flex-direction: column;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .chart-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-        }
-
-        .chart-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .chart-card-title {
-            font-weight: 700;
-            color: #2c3e50;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .chart-card-badge {
-            background: #e8f4fd;
-            color: #3498db;
-            padding: 4px 8px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .chart-canvas-wrap {
-            flex: 1;
-            position: relative;
-            min-height: 0;
-        }
-
-        .pie-chart-container {
-            height: 160px !important;
-        }
-
-        canvas {
-            width: 100% !important;
-            height: 100% !important;
-        }
-
-        .data-table {
-            background: #fff;
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            margin-bottom: 20px;
-        }
-
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-        }
-
-        .table th,
-        .table td {
-            padding: 12px 14px;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .table th {
-            background: #f8f9fa;
-            color: #2c3e50;
-            font-weight: 600;
-            text-align: left;
-        }
-
-        .table tr:hover {
-            background: #f8f9fa;
-        }
-
-        .age-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            background: #e3f2fd;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #1976d2;
-        }
-
-        .interest-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .observacion { background: #e8f5e8; color: #2e7d32; }
-        .fotografia { background: #e3f2fd; color: #1976d2; }
-        .investigacion { background: #fff3e0; color: #f57c00; }
-        .educacion { background: #f3e5f5; color: #7b1fa2; }
-        .recreacion { background: #fce4ec; color: #c2185b; }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.7);
-            backdrop-filter: blur(3px);
-        }
-
-        .modal.show {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background-color: #fff;
-            margin: auto;
-            padding: 24px;
-            border-radius: 16px;
-            width: 90%;
-            max-width: 1000px;
-            max-height: 90vh;
-            overflow: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            animation: modalFadeIn 0.3s;
-        }
-
-        @keyframes modalFadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .modal-title {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: #2c3e50;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .close {
-            color: #7f8c8d;
-            font-size: 24px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: #f8f9fa;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .close:hover {
-            color: #000;
-            background: #e9ecef;
-        }
-
-        .modal-chart-container {
-            height: 500px;
-            margin-bottom: 20px;
-            background: white;
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-
-        .download-btn-small {
-            background: #3498db;
-            color: #fff;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 600;
-        }
-
-        .download-btn-small:hover {
-            background: #2980b9;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
-        .download-btn-small.secondary {
-           background: linear-gradient(135deg, #2e7d32, #4caf50); 
-        }
-
-        .download-btn-small.secondary:hover {
-           background: linear-gradient(135deg, #2e7d32, #4caf50); 
-        }
-
-        .no-data {
-            padding: 40px;
-            text-align: center;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-
-        .no-data i {
-            font-size: 48px;
-            color: #cbd5d1;
-            margin-bottom: 16px;
-        }
-
-        .no-data h3 {
-            color: #2c3e50;
-            margin-bottom: 8px;
-        }
-
-        .no-data p {
-            color: #7f8c8d;
-            margin: 0;
-        }
-
-        .table-section {
-            display: none;
-        }
-
-        .table-section.active {
-            display: block;
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .nav-container {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .main-nav {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .header {
-                padding: 15px;
-            }
-            
-            .top-section {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
-            
-            .user-actions {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            
-            .nav-item {
-                padding: 8px 12px;
-                font-size: 0.9rem;
-            }
-
-            main {
-                padding: 15px;
-            }
-
-            .chart-card {
-                width: 100%;
-                min-width: 0;
-                height: 300px;
-            }
-
-            .modal-content {
-                width: 95%;
-                padding: 16px;
-            }
-
-            .modal-chart-container {
-                height: 400px;
-            }
-
-            .chart-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-
-            .chart-type-buttons {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .nav-item {
-                padding: 6px 10px;
-                font-size: 0.8rem;
-            }
-
-            .btn {
-                padding: 6px 12px;
-                font-size: 0.8rem;
-            }
-
-            .logo h1 {
-                font-size: 1.1rem;
-            }
-
-            .logo-img {
-                width: 40px;
-                height: 40px;
-            }
-
-            .system-date {
-                font-size: 0.8rem;
-                padding: 6px 12px;
-            }
-        }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
+   <!-- Header -->
+        <header class="header">
             <div class="top-section">
                 <div class="logo">
                     <div class="logo-img">
@@ -786,7 +81,8 @@
                 </button>
             </div>
         </div>
-
+        <main class="main-content">
+    
     <!-- Contenido principal -->
     <main>
         <div class="content-area">
@@ -808,45 +104,142 @@
                 </div>
             </div>
 
-            <div id="data-container">
-                <!-- Los datos se cargan dinámicamente aquí -->
+             <!-- 🎯 AQUÍ VAN LOS BOTONES DE NAVEGACIÓN - PEGA ESTO INMEDIATAMENTE DESPUÉS -->
+            <div class="chart-controls">
+                <div class="chart-header">
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 6px">
+                        <i class="fas fa-chart-line"></i> Tipo de Reporte
+                        <span style="background: #27ae60; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; margin-left: 10px;">
+                            Seleccionar
+                        </span>
+                    </h3>
+                </div>
+
+             <!-- BOTONES DE NAVEGACIÓN -->
+            <div class="chart-type-buttons btn-group" style="margin-top: 12px">
+                <button class="chart-btn active" data-type="edad" onclick="window.EdadSystem.cambiarTipoReporte('edad')">
+                    <i class="fas fa-user"></i> Por Edad
+                </button>
+                <button class="chart-btn" data-type="fecha" onclick="window.EdadSystem.cambiarTipoReporte('fecha')">
+                    <i class="fas fa-calendar-day"></i> Por Fecha
+                </button>
+                <button class="chart-btn" data-type="mes" onclick="window.EdadSystem.cambiarTipoReporte('mes')">
+                    <i class="fas fa-calendar-week"></i> Por Mes
+                </button>
+                <button class="chart-btn" data-type="anio" onclick="window.EdadSystem.cambiarTipoReporte('anio')">
+                    <i class="fas fa-calendar-alt"></i> Por Año
+                </button>
             </div>
 
+            <!-- 🆕 NUEVOS FILTROS COMBINADOS (AGREGA ESTO) -->
+            <!-- <div class="chart-controls">
+                <div class="chart-controls">
+                    <div class="chart-header">
+                        <h3 style="margin: 0; display: flex; align-items: center; gap: 6px">
+                            <i class="fas fa-filter"></i> Filtros por Período y Edad
+                        </h3>
+                    </div> -->
+
+                <div id="filtros-combinados" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                        <!-- Filtro de Rango de Fechas -->
+                        <div class="filtro-grupo">
+                            <label for="filtro-fecha-inicial"><i class="fas fa-calendar-alt"></i> Fecha Inicial:</label>
+                            <input type="date" id="filtro-fecha-inicial" class="filtro-input">
+                        </div>
+                        <div class="filtro-grupo">
+                            <label for="filtro-fecha-final"><i class="fas fa-calendar-alt"></i> Fecha Final:</label>
+                            <input type="date" id="filtro-fecha-final" class="filtro-input">
+                        </div>
+                        
+                        <!-- Filtro de Rango de Edad -->
+                       <div class="filtro-grupo">
+                            <label for="filtro-rango-edad"><i class="fas fa-user"></i> Rango de Edad:</label>
+                            <select id="filtro-rango-edad" class="filtro-select">
+                                <option value="todos">Todas las edades</option>
+                                <option value="0-17">0-17 años</option>
+                                <option value="18-25">18-25 años</option>
+                                <option value="26-35">26-35 años</option>
+                                <option value="36-50">36-50 años</option>
+                                <option value="51-65">51-65 años</option>
+                                <option value="66+">66+ años</option>
+                            </select>
+                        </div>
+
+                        <!-- Filtro de Género -->
+                        <div class="filtro-grupo">
+                            <label for="filtro-genero"><i class="fas fa-venus-mars"></i> Género:</label>
+                            <select id="filtro-genero" class="filtro-select">
+                                <option value="todos">Todos los géneros</option>
+                                <option value="Masculino">Masculino</option>
+                                <option value="Femenino">Femenino</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="window.EdadSystem.aplicarFiltrosCombinados()">
+                            <i class="fas fa-check"></i> Aplicar Filtros
+                        </button>
+                        <button class="btn" onclick="window.EdadSystem.limpiarFiltrosCombinados()" style="background: #95a5a6; color: white;">
+                            <i class="fas fa-times"></i> Limpiar
+                        </button>
+                        <button class="btn" onclick="window.EdadSystem.exportarDatosFiltrados()" style="background: #27ae60; color: white;">
+                            <i class="fas fa-file-export"></i> Exportar Datos
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="data-container">
+            <div class="no-data">
+                <i class="fas fa-spinner fa-spin"></i>
+                <h3>Cargando datos de edad...</h3>
+                <p>Calculando edades desde fechas de nacimiento</p>
+            </div>
+        </div>
+
             <!-- Modal ampliado -->
-            <div id="chartModal" class="modal">
+            <div id="chartModalEdad" class="modal">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <div class="modal-title" id="modalTitle">
-                            <i class="fas fa-expand"></i> Vista Ampliada
+                        <div class="modal-title" id="modalTitleEdad">
+                            <i class="fas fa-expand"></i> Vista Ampliada - Distribución por Edad
                         </div>
                         <div class="modal-actions">
-                            <button class="download-btn-small secondary" onclick="descargarPNG()">
+                            <button class="download-btn-small secondary" onclick="window.EdadSystem.descargarPNG()">
                                 <i class="fas fa-image"></i> PNG
                             </button>
-                            <button class="download-btn-small" onclick="descargarExcel()">
+                            <button class="download-btn-small" onclick="window.EdadSystem.descargarExcel()">
                                 <i class="fas fa-file-excel"></i> Excel
                             </button>
-                            <span class="close" onclick="cerrarModal()">&times;</span>
+                            <span class="close" onclick="window.EdadSystem.cerrarModal()">&times;</span>
                         </div>
                     </div>
 
                     <div class="modal-chart-container">
-                        <canvas id="chartAmpliado"></canvas>
+                        <canvas id="chartAmpliadoEdad"></canvas>
                     </div>
 
                     <div class="data-table">
                         <h4 style="margin: 0 0 12px 0; display: flex; align-items: center; gap: 6px;">
-                            <i class="fas fa-table"></i> Datos de la Gráfica
+                            <i class="fas fa-table"></i> Datos por Grupos de Edad
                         </h4>
-                        <table class="table" id="tablaDatos">
+                        <table class="table" id="tablaDatosEdad">
                             <thead>
                                 <tr>
                                     <th>Grupo de Edad</th>
+                                    <th>Rango</th>
                                     <th>Total Visitantes</th>
                                     <th>Porcentaje</th>
+                                    <th>Descripción</th>
                                 </tr>
                             </thead>
-                            <tbody></tbody>
+                            <tbody id="tbodyDatosEdad">
+                                <!-- Los datos se llenarán dinámicamente -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -855,815 +248,73 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- SISTEMA DE EDAD AISLADO -->
+    <script src="js/edad-system.js"></script>
+    <script src="js/edad.js"></script>
+
     <script>
-        // Variables globales
-        let chartBar, chartPie, chartAmpliado;
-        let tipoActual = "edad";
-        let datosEdades = [];
-        let datosSimulados = {};
-
-        // Paletas de colores por grupo de edad
-        const coloresPorEdad = {
-            '0-17': '#27ae60',  // Verde - Niños/Jóvenes
-            '18-25': '#3498db', // Azul - Jóvenes adultos
-            '26-35': '#f39c12', // Amarillo - Adultos jóvenes
-            '36-50': '#e67e22', // Naranja - Adultos
-            '51-65': '#9b59b6', // Morado - Adultos mayores
-            '66+': '#e74c3c'    // Rojo - Tercera edad
-        };
-
-        // Paletas de colores para otros tipos
-        const colorPalettes = {
-            fecha: [
-                '#3498db', '#e67e22', '#9b59b6', '#1abc9c', '#e74c3c',
-                '#f1c40f', '#34495e', '#d35400', '#8e44ad', '#16a085'
-            ],
-            dia: [
-                '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
-                '#DDA0DD', '#98D8C8'
-            ],
-            mes: [
-                '#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6',
-                '#1abc9c', '#d35400', '#34495e'
-            ],
-            anio: [
-                '#3498db', '#e67e22', '#2ecc71', '#9b59b6', '#f1c40f'
-            ],
-            intereses: [
-                '#27ae60', '#3498db', '#f39c12', '#9b59b6', '#e74c3c'
-            ]
-        };
-
-        // Función para actualizar fecha y hora
+        // Solo funciones básicas sin conflicto
         function updateDateTime() {
             const now = new Date();
             const dateTimeString = now.toLocaleString("es-ES", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-                hour12: true,
+                weekday: "long", year: "numeric", month: "long", 
+                day: "numeric", hour: "2-digit", minute: "2-digit"
             });
-
             document.getElementById("current-date-time").textContent = dateTimeString;
         }
 
-        // Función para cargar datos de edades
-        async function cargarDatosEdades() {
-            try {
-                Swal.fire({
-                    title: 'Cargando datos...',
-                    text: 'Obteniendo información de edades',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-
-                console.log('Consultando datos de edades...');
-                
-                // Consultar la tabla de visitantes con los campos específicos
-                const { data: visitantes, error } = await supabase
-                    .from('visitantes')
-                    .select('edad, ciudad_origen, fecha_visita, intereses_heliconias')
-                    .not('edad', 'is', null)
-                    .order('fecha_visita', { ascending: false });
-
-                if (error) {
-                    console.error('Error en consulta:', error);
-                    throw new Error(`Error de base de datos: ${error.message}`);
-                }
-
-                console.log('Datos de edades recibidos:', visitantes);
-
-                if (visitantes && visitantes.length > 0) {
-                    procesarDatosEdades(visitantes);
-                    mostrarDatos();
-                } else {
-                    console.log('No se encontraron visitantes con edad registrada');
-                    mostrarSinDatos();
-                }
-
-                Swal.close();
-                
-            } catch (error) {
-                console.error('Error cargando edades:', error);
-                Swal.close();
-                
-                let mensajeError = 'No se pudieron cargar los datos de edades';
-                if (error.message.includes('JWT')) {
-                    mensajeError = 'Error de autenticación. Verifica la configuración de Supabase.';
-                } else if (error.message.includes('network') || error.message.includes('fetch')) {
-                    mensajeError = 'Error de conexión. Verifica tu conexión a internet.';
-                } else if (error.message.includes('permission')) {
-                    mensajeError = 'No tienes permisos para acceder a estos datos.';
-                }
-                
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: mensajeError,
-                    confirmButtonColor: '#e74c3c'
-                }).then(() => {
-                    mostrarSinDatos();
-                });
-            }
-        }
-
-        // Función para procesar datos de edades
-        function procesarDatosEdades(visitantes) {
-            console.log('Procesando datos de edades...');
-            
-            // Agrupar por rangos de edad
-            const rangosEdad = {
-                '0-17': 0,   // Niños y adolescentes
-                '18-25': 0,  // Jóvenes adultos
-                '26-35': 0,  // Adultos jóvenes
-                '36-50': 0,  // Adultos
-                '51-65': 0,  // Adultos mayores
-                '66+': 0     // Tercera edad
-            };
-
-            let sumaEdades = 0;
-            let totalConEdad = 0;
-
-            visitantes.forEach(visita => {
-                if (visita.edad) {
-                    sumaEdades += visita.edad;
-                    totalConEdad++;
-
-                    // Asignar a rango de edad
-                    if (visita.edad <= 17) {
-                        rangosEdad['0-17']++;
-                    } else if (visita.edad <= 25) {
-                        rangosEdad['18-25']++;
-                    } else if (visita.edad <= 35) {
-                        rangosEdad['26-35']++;
-                    } else if (visita.edad <= 50) {
-                        rangosEdad['36-50']++;
-                    } else if (visita.edad <= 65) {
-                        rangosEdad['51-65']++;
-                    } else {
-                        rangosEdad['66+']++;
-                    }
-                }
-            });
-
-            const labelsEdad = Object.keys(rangosEdad);
-            const valuesEdad = Object.values(rangosEdad);
-            const edadPromedio = totalConEdad > 0 ? Math.round(sumaEdades / totalConEdad) : 0;
-            const totalGrupos = Object.keys(rangosEdad).filter(rango => rangosEdad[rango] > 0).length;
-
-            // Actualizar estadísticas
-            document.getElementById('total-visitantes').textContent = totalConEdad.toLocaleString();
-            document.getElementById('edad-promedio').textContent = edadPromedio + ' años';
-            document.getElementById('total-grupos').textContent = totalGrupos;
-
-            // Procesar datos por fecha, día, mes, año e intereses
-            const datosTiempo = procesarDatosPorTiempo(visitantes);
-            const datosIntereses = procesarDatosPorIntereses(visitantes);
-
-            // Preparar datos para gráficas
-            datosSimulados = {
-                edad: {
-                    labels: labelsEdad,
-                    values: valuesEdad
-                },
-                fecha: datosTiempo.fecha,
-                dia: datosTiempo.dia,
-                mes: datosTiempo.mes,
-                anio: datosTiempo.anio,
-                intereses: datosIntereses
-            };
-
-            console.log('Datos procesados:', datosSimulados);
-        }
-
-        // Función para procesar datos por tiempo
-        function procesarDatosPorTiempo(visitantes) {
-            // Por fecha
-            const visitasPorFecha = {};
-            // Por día de la semana
-            const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-            const visitasPorDia = {
-                'Lunes': 0, 'Martes': 0, 'Miércoles': 0, 'Jueves': 0, 
-                'Viernes': 0, 'Sábado': 0, 'Domingo': 0
-            };
-            // Por mes
-            const meses = [
-                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-            ];
-            const visitasPorMes = {};
-            // Por año
-            const visitasPorAnio = {};
-
-            visitantes.forEach(visita => {
-                const fecha = new Date(visita.fecha_visita);
-                
-                // Por fecha
-                const fechaStr = fecha.toISOString().split('T')[0];
-                if (!visitasPorFecha[fechaStr]) {
-                    visitasPorFecha[fechaStr] = 0;
-                }
-                visitasPorFecha[fechaStr]++;
-                
-                // Por día de la semana
-                const dia = diasSemana[fecha.getDay()];
-                visitasPorDia[dia]++;
-                
-                // Por mes
-                const mes = meses[fecha.getMonth()];
-                if (!visitasPorMes[mes]) {
-                    visitasPorMes[mes] = 0;
-                }
-                visitasPorMes[mes]++;
-                
-                // Por año
-                const anio = fecha.getFullYear().toString();
-                if (!visitasPorAnio[anio]) {
-                    visitasPorAnio[anio] = 0;
-                }
-                visitasPorAnio[anio]++;
-            });
-
-            return {
-                fecha: {
-                    labels: Object.keys(visitasPorFecha).slice(0, 10), // Últimas 10 fechas
-                    values: Object.values(visitasPorFecha).slice(0, 10)
-                },
-                dia: {
-                    labels: Object.keys(visitasPorDia),
-                    values: Object.values(visitasPorDia)
-                },
-                mes: {
-                    labels: Object.keys(visitasPorMes),
-                    values: Object.values(visitasPorMes)
-                },
-                anio: {
-                    labels: Object.keys(visitasPorAnio),
-                    values: Object.values(visitasPorAnio)
-                }
-            };
-        }
-
-        // Función para procesar datos por intereses
-        function procesarDatosPorIntereses(visitantes) {
-            const intereses = {
-                'Observación': 0,
-                'Fotografía': 0,
-                'Investigación': 0,
-                'Educación': 0,
-                'Recreación': 0
-            };
-
-            visitantes.forEach(visita => {
-                if (visita.intereses_heliconias && intereses.hasOwnProperty(visita.intereses_heliconias)) {
-                    intereses[visita.intereses_heliconias]++;
-                }
-            });
-
-            return {
-                labels: Object.keys(intereses),
-                values: Object.values(intereses)
-            };
-        }
-
-        // Función para obtener etiqueta descriptiva
-        function obtenerEtiquetaDescriptiva(tipo) {
-            const etiquetas = {
-                edad: 'Grupo de Edad',
-                fecha: 'Fecha de Visita',
-                dia: 'Día de la Semana',
-                mes: 'Mes del Año',
-                anio: 'Año',
-                intereses: 'Interés Principal'
-            };
-            return etiquetas[tipo] || 'Categoría';
-        }
-
-        // Función para obtener título descriptivo
-        function obtenerTituloDescriptivo(tipo) {
-            const titulos = {
-                edad: 'Visitantes por Grupo de Edad',
-                fecha: 'Visitantes por Fecha',
-                dia: 'Visitantes por Día de la Semana',
-                mes: 'Visitantes por Mes',
-                anio: 'Visitantes por Año',
-                intereses: 'Visitantes por Interés en Heliconias'
-            };
-            return titulos[tipo] || 'Distribución de Visitantes';
-        }
-
-        // Función para obtener clase CSS por interés
-        function obtenerClaseInteres(interes) {
-            const clases = {
-                'Observación': 'observacion',
-                'Fotografía': 'fotografia',
-                'Investigación': 'investigacion',
-                'Educación': 'educacion',
-                'Recreación': 'recreacion'
-            };
-            return clases[interes] || 'observacion';
-        }
-
-        // Función para generar colores según el tipo
-        function generarColores(tipo, labels) {
-            if (tipo === 'edad') {
-                return labels.map(label => coloresPorEdad[label] || '#95a5a6');
-            } else if (tipo === 'intereses') {
-                const coloresIntereses = {
-                    'Observación': '#27ae60',
-                    'Fotografía': '#3498db',
-                    'Investigación': '#f39c12',
-                    'Educación': '#9b59b6',
-                    'Recreación': '#e74c3c'
-                };
-                return labels.map(label => coloresIntereses[label] || '#95a5a6');
-            } else {
-                const palette = colorPalettes[tipo] || colorPalettes.fecha;
-                const cols = [];
-                for(let i = 0; i < labels.length; i++) {
-                    cols.push(palette[i % palette.length]);
-                }
-                return cols;
-            }
-        }
-
-        // Función para mostrar gráficas
-        function mostrarGraficas(tipo) {
-            tipoActual = tipo;
-            crearGraficas(tipo);
-        }
-
-        // Función para crear gráficas
-        function crearGraficas(tipo) {
-            const { labels, values } = datosSimulados[tipo];
-            const colors = generarColores(tipo, labels);
-            const etiquetaDescriptiva = obtenerEtiquetaDescriptiva(tipo);
-            const tituloDescriptivo = obtenerTituloDescriptivo(tipo);
-
-            // Configurar barras
-            const ctxBar = document.getElementById("chartBar").getContext("2d");
-            if (chartBar) chartBar.destroy();
-            chartBar = new Chart(ctxBar, {
-                type: "bar",
-                data: {
-                    labels,
-                    datasets: [
-                        {
-                            label: "Total de Visitantes",
-                            data: values,
-                            backgroundColor: colors,
-                            borderRadius: 6,
-                            barThickness: 18,
-                        },
-                    ],
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        title: {
-                            display: true,
-                            text: tituloDescriptivo,
-                            font: { size: 16, weight: 'bold' },
-                            padding: 20
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0,0,0,0.7)',
-                            titleFont: { size: 13 },
-                            bodyFont: { size: 13 },
-                            padding: 10,
-                            cornerRadius: 6,
-                            callbacks: {
-                                title: function(tooltipItems) {
-                                    return tooltipItems[0].label;
-                                },
-                                label: function(context) {
-                                    return `Visitantes: ${context.parsed.y.toLocaleString()}`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(0,0,0,0.05)' },
-                            title: {
-                                display: true,
-                                text: 'Cantidad de Visitantes',
-                                font: { weight: 'bold' }
-                            }
-                        },
-                        x: {
-                            grid: { display: false },
-                            title: {
-                                display: true,
-                                text: etiquetaDescriptiva,
-                                font: { weight: 'bold' }
-                            },
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 0
-                            }
-                        }
-                    },
-                },
-            });
-
-            // Configurar circular
-            const ctxPie = document.getElementById("chartPie").getContext("2d");
-            if (chartPie) chartPie.destroy();
-            chartPie = new Chart(ctxPie, {
-                type: "doughnut",
-                data: {
-                    labels,
-                    datasets: [
-                        {
-                            data: values,
-                            backgroundColor: colors,
-                            borderWidth: 2,
-                            borderColor: '#fff'
-                        },
-                    ],
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                padding: 8,
-                                usePointStyle: true,
-                                pointStyle: 'circle',
-                                boxWidth: 8,
-                                font: { size: 10 }
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: tituloDescriptivo,
-                            font: { size: 16, weight: 'bold' },
-                            padding: 20
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0,0,0,0.7)',
-                            titleFont: { size: 11 },
-                            bodyFont: { size: 11 },
-                            padding: 6,
-                            cornerRadius: 4,
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label || '';
-                                    const value = context.parsed || 0;
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = Math.round((value / total) * 100);
-                                    return `${label}: ${value.toLocaleString()} visitantes (${percentage}%)`;
-                                }
-                            }
-                        }
-                    },
-                    cutout: '70%',
-                    spacing: 2
-                },
-            });
-        }
-
-        // Función para abrir modal
-        function abrirModal(tipoGrafica) {
-            const modal = document.getElementById("chartModal");
-            modal.classList.add("show");
-
-            // Crear gráfica inicial
-            actualizarGraficaModal(tipoGrafica);
-        }
-
-        // Función para actualizar la gráfica del modal
-        function actualizarGraficaModal(tipoGrafica) {
-            const ctx = document.getElementById("chartAmpliado").getContext("2d");
-            
-            const { labels, values } = datosSimulados[tipoActual];
-            const colors = generarColores(tipoActual, labels);
-            const total = values.reduce((a, b) => a + b, 0);
-            const etiquetaDescriptiva = obtenerEtiquetaDescriptiva(tipoActual);
-            const tituloDescriptivo = obtenerTituloDescriptivo(tipoActual);
-
-            if (chartAmpliado) chartAmpliado.destroy();
-
-            // Actualizar título del modal
-            const modalTitle = document.getElementById("modalTitle");
-            modalTitle.innerHTML = `<i class="fas fa-expand"></i> ${tituloDescriptivo}`;
-
-            chartAmpliado = new Chart(ctx, {
-                type: tipoGrafica === "bar" ? "bar" : "doughnut",
-                data: {
-                    labels,
-                    datasets: [
-                        {
-                            label: "Total de Visitantes",
-                            data: values,
-                            backgroundColor: colors,
-                            borderRadius: tipoGrafica === "bar" ? 6 : 0,
-                            borderWidth: tipoGrafica === "bar" ? 0 : 2,
-                            borderColor: tipoGrafica === "bar" ? 'transparent' : '#fff',
-                            barThickness: tipoGrafica === "bar" ? 18 : undefined,
-                            maxBarThickness: tipoGrafica === "bar" ? 30 : undefined,
-                            barPercentage: tipoGrafica === "bar" ? 0.6 : undefined
-                        },
-                    ],
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: tipoGrafica === "bar" ? 'top' : 'right',
-                            labels: {
-                                padding: 15,
-                                usePointStyle: true,
-                                pointStyle: 'circle',
-                                font: { size: 13 }
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: tituloDescriptivo,
-                            font: { size: 18, weight: 'bold' },
-                            padding: 25
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0,0,0,0.7)',
-                            titleFont: { size: 14 },
-                            bodyFont: { size: 14 },
-                            padding: 12,
-                            cornerRadius: 8,
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label || '';
-                                    const value = context.parsed.y || context.parsed;
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = Math.round((value / total) * 100);
-                                    return `${label}: ${value.toLocaleString()} visitantes (${percentage}%)`;
-                                }
-                            }
-                        }
-                    },
-                    scales: tipoGrafica === "bar" ? {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(0,0,0,0.05)' },
-                            title: {
-                                display: true,
-                                text: 'Cantidad de Visitantes',
-                                font: { weight: 'bold', size: 14 }
-                            }
-                        },
-                        x: {
-                            grid: { display: false },
-                            title: {
-                                display: true,
-                                text: etiquetaDescriptiva,
-                                font: { weight: 'bold', size: 14 }
-                            },
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 0
-                            }
-                        }
-                    } : {},
-                    cutout: tipoGrafica === "bar" ? '0%' : '40%'
-                },
-            });
-
-            // Llenar tabla con porcentajes
-            const tbody = document.querySelector("#tablaDatos tbody");
-            tbody.innerHTML = labels
-                .map((l, i) => {
-                    const porcentaje = ((values[i] / total) * 100).toFixed(1);
-                    return `<tr>
-                        <td><strong>${l}</strong></td>
-                        <td style="text-align: center;"><strong>${values[i].toLocaleString()}</strong></td>
-                        <td style="text-align: center; color: #2c3e50; font-weight: bold">${porcentaje}%</td>
-                    </tr>`;
-                })
-                .join("");
-
-            setTimeout(() => {
-                chartAmpliado.resize();
-            }, 200);
-        }
-
-        // Función para cerrar modal
-        function cerrarModal() {
+        function cerrarModalEdad() {
             document.getElementById("chartModal").classList.remove("show");
         }
 
-        // Funciones de descarga
-        function descargarPNG() {
-            const link = document.createElement("a");
-            link.download = `grafica_${tipoActual}.png`;
-            link.href = document.getElementById("chartAmpliado").toDataURL("image/png");
-            link.click();
-        }
-
-        function descargarExcel() {
-            const { labels, values } = datosSimulados[tipoActual];
+        // Configurar eventos de ayuda y salir
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDateTime();
+            setInterval(updateDateTime, 60000);
             
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet([
-                [obtenerEtiquetaDescriptiva(tipoActual), "Total de Visitantes"],
-                ...labels.map((l, i) => [l, values[i]]),
-            ]);
-            XLSX.utils.book_append_sheet(wb, ws, "Datos");
-            XLSX.writeFile(wb, `datos_${tipoActual}.xlsx`);
-        }
+            // Inicializar sistema de edad de forma segura
+            if (window.EdadSystem && window.EdadSystem.cargarDatos) {
+                window.EdadSystem.cargarDatos();
+            }
 
-        function descargarExcelTabla(tipo) {
-            let tableId = 'tabla-edad-contenido';
-            if(tipo === 'fecha') tableId = 'tabla-fecha-contenido';
-            if(tipo === 'mes') tableId = 'tabla-mes-contenido';
-            if(tipo === 'dia') tableId = 'tabla-dia-contenido';
-            if(tipo === 'anio') tableId = 'tabla-anio-contenido';
-            if(tipo === 'intereses') tableId = 'tabla-intereses-contenido';
-
-            const table = document.getElementById(tableId);
-            if(!table) return;
-
-            const wb = XLSX.utils.table_to_book(table, {sheet:'Datos'});
-            XLSX.writeFile(wb, `estadisticas_${tipo}.xlsx`);
-        }
-
-        function descargarGraficoPrincipal() {
-            const link = document.createElement("a");
-            link.download = "grafica_principal.png";
-            link.href = document.getElementById("chartBar").toDataURL("image/png");
-            link.click();
-        }
-
-        // Llenar tabla de edades
-        function llenarTablaEdad() {
-            const tbody = document.getElementById('tabla-edad-body');
-            const totalVisitantes = datosSimulados.edad.values.reduce((a, b) => a + b, 0);
-            
-            tbody.innerHTML = datosSimulados.edad.labels.map((rango, index) => {
-                const cantidad = datosSimulados.edad.values[index];
-                const porcentaje = totalVisitantes > 0 ? ((cantidad / totalVisitantes) * 100).toFixed(1) : 0;
-                
-                return `
-                    <tr>
-                        <td style="font-weight: bold; color: #000; width: 50px;">${index + 1}</td>
-                        <td style="min-width: 150px;">
-                            <span class="age-badge">
-                                <i class="fas fa-user"></i>
-                                ${rango} años
-                            </span>
-                        </td>
-                        <td style="width: 120px; text-align: center;"><strong>${cantidad.toLocaleString()}</strong></td>
-                        <td style="width: 100px; text-align: center; color: #000; font-weight: bold">${porcentaje}%</td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        // Mostrar datos en la interfaz
-        function mostrarDatos() {
-            const container = document.getElementById('data-container');
-            container.innerHTML = `
-                <div class="chart-controls">
-                    <div class="chart-header">
-                        <h3 style="margin: 0; display: flex; align-items: center; gap: 6px">
-                            <i class="fas fa-chart-bar"></i> Selecciona el Tipo de Visualización
-                        </h3>
-                        <button class="download-btn" id="downloadChartBtn">
-                            <i class="fas fa-download"></i> Descargar Gráfico (PNG)
-                        </button>
-                    </div>
-
-                    <div class="chart-type-buttons btn-group" style="margin-top: 12px">
-                        <button class="chart-btn active" data-type="edad">
-                            <i class="fas fa-user"></i> Por Edad
-                        </button>
-                        <button class="chart-btn" data-type="fecha">
-                            <i class="fas fa-calendar-day"></i> Por Fecha
-                        </button>
-                        <button class="chart-btn" data-type="dia">
-                            <i class="fas fa-calendar"></i> Por Día
-                        </button>
-                        <button class="chart-btn" data-type="mes">
-                            <i class="fas fa-calendar-week"></i> Por Mes
-                        </button>
-                        <button class="chart-btn" data-type="anio">
-                            <i class="fas fa-calendar-alt"></i> Por Año
-                        </button>
-                        <button class="chart-btn" data-type="intereses">
-                            <i class="fas fa-heart"></i> Por Intereses
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Gráficas principales lado a lado -->
-                <div class="charts-grid">
-                    <div class="chart-card" onclick="abrirModal('bar')">
-                        <div class="chart-card-header">
-                            <div class="chart-card-title">
-                                <i class="fas fa-chart-bar"></i> Gráfica de Barras
-                            </div>
-                            <div class="chart-card-badge">Haz clic para ampliar</div>
+            // Configurar botones de ayuda y salir
+            document.getElementById('help-btn')?.addEventListener('click', function() {
+                Swal.fire({
+                    title: 'Ayuda - Reporte por Edad',
+                    html: `
+                        <div style="text-align: left;">
+                            <h4>📊 Cómo usar el reporte por edad:</h4>
+                            <ul>
+                                <li><strong>Visualiza la distribución</strong> de visitantes por grupos de edad</li>
+                                <li><strong>Compara estadísticas</strong> como edad promedio y rangos</li>
+                                <li><strong>Haz clic en las gráficas</strong> para ver versión ampliada</li>
+                                <li><strong>Descarga reportes</strong> en PNG o Excel</li>
+                            </ul>
+                            <p>Los datos se calculan automáticamente desde las fechas de nacimiento registradas.</p>
                         </div>
-                        <div class="chart-canvas-wrap">
-                            <canvas id="chartBar"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="chart-card" onclick="abrirModal('pie')">
-                        <div class="chart-card-header">
-                            <div class="chart-card-title">
-                                <i class="fas fa-chart-pie"></i> Gráfica Circular
-                            </div>
-                            <div class="chart-card-badge">Haz clic para ampliar</div>
-                        </div>
-                        <div class="chart-canvas-wrap pie-chart-container">
-                            <canvas id="chartPie"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tablas de datos -->
-                <div class="table-section active" id="tablaEdad" style="margin-top: 20px">
-                    <div class="data-table">
-                        <div class="chart-header">
-                            <h3 style="margin: 0; display: flex; align-items: center; gap: 6px">
-                                <i class="fas fa-user"></i> Distribución por Grupos de Edad
-                            </h3>
-                            <button class="download-btn" onclick="descargarExcelTabla('edad')">
-                                <i class="fas fa-file-excel"></i> Descargar Excel
-                            </button>
-                        </div>
-                        <div style="overflow-x: auto;">
-                            <table class="table" id="tabla-edad-contenido" style="margin-top: 12px; min-width: 600px;">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 50px;">#</th>
-                                        <th style="min-width: 150px;">Grupo de Edad</th>
-                                        <th style="width: 120px;">Total Visitantes</th>
-                                        <th style="width: 100px;">Porcentaje</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabla-edad-body">
-                                    <!-- Los datos se llenarán dinámicamente -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Inicializar gráficas
-            mostrarGraficas("edad");
-            llenarTablaEdad();
-
-            // Configurar eventos
-            configurarEventos();
-        }
-
-        // Configurar eventos
-        function configurarEventos() {
-            // Botones de tipo de gráfica
-            document.querySelectorAll('.chart-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    mostrarGraficas(this.getAttribute('data-type'));
+                    `,
+                    icon: 'info',
+                    confirmButtonText: 'Entendido'
                 });
             });
 
-            // Botón de descarga
-            document.getElementById('downloadChartBtn').addEventListener('click', descargarGraficoPrincipal);
-        }
-
-        // Mostrar mensaje cuando no hay datos
-        function mostrarSinDatos() {
-            const container = document.getElementById('data-container');
-            container.innerHTML = `
-                <div class="no-data">
-                    <i class="fas fa-user"></i>
-                    <h3>No hay datos de edades disponibles</h3>
-                    <p>No se encontraron visitantes con edad registrada en la base de datos.</p>
-                </div>
-            `;
-        }
-
-        // Inicializar
-        document.addEventListener('DOMContentLoaded', function() {
-            updateDateTime();
-            setInterval(updateDateTime, 1000);
-            cargarDatosEdades();
+            document.getElementById('logout-btn')?.addEventListener('click', function() {
+                Swal.fire({
+                    title: '¿Cerrar sesión?',
+                    text: '¿Estás seguro de que deseas salir del sistema?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#2e7d32',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sí, salir',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = 'login.html';
+                    }
+                });
+            });
         });
     </script>
 </body>
