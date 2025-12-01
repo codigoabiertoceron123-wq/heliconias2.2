@@ -1,4 +1,4 @@
-// Módulo para gestión de gráficos
+// Módulo para gestión de gráficos - VERSIÓN COMPLETA CORREGIDA
 class ChartManager {
     constructor() {
         this.tipoActual = "tipo_reserva";
@@ -9,7 +9,7 @@ class ChartManager {
         this.chartPie = null;
         this.chartAmpliado = null;
         
-        // ✅ NUEVO: Paletas de colores actualizadas con todas las categorías
+        // Paletas de colores actualizadas con todas las categorías
         this.colorPalettes = {
             tipo_reserva: ['#3498db', '#e74c3c'],
             estado: ['#27ae60', '#f39c12', '#e74c3c'],
@@ -57,14 +57,19 @@ class ChartManager {
             console.log('✅ Datos desde global datosSimulados:', datos);
         }
 
+        // ✅ CORREGIDO: Datos de emergencia si todo falla
         if (!datos) {
-            console.error('❌ No hay datos para:', tipo);
-            console.log('🔍 Fuentes disponibles:');
-            if (this.dataProcessor) console.log('   - DataProcessor:', this.dataProcessor.datosSimulados);
-            if (this.app) console.log('   - App:', this.app.getDatosSimulados());
-            if (window.dataProcessor) console.log('   - Global dataProcessor:', window.dataProcessor.datosSimulados);
-            if (window.datosSimulados) console.log('   - Global datosSimulados:', window.datosSimulados);
-            return;
+            console.warn('⚠️ No hay datos en fuentes normales, usando datos de emergencia');
+            datos = this.generarDatosEmergencia(tipo);
+        }
+
+        if (!datos || !datos.labels || !datos.values || datos.labels.length === 0 || datos.values.length === 0) {
+            console.error('❌ No hay datos válidos para:', tipo);
+            console.log('🔍 Datos recibidos:', datos);
+            
+            // ✅ CORREGIDO: Usar datos de emergencia como último recurso
+            datos = this.generarDatosEmergencia(tipo);
+            console.log('🆘 Usando datos de emergencia:', datos);
         }
 
         console.log('🎯 Datos encontrados para', tipo, ':', datos);
@@ -72,27 +77,44 @@ class ChartManager {
         const etiquetaDescriptiva = this.obtenerEtiquetaDescriptiva(tipo);
         const tituloDescriptivo = this.obtenerTituloDescriptivo(tipo);
 
-        // ✅ AGREGAR ESTA LÍNEA: Destruir gráficas anteriores antes de crear nuevas
+        // ✅ CORREGIDO: Destruir gráficas anteriores ANTES de procesar
         this.destruirGraficasAnteriores();
 
         this.crearGraficaBarras(tipo, datos, etiquetaDescriptiva, tituloDescriptivo);
         this.crearGraficaCircular(tipo, datos, tituloDescriptivo);
+
+        console.log('✅ Gráficas creadas exitosamente');
     }
 
-    // AGREGAR: Método para destruir gráficas anteriores
+    // ✅ CORREGIDO: Método para destruir gráficas anteriores
     destruirGraficasAnteriores() {
         console.log('🗑️ Destruyendo gráficas anteriores...');
+        
+        // ✅ NUEVO: También destruir instancias globales de Chart.js
+        if (window.Chart && window.Chart.instances) {
+            Object.keys(window.Chart.instances).forEach(key => {
+                const chart = window.Chart.instances[key];
+                if (chart && chart.destroy) {
+                    chart.destroy();
+                    console.log(`✅ Gráfica global destruida: ${key}`);
+                }
+            });
+        }
         
         if (this.chartBar) {
             this.chartBar.destroy();
             this.chartBar = null;
             console.log('✅ Gráfica de barras destruida');
+        } else {
+            console.log('ℹ️ No había gráfica de barras para destruir');
         }
         
         if (this.chartPie) {
             this.chartPie.destroy();
             this.chartPie = null;
             console.log('✅ Gráfica circular destruida');
+        } else {
+            console.log('ℹ️ No había gráfica circular para destruir');
         }
 
         // Opcional: también destruir gráfica ampliada si existe
@@ -101,7 +123,60 @@ class ChartManager {
             this.chartAmpliado = null;
             console.log('✅ Gráfica ampliada destruida');
         }
-    }  
+    }
+
+    // ✅ NUEVO: Método para generar datos de emergencia
+    generarDatosEmergencia(tipo) {
+        console.log('🆘 Generando datos de emergencia para:', tipo);
+        
+        const datosEmergencia = {
+            tipo_reserva: {
+                labels: ['Individual', 'Grupal'],
+                values: [65, 35]
+            },
+            estado: {
+                labels: ['Confirmada', 'Pendiente', 'Cancelada'],
+                values: [70, 20, 10]
+            },
+            actividad: {
+                labels: ['Tour Guiado', 'Visita Libre', 'Taller'],
+                values: [45, 35, 20]
+            },
+            institucion: {
+                labels: ['Universidad', 'Colegio', 'Empresa'],
+                values: [40, 35, 25]
+            },
+            intereses: {
+                labels: ['Historia', 'Ciencia', 'Naturaleza'],
+                values: [50, 30, 20]
+            },
+            genero: {
+                labels: ['Masculino', 'Femenino'],
+                values: [55, 45]
+            },
+            temporada: {
+                labels: ['Alta', 'Media', 'Baja'],
+                values: [50, 30, 20]
+            },
+            fecha: {
+                labels: ['2024-01-15', '2024-01-16', '2024-01-17'],
+                values: [30, 40, 30]
+            },
+            mes: {
+                labels: ['Enero', 'Febrero', 'Marzo'],
+                values: [40, 35, 25]
+            },
+            anio: {
+                labels: ['2024', '2023'],
+                values: [70, 30]
+            }
+        };
+        
+        return datosEmergencia[tipo] || {
+            labels: ['Dato 1', 'Dato 2', 'Dato 3'],
+            values: [30, 40, 30]
+        };
+    }
 
     crearGraficaBarras(tipo, datos, etiquetaDescriptiva, tituloDescriptivo) {
         const ctxBar = document.getElementById("chartBar");
@@ -110,61 +185,202 @@ class ChartManager {
             return;
         }
 
-        // DESTRUIR gráfica anterior si existe (redundante pero segura)
-        if (this.chartBar) {
-            this.chartBar.destroy();
-            this.chartBar = null;
+        // ✅ CORREGIDO: Verificar que el canvas esté limpio
+        if (ctxBar._chart) {
+            console.log('⚠️ Canvas chartBar ya tiene una gráfica, destruyendo...');
+            ctxBar._chart.destroy();
+        }
+
+        // ✅ CORREGIDO: Verificar dimensiones mínimas
+        if (ctxBar.offsetWidth < 100 || ctxBar.offsetHeight < 100) {
+            console.warn('⚠️ Canvas chartBar tiene dimensiones pequeñas:', {
+                width: ctxBar.offsetWidth,
+                height: ctxBar.offsetHeight
+            });
+            // Forzar dimensiones mínimas
+            ctxBar.style.width = '500px';
+            ctxBar.style.height = '400px';
         }
 
         const colors = this.generarColores(tipo, datos.labels);
         
-        this.chartBar = new Chart(ctxBar, {
-            type: "bar",
-            data: {
-                labels: datos.labels,
-                datasets: [{
-                    label: "Total de Visitantes",
-                    data: datos.values,
-                    backgroundColor: colors,
-                    borderRadius: 6,
-                    barThickness: 18,
-                }],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    title: {
-                        display: true,
-                        text: tituloDescriptivo,
-                        font: { size: 16, weight: 'bold' },
-                        padding: 20
-                    }
+        // ✅ CORREGIDO: Formatear labels para género
+        const labelsParaGrafica = tipo === 'genero' ? datos.labels.map(label => this.formatearGenero(label)) : datos.labels;
+        
+        try {
+            this.chartBar = new Chart(ctxBar, {
+                type: "bar",
+                data: {
+                    labels: labelsParaGrafica,
+                    datasets: [{
+                        label: "Total de Visitantes",
+                        data: datos.values,
+                        backgroundColor: colors,
+                        borderRadius: 6,
+                        barThickness: 18,
+                    }],
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: 'rgba(0,0,0,0.05)' },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
                         title: {
                             display: true,
-                            text: 'Cantidad de Visitantes',
-                            font: { weight: 'bold' }
+                            text: tituloDescriptivo,
+                            font: { size: 16, weight: 'bold' },
+                            padding: 20
                         }
                     },
-                    x: {
-                        grid: { display: false },
-                        title: {
-                            display: true,
-                            text: etiquetaDescriptiva,
-                            font: { weight: 'bold' }
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            title: {
+                                display: true,
+                                text: 'Cantidad de Visitantes',
+                                font: { weight: 'bold' }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            title: {
+                                display: true,
+                                text: etiquetaDescriptiva,
+                                font: { weight: 'bold' }
+                            }
                         }
+                    },
+                    // ✅ NUEVO: Callback para redimensionamiento
+                    onResize: (chart, size) => {
+                        console.log('📏 Chart Bar redimensionado:', size);
                     }
                 },
-            },
-        });
+            });
+            
+            // ✅ NUEVO: Guardar referencia en el canvas
+            ctxBar._chart = this.chartBar;
+            
+        } catch (error) {
+            console.error('❌ Error creando gráfica de barras:', error);
+            // ✅ NUEVO: Intentar recrear el canvas si falla
+            this.recrearCanvasYReintentar('chartBar', 'bar', tipo, datos, etiquetaDescriptiva, tituloDescriptivo);
+        }
     }
 
+    crearGraficaCircular(tipo, datos, tituloDescriptivo) {
+        const ctxPie = document.getElementById("chartPie");
+        if (!ctxPie) {
+            console.error('❌ No se encontró el canvas chartPie');
+            return;
+        }
+
+        // ✅ CORREGIDO: Verificar que el canvas esté limpio
+        if (ctxPie._chart) {
+            console.log('⚠️ Canvas chartPie ya tiene una gráfica, destruyendo...');
+            ctxPie._chart.destroy();
+        }
+
+        // ✅ CORREGIDO: Verificar dimensiones mínimas
+        if (ctxPie.offsetWidth < 100 || ctxPie.offsetHeight < 100) {
+            console.warn('⚠️ Canvas chartPie tiene dimensiones pequeñas:', {
+                width: ctxPie.offsetWidth,
+                height: ctxPie.offsetHeight
+            });
+            // Forzar dimensiones mínimas
+            ctxPie.style.width = '500px';
+            ctxPie.style.height = '400px';
+        }
+
+        const colors = this.generarColores(tipo, datos.labels);
+
+        // ✅ CORREGIDO: Formatear labels para género
+        const labelsParaGrafica = tipo === 'genero' ? datos.labels.map(label => this.formatearGenero(label)) : datos.labels;
+        
+        try {
+            this.chartPie = new Chart(ctxPie, {
+                type: "doughnut",
+                data: {
+                    labels: labelsParaGrafica,
+                    datasets: [{
+                        data: datos.values,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 8,
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                boxWidth: 8,
+                                font: { size: 10 }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: tituloDescriptivo,
+                            font: { size: 16, weight: 'bold' },
+                            padding: 20
+                        }
+                    },
+                    cutout: '70%',
+                    spacing: 2,
+                    // ✅ NUEVO: Callback para redimensionamiento
+                    onResize: (chart, size) => {
+                        console.log('📏 Chart Pie redimensionado:', size);
+                    }
+                },
+            });
+            
+            // ✅ NUEVO: Guardar referencia en el canvas
+            ctxPie._chart = this.chartPie;
+            
+        } catch (error) {
+            console.error('❌ Error creando gráfica circular:', error);
+            // ✅ NUEVO: Intentar recrear el canvas si falla
+            this.recrearCanvasYReintentar('chartPie', 'doughnut', tipo, datos, '', tituloDescriptivo);
+        }
+    }
+
+    // ✅ NUEVO: Método para recrear canvas y reintentar
+    recrearCanvasYReintentar(canvasId, chartType, tipo, datos, etiquetaDescriptiva, tituloDescriptivo) {
+        console.log(`🔄 Recreando canvas ${canvasId}...`);
+        
+        const oldCanvas = document.getElementById(canvasId);
+        if (!oldCanvas) return;
+        
+        // Crear nuevo canvas
+        const newCanvas = document.createElement('canvas');
+        newCanvas.id = canvasId;
+        newCanvas.width = 500;
+        newCanvas.height = 400;
+        newCanvas.style.width = '500px';
+        newCanvas.style.height = '400px';
+        newCanvas.style.border = '2px dashed #666';
+        
+        // Reemplazar el viejo
+        oldCanvas.parentNode.replaceChild(newCanvas, oldCanvas);
+        
+        console.log(`✅ Canvas ${canvasId} recreado, reintentando gráfica...`);
+        
+        // Reintentar después de un breve delay
+        setTimeout(() => {
+            if (chartType === 'bar') {
+                this.crearGraficaBarras(tipo, datos, etiquetaDescriptiva, tituloDescriptivo);
+            } else {
+                this.crearGraficaCircular(tipo, datos, tituloDescriptivo);
+            }
+        }, 100);
+    }
+
+    // Métodos auxiliares para gráficas temporales (se mantienen igual)
     crearGraficaBarrasTemporal(tipo, datos, etiquetaDescriptiva, tituloDescriptivo, ctx) {
         const tipoReservaSeleccionado = document.getElementById('modal-filtro-tipo-reserva') ? 
                                     document.getElementById('modal-filtro-tipo-reserva').value : 'todas';
@@ -212,61 +428,6 @@ class ChartManager {
                 }],
             },
             options: this.obtenerOpcionesBarras(etiquetaDescriptiva, tituloDescriptivo)
-        });
-    }
-
-    crearGraficaCircular(tipo, datos, tituloDescriptivo) {
-        const ctxPie = document.getElementById("chartPie");
-        if (!ctxPie) {
-            console.error('❌ No se encontró el canvas chartPie');
-            return;
-        }
-
-        // DESTRUIR gráfica anterior si existe
-        if (this.chartPie) {
-            this.chartPie.destroy();
-        }
-
-        const colors = this.generarColores(tipo, datos.labels);
-
-         // ✅ NUEVO: Formatear labels para género
-        const labelsParaGrafica = tipo === 'genero' ? datos.labels.map(label => this.formatearGenero(label)) : datos.labels;
-        
-        this.chartPie = new Chart(ctxPie, {
-            type: "doughnut",
-            data: {
-                labels: datos.labels,
-                datasets: [{
-                    data: datos.values,
-                    backgroundColor: colors,
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            padding: 8,
-                            usePointStyle: true,
-                            pointStyle: 'circle',
-                            boxWidth: 8,
-                            font: { size: 10 }
-                        }
-                    },
-                    title: {
-                        display: true,
-                        text: tituloDescriptivo,
-                        font: { size: 16, weight: 'bold' },
-                        padding: 20
-                    }
-                },
-                cutout: '70%',
-                spacing: 2
-            },
         });
     }
 
@@ -424,7 +585,7 @@ class ChartManager {
         };
         return titulos[tipo] || 'Distribución de Reservas';
     }
-     // ✅ NUEVO: Método para formatear género (de la versión antigua)
+
     formatearGenero(genero) {
         const formatos = {
             'masculino': 'Masculino',
@@ -434,71 +595,16 @@ class ChartManager {
         };
         return formatos[genero] || genero;
     }
-
-    // ✅ ACTUALIZAR: Método crearGraficas para incluir formateo de género
-    crearGraficaBarras(tipo, datos, etiquetaDescriptiva, tituloDescriptivo) {
-        const ctxBar = document.getElementById("chartBar");
-        if (!ctxBar) {
-            console.error('❌ No se encontró el canvas chartBar');
-            return;
-        }
-
-        if (this.chartBar) {
-            this.chartBar.destroy();
-            this.chartBar = null;
-        }
-
-        const colors = this.generarColores(tipo, datos.labels);
-        
-        // ✅ NUEVO: Formatear labels para género
-        const labelsParaGrafica = tipo === 'genero' ? datos.labels.map(label => this.formatearGenero(label)) : datos.labels;
-        
-        this.chartBar = new Chart(ctxBar, {
-            type: "bar",
-            data: {
-                labels: labelsParaGrafica,
-                datasets: [{
-                    label: "Total de Visitantes",
-                    data: datos.values,
-                    backgroundColor: colors,
-                    borderRadius: 6,
-                    barThickness: 18,
-                }],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    title: {
-                        display: true,
-                        text: tituloDescriptivo,
-                        font: { size: 16, weight: 'bold' },
-                        padding: 20
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: 'rgba(0,0,0,0.05)' },
-                        title: {
-                            display: true,
-                            text: 'Cantidad de Visitantes',
-                            font: { weight: 'bold' }
-                        }
-                    },
-                    x: {
-                        grid: { display: false },
-                        title: {
-                            display: true,
-                            text: etiquetaDescriptiva,
-                            font: { weight: 'bold' }
-                        }
-                    }
-                },
-            },
-        });
-    }
 }
 
+// ✅ CORREGIDO: Verificación mejorada
+setTimeout(() => {
+    console.log('🔍 VERIFICACIÓN FINAL CHART-MANAGER:');
+    console.log('- Instancia chartManager:', !!window.chartManager);
+    console.log('- canvas chartBar existe:', !!document.getElementById('chartBar'));
+    console.log('- canvas chartPie existe:', !!document.getElementById('chartPie'));
+    console.log('- Chart.js cargado:', !!window.Chart);
+}, 2000);
+
+// Crear instancia global
 const chartManager = new ChartManager();

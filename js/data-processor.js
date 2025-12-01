@@ -62,7 +62,9 @@ class DataProcessor {
     }
 
     procesarDatosPorCategorias(participantes) {
-        // ✅ NUEVO: Todas las categorías de la versión antigua adaptadas
+        console.log('🔄 Procesando datos con estructura REAL...');
+        
+        // ✅ USANDO LA ESTRUCTURA REAL DE LA BASE DE DATOS
         const tipoReserva = { 'individual': 0, 'grupal': 0 };
         const estado = { 'confirmada': 0, 'pendiente': 0, 'cancelada': 0 };
         const actividad = {};
@@ -75,49 +77,49 @@ class DataProcessor {
             const reserva = participante.reservas;
             if (!reserva) return;
 
-            // Tipo de reserva
+            // ✅ TIPO DE RESERVA (desde tabla reservas)
             if (reserva.tipo_reserva && tipoReserva.hasOwnProperty(reserva.tipo_reserva)) {
                 tipoReserva[reserva.tipo_reserva]++;
             }
 
-            // Estado de reserva
+            // ✅ ESTADO DE RESERVA (desde tabla reservas)
             if (reserva.estado && estado.hasOwnProperty(reserva.estado)) {
                 estado[reserva.estado]++;
             }
 
-            // Actividad
-            if (reserva.actividades && reserva.actividades.nombre_actividad) {
-                const actividadNombre = reserva.actividades.nombre_actividad;
+            // ✅ ACTIVIDAD (desde tabla actividades a través de reservas)
+            if (participante.actividades && participante.actividades.nombre) {
+                const actividadNombre = participante.actividades.nombre;
                 if (!actividad[actividadNombre]) actividad[actividadNombre] = 0;
                 actividad[actividadNombre]++;
             }
 
-            // Institución
-            if (reserva.instituciones && reserva.instituciones.nombre_institucion) {
-                const institucionNombre = reserva.instituciones.nombre_institucion;
+            // ✅ INSTITUCIÓN (desde tabla instituciones)
+            if (participante.instituciones && participante.instituciones.nombre_institucion) {
+                const institucionNombre = participante.instituciones.nombre_institucion;
                 if (!institucion[institucionNombre]) institucion[institucionNombre] = 0;
                 institucion[institucionNombre]++;
-            } else if (!reserva.id_institucion) {
+            } else if (!participante.id_institucion) {
                 const individual = 'Individual/Sin institución';
                 if (!institucion[individual]) institucion[individual] = 0;
                 institucion[individual]++;
             }
 
-            // Intereses
-            if (participante.intereses && participante.intereses.nombre_interes) {
-                const interesNombre = participante.intereses.nombre_interes;
+            // ✅ INTERESES (desde tabla intereses)
+            if (participante.intereses && participante.intereses.nombre) {
+                const interesNombre = participante.intereses.nombre;
                 if (!intereses[interesNombre]) intereses[interesNombre] = 0;
                 intereses[interesNombre]++;
             }
 
-            // Género
+            // ✅ GÉNERO (desde tabla genero)
             if (participante.genero && participante.genero.genero) {
                 const generoNombre = participante.genero.genero;
                 if (!genero[generoNombre]) genero[generoNombre] = 0;
                 genero[generoNombre]++;
             }
 
-            // Temporada (calculada desde fecha_visita)
+            // ✅ TEMPORADA (calculada desde fecha_visita)
             const fechaVisita = participante.fecha_visita; 
             if (fechaVisita) {
                 const temp = this.determinarTemporada(fechaVisita);
@@ -127,19 +129,42 @@ class DataProcessor {
 
         const datosTiempo = this.procesarDatosPorTiempo(participantes);
 
-        // ✅ NUEVO: Incluir todas las categorías como en la versión antigua
+        // ✅ ESTRUCTURA FINAL CON DATOS REALES
         this.datosSimulados = {
-            tipo_reserva: { labels: Object.keys(tipoReserva), values: Object.values(tipoReserva) },
-            estado: { labels: Object.keys(estado), values: Object.values(estado) },
-            actividad: { labels: Object.keys(actividad).slice(0, 5), values: Object.values(actividad).slice(0, 5) },
-            institucion: { labels: Object.keys(institucion).slice(0, 5), values: Object.values(institucion).slice(0, 5) },
-            intereses: { labels: Object.keys(intereses).slice(0, 6), values: Object.values(intereses).slice(0, 6) },
-            genero: { labels: Object.keys(genero), values: Object.values(genero) },
-            temporada: { labels: Object.keys(temporada), values: Object.values(temporada) },
+            tipo_reserva: { 
+                labels: Object.keys(tipoReserva), 
+                values: Object.values(tipoReserva) 
+            },
+            estado: { 
+                labels: Object.keys(estado), 
+                values: Object.values(estado) 
+            },
+            actividad: { 
+                labels: Object.keys(actividad).slice(0, 6), 
+                values: Object.values(actividad).slice(0, 6) 
+            },
+            institucion: { 
+                labels: Object.keys(institucion).slice(0, 6), 
+                values: Object.values(institucion).slice(0, 6) 
+            },
+            intereses: { 
+                labels: Object.keys(intereses).slice(0, 6), 
+                values: Object.values(intereses).slice(0, 6) 
+            },
+            genero: { 
+                labels: Object.keys(genero), 
+                values: Object.values(genero) 
+            },
+            temporada: { 
+                labels: Object.keys(temporada), 
+                values: Object.values(temporada) 
+            },
             fecha: datosTiempo.fecha,
             mes: datosTiempo.mes,
             anio: datosTiempo.anio
         };
+
+        console.log('✅ Datos procesados con estructura REAL:', this.datosSimulados);
     }
 
     determinarTemporada(fecha) {

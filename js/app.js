@@ -39,7 +39,6 @@ class App {
             await this.loadInitialData();
         }
     }
-
     async initializeModules() {
         try {
             // 1. DataProcessor (sin dependencias)
@@ -100,51 +99,55 @@ class App {
     }
 
     setupModuleReferences() {
-        // Pasar referencia de la app a todos los módulos disponibles
-        Object.values(this.modules).forEach(module => {
-            if (module && typeof module.setApp === 'function') {
-                module.setApp(this);
-            }
-        });
+    // Pasar referencia de la app a todos los módulos disponibles
+    Object.values(this.modules).forEach(module => {
+        if (module && typeof module.setApp === 'function') {
+            module.setApp(this);
+        }
+    });
 
-        // CONFIGURACIÓN ESPECÍFICA MEJORADA
-        if (this.modules.dataLoader && this.modules.dataProcessor) {
-            this.modules.dataLoader.dataProcessor = this.modules.dataProcessor;
-            console.log('🔗 DataLoader -> DataProcessor conectado');
-        }
-        
-        if (this.modules.chartManager) {
-            this.modules.chartManager.dataProcessor = this.modules.dataProcessor;
-            this.modules.chartManager.app = this;
-            console.log('🔗 ChartManager -> DataProcessor y App conectados');
-        }
-        
-        if (this.modules.uiManager) {
-            this.modules.uiManager.dataLoader = this.modules.dataLoader;
-            this.modules.uiManager.chartManager = this.modules.chartManager;
-            this.modules.uiManager.dataProcessor = this.modules.dataProcessor;
-            this.modules.uiManager.app = this;
-        }
-
-        if (this.modules.exportManager) {
-            this.modules.exportManager.chartManager = this.modules.chartManager;
-            this.modules.exportManager.dataProcessor = this.modules.dataProcessor;
-            this.modules.exportManager.app = this;
-        }
-
-        if (this.modules.modalManager) {
-            this.modules.modalManager.chartManager = this.modules.chartManager;
-            this.modules.modalManager.dataProcessor = this.modules.dataProcessor;
-            this.modules.modalManager.app = this;
-        }
-
-        if (this.modules.filterManager) {
-            this.modules.filterManager.dataLoader = this.modules.dataLoader;
-            this.modules.filterManager.app = this;
-        }
-
-        console.log('✅ Referencias entre módulos configuradas');
+    // CONFIGURACIÓN ESPECÍFICA MEJORADA
+    if (this.modules.dataLoader && this.modules.dataProcessor) {
+        this.modules.dataLoader.dataProcessor = this.modules.dataProcessor;
+        console.log('🔗 DataLoader -> DataProcessor conectado');
     }
+    
+    if (this.modules.chartManager) {
+        this.modules.chartManager.dataProcessor = this.modules.dataProcessor;
+        this.modules.chartManager.app = this;
+        console.log('🔗 ChartManager -> DataProcessor y App conectados');
+    }
+    
+    if (this.modules.uiManager) {
+        // ✅ USAR EL MÉTODO DE INICIALIZACIÓN CORRECTO
+        this.modules.uiManager.inicializarModulos(
+            this.modules.dataLoader, 
+            this.modules.chartManager, 
+            this.modules.dataProcessor
+        );
+        this.modules.uiManager.app = this;
+        console.log('🔗 UIManager completamente inicializado');
+    } // ✅ LLAVE DE CIERRE AGREGADA
+
+    if (this.modules.exportManager) {
+        this.modules.exportManager.chartManager = this.modules.chartManager;
+        this.modules.exportManager.dataProcessor = this.modules.dataProcessor;
+        this.modules.exportManager.app = this;
+    }
+
+    if (this.modules.modalManager) {
+        this.modules.modalManager.chartManager = this.modules.chartManager;
+        this.modules.modalManager.dataProcessor = this.modules.dataProcessor;
+        this.modules.modalManager.app = this;
+    }
+
+    if (this.modules.filterManager) {
+        this.modules.filterManager.dataLoader = this.modules.dataLoader;
+        this.modules.filterManager.app = this;
+    }
+
+    console.log('✅ Referencias entre módulos configuradas');
+}
     
     setupGlobalEvents() {
         // Fecha y hora
@@ -191,22 +194,36 @@ class App {
     }
 
     async loadInitialData() {
-        try {
-            console.log('📥 Cargando datos iniciales...');
-            
-            // 1. Cargar datos (DataProcessor los procesará y pasará a App)
-            await this.modules.dataLoader.cargarDatosVisitantes();
-            
-            // 2. ✅ CORRECCIÓN: Notificar UNA sola vez después de todo
-            console.log('🎯 Notificando cambio de datos (una vez)');
-            setTimeout(() => {
-                this.notificarCambioDatos();
-            }, 150);
-            
-        } catch (error) {
-            console.error('Error cargando datos iniciales:', error);
+    try {
+        console.log('📥 Cargando datos iniciales...');
+        
+        // 1. Cargar datos (DataProcessor los procesará y pasará a App)
+        await this.modules.dataLoader.cargarDatosVisitantes();
+        
+        // 2. ✅ ESPERAR a que los datos se procesen antes de mostrar la UI
+        console.log('🎯 Esperando procesamiento de datos...');
+        setTimeout(() => {
+            if (this.modules.uiManager && this.modules.dataProcessor.datosSimulados) {
+                console.log('✅ Datos listos, mostrando interfaz...');
+                this.modules.uiManager.mostrarDatos();
+            } else {
+                console.warn('⚠️ Datos no disponibles, reintentando...');
+                setTimeout(() => {
+                    if (this.modules.uiManager) {
+                        this.modules.uiManager.mostrarDatos();
+                    }
+                }, 1000);
+            }
+        }, 500);
+        
+    } catch (error) {
+        console.error('Error cargando datos iniciales:', error);
+        // Mostrar UI incluso con error
+        if (this.modules.uiManager) {
+            this.modules.uiManager.mostrarDatos();
         }
     }
+  }
 
     // Getters y setters para datos compartidos
     getTipoActual() {
@@ -382,6 +399,8 @@ class App {
         }
     }
 
+    
+
     descargarGraficoPrincipal() {
         if (this.modules.exportManager) {
             this.modules.exportManager.descargarGraficoPrincipal();
@@ -396,10 +415,17 @@ class App {
 // Crear instancia global
 const app = new App();
 
-// Inicializar cuando el DOM esté listo
+
+// ✅ SOLO UN DOMContentLoaded FUERA de la clase
 document.addEventListener('DOMContentLoaded', function() {
-    app.initialize();
+    console.log('📄 DOM cargado, iniciando aplicación...');
+    app.initialize().then(() => {
+        console.log('🎉 Aplicación completamente inicializada');
+    }).catch(error => {
+        console.error('💥 Error fatal inicializando aplicación:', error);
+    });
 });
+
 
 // Hacer métodos disponibles globalmente para onclick en HTML
 window.abrirModal = (tipo) => app.abrirModal(tipo);

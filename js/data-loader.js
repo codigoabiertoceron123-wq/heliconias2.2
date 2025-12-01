@@ -16,91 +16,115 @@ class DataLoader {
 
     async cargarDatosVisitantes() {
         try {
-            if (typeof Swal === 'undefined') {
-                console.warn('SweetAlert2 no está disponible');
+            console.log('🔍 Cargando datos para REPORTE DE RESERVAS...');
+
+            if (!window.supabase) {
+                console.error('❌ Cliente Supabase no disponible');
                 this.cargarDatosDemo();
                 return;
             }
 
-            this.mostrarCarga('Cargando datos...', 'Obteniendo información de reservas y participantes');
-
+            // ✅ CONSULTA CORREGIDA con la estructura REAL
             let query = supabase
                 .from('participantes_reserva')
                 .select(`
                     *,
-                    reservas(
-                        *,
-                        actividades(*),
-                        instituciones(*)
+                    reservas!inner(
+                        id_reserva,
+                        tipo_reserva,
+                        estado,
+                        fecha_reserva,
+                        id_actividad,
+                        numero_participantes
                     ),
-                    intereses(*)
-                `);
+                    actividades!reservas(id_actividad, nombre),
+                    intereses!inner(id_interes, nombre),
+                    instituciones!inner(id_institucion, nombre_institucion),
+                    genero!inner(id_genero, genero)
+                `)
+                .order('fecha_visita', { ascending: false })
+                .limit(500);
 
-            // Aplicar filtros activos desde la app principal
-            if (this.app) {
-                const filtros = this.app.getFiltrosActivos();
-                if (filtros.tipo_reserva) {
-                    query = query.eq('reservas.tipo_reserva', filtros.tipo_reserva);
-                }
-                if (filtros.estado) {
-                    query = query.eq('reservas.estado', filtros.estado);
-                }
-                if (filtros.anio) {
-                    query = query.filter('fecha_visita', 'gte', `${filtros.anio}-01-01`)
-                                .filter('fecha_visita', 'lte', `${filtros.anio}-12-31`);
-                }
-            }
-
+            console.log('📡 Ejecutando consulta con estructura real...');
             const { data: participantes, error } = await query;
 
             if (error) {
-                console.error('Error en consulta:', error);
-                throw new Error(`Error de base de datos: ${error.message}`);
+                console.error('❌ Error en consulta:', error);
+                console.log('🔍 Detalles:', error.message);
+                
+                // ✅ INTENTO ALTERNATIVO: Consulta más simple
+                return await this.cargarDatosAlternativos();
             }
 
-            this.ocultarCarga();
+            console.log(`✅ ${participantes?.length || 0} participantes cargados`);
 
             if (participantes && participantes.length > 0) {
-                // ✅ CORRECTO: Solo procesar datos, NO notificar
+                console.log('📊 Ejemplo de datos cargados:', participantes[0]);
+                
+                // ✅ Procesar datos exitosamente
                 if (this.dataProcessor) {
                     this.dataProcessor.procesarDatosCompletos(participantes);
-                    // ❌ NO llamar a notificarCambioDatos() aquí
-                } else {
-                    // Fallback a la versión global si existe
-                    if (typeof dataProcessor !== 'undefined') {
-                        dataProcessor.procesarDatosCompletos(participantes);
-                        // En versión global, UI se actualiza automáticamente
-                    }
+                } else if (typeof dataProcessor !== 'undefined') {
+                    dataProcessor.procesarDatosCompletos(participantes);
+                }
+                
+                // Mostrar éxito
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Datos cargados',
+                        text: `Se cargaron ${participantes.length} participantes`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
                 }
             } else {
-                console.log('No se encontraron reservas');
+                console.log('⚠️ No se encontraron participantes');
                 this.cargarDatosDemo();
             }
             
         } catch (error) {
-            console.error('Error cargando datos:', error);
-            this.ocultarCarga();
+            console.error('❌ Error crítico:', error);
             this.cargarDatosDemo();
-            
-            let mensajeError = 'No se pudieron cargar los datos';
-            if (error.message.includes('JWT')) {
-                mensajeError = 'Error de autenticación. Verifica la configuración de Supabase.';
-            } else if (error.message.includes('network') || error.message.includes('fetch')) {
-                mensajeError = 'Error de conexión. Verifica tu conexión a internet.';
-            } else if (error.message.includes('permission')) {
-                mensajeError = 'No tienes permisos para acceder a estos datos.';
-            }
-            
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: mensajeError,
-                    confirmButtonColor: '#e74c3c'
-                });
-            }
         }
     }
+
+// ✅ NUEVO MÉTODO: Carga alternativa si falla la principal
+async cargarDatosAlternativos() {
+    try {
+        console.log('🔄 Intentando carga alternativa...');
+        
+        // Consulta más simple pero funcional
+        const { data: participantes, error } = await supabase
+            .from('participantes_reserva')
+            .select(`
+                *,
+                reservas(tipo_reserva, estado, fecha_reserva),
+                intereses(nombre),
+                instituciones(nombre_institucion),
+                genero(genero)
+            `)
+            .limit(300);
+
+        if (error) throw error;
+
+        if (participantes && participantes.length > 0) {
+            console.log(`✅ ${participantes.length} participantes cargados (alternativo)`);
+            
+            if (this.dataProcessor) {
+                this.dataProcessor.procesarDatosCompletos(participantes);
+            }
+            
+            return true;
+        }
+        
+        return false;
+        
+    } catch (error) {
+        console.error('❌ Error en carga alternativa:', error);
+        return false;
+    }
+}
 
     mostrarCarga(titulo, texto) {
         if (typeof Swal !== 'undefined') {
