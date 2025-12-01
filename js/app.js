@@ -12,34 +12,37 @@ class App {
         // ✅ AGREGAR: Control para evitar notificaciones duplicadas
         this.notificacionEnProceso = false;
     }
-
-    async initialize() {
-        try {
-            console.log('🚀 Inicializando aplicación...');
-            
-            // Inicializar módulos en orden correcto
-            await this.initializeModules();
-            
-            // Configurar referencias cruzadas
-            this.setupModuleReferences();
-            
-            // Configurar eventos globales
-            this.setupGlobalEvents();
-            
-            // Cargar datos iniciales
-            await this.loadInitialData();
-            
-            this.isInitialized = true;
-            console.log('✅ Aplicación inicializada correctamente');
-            
-        } catch (error) {
-            console.error('❌ Error inicializando aplicación:', error);
-            // Inicialización mínima incluso si hay errores
-            this.setupGlobalEvents();
-            await this.loadInitialData();
-        }
+// En app.js, modifica el método initialize():
+initialize() {
+    console.log('🚀 Inicializando aplicación...');
+    
+    try {
+        // Inicializar módulos
+        this.modules = {
+            dataLoader: new DataLoader(),
+            dataProcessor: new DataProcessor(),
+            chartManager: new ChartManager()
+        };
+        
+        // Configurar dependencias básicas
+        this.modules.dataLoader.setApp(this);
+        this.modules.dataProcessor.setApp(this);
+        
+        // ✅ Asignar referencias directamente (sin setChartManager si no existe)
+        this.modules.chartManager.app = this;
+        this.modules.chartManager.dataProcessor = this.modules.dataProcessor;
+        
+        // Cargar datos iniciales
+        this.loadInitialData();
+        
+        console.log('✅ Aplicación inicializada correctamente');
+        
+    } catch (error) {
+        console.error('❌ Error inicializando aplicación:', error);
+        this.mostrarError('Error al inicializar la aplicación');
     }
-    async initializeModules() {
+}
+       async initializeModules() {
         try {
             // 1. DataProcessor (sin dependencias)
             this.modules.dataProcessor = new DataProcessor();
