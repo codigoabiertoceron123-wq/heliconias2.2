@@ -2,9 +2,7 @@
 (function() {
     'use strict';
     
-    // =============================================
-    // VARIABLES PRIVADAS - NO CONFLICTOS
-    // =============================================
+ 
     let chartBarEdad, chartPieEdad, chartAmpliadoEdad;
     let tipoActualEdad = "edad";
     let datosSimuladosEdad = {};
@@ -37,9 +35,7 @@
         anio: ['#3498db', '#e67e22', '#2ecc71', '#9b59b6', '#f1c40f', '#e74c3c']
     };
 
-    // =============================================
-    // FUNCIONES PRIVADAS
-    // =============================================
+   
 
     function calcularEdad(fechaNacimiento) {
         try {
@@ -533,9 +529,7 @@
         mostrarGraficasTiempo(tipo);
     }
 
-    // =============================================
-    // FUNCIONES DE FILTRADO COMBINADO
-    // =============================================
+  
 
     async function aplicarFiltrosCombinados() {
         try {
@@ -697,9 +691,7 @@
         });
     }
 
-    // =============================================
-    // FUNCIÓN FALTANTE - GRÁFICA AMPLIADA PARA TIEMPO
-    // =============================================
+  
 
     function crearGraficaAmpliadaTiempo(tipo, tipoGrafica) {
         const ctx = document.getElementById("chartAmpliadoEdad");
@@ -789,9 +781,7 @@
         });
     }
 
-    // =============================================
-    // FUNCIÓN PARA LLENAR TABLA MODAL DE TIEMPO
-    // =============================================
+   
 
     function llenarTablaModalTiempo(tipo) {
         const tbody = document.getElementById("tbodyDatosEdad");
@@ -841,9 +831,7 @@
         ` : '');
     }
 
-    // =============================================
-    // FUNCIÓN AUXILIAR PARA DESCRIPCIONES DE TIEMPO
-    // =============================================
+   
 
     function getDescripcionTiempo(tipo, label) {
         switch(tipo) {
@@ -858,9 +846,6 @@
         }
     }
 
-    // =============================================
-    // FUNCIONES DE FILTRADO PARA MODAL DE TIEMPO
-    // =============================================
 
     async function aplicarFiltrosModalTiempo(tipo) {
         const fechaInicio = document.getElementById('modal-filtro-fecha-inicio-tiempo')?.value;
@@ -1574,9 +1559,7 @@
         });
     }
 
-    // =============================================
-    // FUNCIONES DEL MODAL MEJORADAS
-    // =============================================
+    
 
     function abrirModalEdad(tipoGrafica) {
         const modal = document.getElementById("chartModalEdad");
@@ -1769,9 +1752,7 @@
         XLSX.writeFile(wb, "reporte_edad_detallado.xlsx");
     }
 
-    // =============================================
-    // NUEVAS FUNCIONES PARA MODALES
-    // =============================================
+   
 
     function crearFiltrosModalEdad() {
         const modalHeader = document.querySelector('.modal-header');
@@ -1949,9 +1930,7 @@
         mostrarExitoEdad('Filtros limpiados - Mostrando todos los datos');
     }
 
-    // =============================================
-    // MODAL PARA FECHA, MES Y AÑO
-    // =============================================
+    
 
     function abrirModalTiempo(tipo, tipoGrafica) {
         const modal = document.getElementById("chartModalEdad");
@@ -2453,9 +2432,7 @@
         llenarTablaModalEdad();
     }
 
-    // =============================================
-    // FUNCIONES DE FILTRADO AVANZADO
-    // =============================================
+  
 
     async function aplicarFiltros() {
         try {
@@ -2718,31 +2695,23 @@
         `;
     }
 
-    // =============================================
-    // API PÚBLICA - COMPLETA
-    // =============================================
+   
 
     if (!window.EdadSystem) {
         window.EdadSystem = {};
     }
 
-    // ======================
-    // SISTEMA DE EDAD
-    // ======================
+    
     window.EdadSystem.cargarDatos = () => cargarDatosEdades();
     window.EdadSystem.abrirModalEdad = (tipo) => abrirModalEdad(tipo);
     window.EdadSystem.cerrarModal = () => cerrarModalEdad();
 
-    // ======================
-    // SISTEMA DE TIEMPO (FECHA, MES, AÑO)
-    // ======================
+    
     window.EdadSystem.cargarDatosTiempo = (tipo) => cargarDatosTiempo(tipo);
     window.EdadSystem.cambiarTipoTiempo = (tipo) => cargarDatosTiempo(tipo);
     window.EdadSystem.abrirModalTiempo = (tipo, tipoGrafica) => abrirModalTiempo(tipo, tipoGrafica);
 
-    // ======================
-    // FUNCIONES DE DESCARGA
-    // ======================
+   
     window.EdadSystem.descargarGraficoPrincipal = () => {
         if (chartBarEdad) {
             const link = document.createElement("a");
@@ -2790,9 +2759,7 @@
         XLSX.writeFile(wb, `reporte_${tipo}.xlsx`);
     };
 
-    // ======================
-    // FILTRADO
-    // ======================
+   
     window.EdadSystem.aplicarFiltros = () => aplicarFiltros();
     window.EdadSystem.limpiarFiltros = () => limpiarFiltros();
     window.EdadSystem.cambiarTipoReporte = (tipo) => cambiarTipoReporte(tipo);

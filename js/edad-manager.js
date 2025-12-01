@@ -1,9 +1,7 @@
 (function() {
     'use strict';
     
-    // =============================================
-    // CLASE PRINCIPAL - TOTALMENTE AISLADA
-    // =============================================
+    
     class EdadManager {
         constructor() {
             this.datosEdades = {};
@@ -491,9 +489,7 @@
         }
     }
 
-    // =============================================
-    // CLASE DE UTILIDADES
-    // =============================================
+    
     class EdadUtils {
         validarFechaNacimiento(fecha) {
             if (!fecha) return false;
@@ -507,9 +503,7 @@
         }
     }
 
-    // =============================================
-    // API PÚBLICA - EXPONER SOLO LO NECESARIO
-    // =============================================
+  
     const edadManager = new EdadManager();
 
     // Crear namespace global SEGURO
