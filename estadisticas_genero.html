@@ -17,7 +17,17 @@
         <div class="top-section">
             <div class="logo">
                 <div class="logo-img">
-                    <i class="fas fa-leaf"></i>
+                    <i class="fas fa-leaf" style="
+                        display: block;
+                        width: 50px;
+                        height: 50px;
+                        background-image: url('img/logo.png');
+                        background-size: contain;
+                        background-repeat: no-repeat;
+                        background-position: center;
+                        font-size: 0;
+                        color: transparent;
+                    ">></i>
                 </div>
                 <h1>Heliconias Reports</h1>
             </div>
@@ -38,10 +48,6 @@
                     <i class="fas fa-chart-line"></i>
                     <span>Reportes</span>
                 </a>
-                <a href="#" class="nav-item tooltip">
-                    <i class="fas fa-history"></i>
-                    <span>Historial</span>
-                </a>
                 <a href="configuracion.html" class="nav-item tooltip">
                     <i class="fas fa-cog"></i>
                     <span>Configuración</span>
@@ -49,25 +55,27 @@
             </nav>
         </div>
 
-        <div class="top-bar">
-            <div class="system-date">
-                <i class="fas fa-clock"></i>
-                <span id="current-date-time">Cargando fecha y hora...</span>
-            </div>
-
-            <div class="user-actions">
-                <a href="soporte.html" class="btn btn-primary tooltip">
-                    <i class="fas fa-headset"></i> Soporte
-                </a>
-                <button class="btn btn-primary tooltip" id="help-btn">
-                    <i class="fas fa-question-circle"></i> Ayuda
-                </button>
-                <button class="btn btn-accent tooltip" id="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Salir
-                </button>
-            </div>
-        </div>
+        
     </header>
+
+    <div class="top-bar">
+        <div class="system-date">
+            <i class="fas fa-clock"></i>
+            <span id="current-date-time">Cargando fecha y hora...</span>
+        </div>
+
+        <div class="user-actions">
+            <a href="soporte.html" class="btn btn-primary tooltip">
+                <i class="fas fa-headset"></i> Soporte
+            </a>
+            <button class="btn btn-primary tooltip" id="help-btn">
+                <i class="fas fa-question-circle"></i> Ayuda
+            </button>
+            <button class="btn btn-accent tooltip" id="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Salir
+            </button>
+        </div>
+    </div>
 
     <!-- Contenido principal -->
     <main>
