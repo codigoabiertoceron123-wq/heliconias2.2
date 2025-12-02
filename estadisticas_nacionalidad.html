@@ -24,10 +24,9 @@
             background: white;
         }
 
-        /* Header Styles */
         .header {
             background: linear-gradient(135deg, #ffffff, #ffffff);
-            color: #27ae60;
+            color: #2e7d32;
             padding: 15px 30px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             position: sticky;
@@ -43,9 +42,9 @@
         }
 
         .logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
+            display: flex;           /* Activar flexbox */
+            align-items: center;     /* Centrar verticalmente el contenido */
+            gap: 15px;               /* Espacio entre logo y título */
         }
 
         .logo-img {
@@ -58,6 +57,18 @@
             justify-content: center;
         }
 
+        .logo-img i {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-image: url("img/logo.png"); /* Tu logo real */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            font-size: 0; /* Oculta el ícono de fontawesome */
+            color: transparent;
+        }
+
         .logo h1 {
             font-size: 24px;
             font-weight: 700;
@@ -66,29 +77,43 @@
         
         .top-bar {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            justify-content: space-between; /* izquierda - derecha */
+            align-items: center;            /* misma línea */
             width: 100%;
             margin-bottom: 10px;
+            margin-top: 15px; 
         }
 
         .system-date {
             display: flex;
+            margin-left: 20px;
             align-items: center;
             gap: 10px;
             font-weight: 500;
             color: #000000;
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.15); /* efecto cristal */
             padding: 10px 18px;
             border-radius: 25px;
+            backdrop-filter: blur(6px);  /* efecto vidrio borroso */
+            -webkit-backdrop-filter: blur(6px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.25);
             font-size: 15px;
+            letter-spacing: 0.5px;        /* más elegante */
         }
 
-        /* Navigation */
+        /* Navigation Styles */
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.3);
+        }
+
         .main-nav {
             display: flex;
             gap: 5px;
+            left: 50px;/* ajusta el valor para mover más a la izquierda o derecha */
         }
 
         .nav-item {
@@ -96,34 +121,36 @@
             align-items: center;
             gap: 8px;
             padding: 10px 20px;
-            color: #27ae60;
+            color: #2e7d32;
             text-decoration: none;
             border-radius: 6px;
             position: relative;
-            background: transparent;
+            background: transparent; /* quitar fondo */
             transition: all 0.3s ease;
         }
 
+        /* Línea inferior al pasar el mouse */
         .nav-item::after {
             content: '';
             position: absolute;
             bottom: 0;
-            left: 10%;
-            width: 80%;
-            height: 2px;
-            background: linear-gradient(135deg, #27ae60, #2ecc71);
-            transform: scaleX(0);
+            left: 10%;           /* margen izquierdo de la línea */
+            width: 80%;          /* ancho de la línea */
+            height: 2px;         /* grosor de la línea */
+            background: linear-gradient(135deg, #2e7d32, #4caf50);
+            transform: scaleX(0); /* inicialmente invisible */
             transition: transform 0.3s ease;
+            transform-origin: center;
         }
 
         .nav-item:hover::after {
-            transform: scaleX(1);
+            transform: scaleX(1); /* línea aparece */
         }
 
         .user-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
+            display: flex;        /* ya estaba flex */
+            justify-content: flex-end;  /* esto los lleva a la derecha */
+            gap: 10px; 
         }
 
         .btn {
@@ -137,15 +164,18 @@
             align-items: center;
             gap: 6px;
             transition: all 0.3s ease;
+            position: relative;
+            left: -20px; /* mueve cada botón 20px hacia la izquierda */
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            background: linear-gradient(135deg, #2e7d32, #4caf50); /* verde degradado */
             color: white;
         }
 
+
         .btn-accent {
-            background: linear-gradient(135deg, #e74c3c, #fe5926);
+            background: linear-gradient(135deg, #e74c3c, #fe5926); 
             color: white;
         }
 
@@ -647,7 +677,7 @@
                 <h1>Heliconias Reports</h1>
             </div>
             <nav class="main-nav">
-                <a href="principal.html" class="nav-item tooltip">
+                <a href="principal.html" class="nav-item active tooltip">
                     <i class="fas fa-home"></i>
                     <span>Inicio</span>
                 </a>
@@ -663,13 +693,9 @@
                     <i class="fas fa-chart-line"></i>
                     <span>Reportes</span>
                 </a>
-                <a href="estadisticas_institucion.html" class="nav-item tooltip">
-                    <i class="fas fa-school"></i>
-                    <span>Por Institución</span>
-                </a>
-                <a href="estadisticas_nacionalidad.html" class="nav-item active tooltip">
-                    <i class="fas fa-globe-americas"></i>
-                    <span>Por Nacionalidad</span>
+                <a href="#" class="nav-item tooltip">
+                    <i class="fas fa-history"></i>
+                    <span>Historial</span>
                 </a>
                 <a href="configuracion.html" class="nav-item tooltip">
                     <i class="fas fa-cog"></i>
@@ -678,25 +704,26 @@
             </nav>
         </div>
 
-        <div class="top-bar">
-            <div class="system-date">
-                <i class="fas fa-clock"></i>
-                <span id="current-date-time">Cargando fecha y hora...</span>
-            </div>
-
-            <div class="user-actions">
-                <a href="soporte.html" class="btn btn-primary">
-                    <i class="fas fa-headset"></i> Soporte
-                </a>
-                <button class="btn btn-primary" id="help-btn">
-                    <i class="fas fa-question-circle"></i> Ayuda
-                </button>
-                <button class="btn btn-accent" id="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Salir
-                </button>
-            </div>
-        </div>
     </header>
+
+    <div class="top-bar">
+        <div class="system-date">
+            <i class="fas fa-clock"></i>
+            <span id="current-date-time">Cargando fecha y hora...</span>
+        </div>
+
+        <div class="user-actions">
+            <a href="soporte.html" class="btn btn-primary">
+                <i class="fas fa-headset"></i> Soporte
+            </a>
+            <button class="btn btn-primary" id="help-btn">
+                <i class="fas fa-question-circle"></i> Ayuda
+            </button>
+            <button class="btn btn-accent" id="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Salir
+            </button>
+        </div>
+    </div>
 
     <!-- Contenido principal -->
     <main>
