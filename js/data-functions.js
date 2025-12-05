@@ -58,6 +58,159 @@ function generarColores(tipo, labels) {
     }
 }
 
+// Función auxiliar para procesar cualquier período (fecha, mes, año) de manera consistente
+async function procesarDatosPorPeriodo(tipoPeriodo, fechaInicial, fechaFinal, generoSeleccionado = 'todos') {
+    console.log(`📊 Procesando ${tipoPeriodo}:`, { fechaInicial, fechaFinal, generoSeleccionado });
+    
+    try {
+        // CONSULTA base para obtener datos
+        const { data: participantes, error } = await supabase
+            .from('participantes_reserva')
+            .select(`
+                fecha_visita,
+                genero!inner(id_genero, genero)
+            `)
+            .not('fecha_visita', 'is', null)
+            .not('id_genero', 'is', null)
+            .gte('fecha_visita', fechaInicial + 'T00:00:00')
+            .lte('fecha_visita', fechaFinal + 'T23:59:59')
+            .order('fecha_visita', { ascending: true });
+
+        if (error) throw error;
+
+        if (!participantes || participantes.length === 0) {
+            return { type: 'grouped', labels: [], datasets: [], totalGeneral: 0 };
+        }
+
+        // Obtener todos los géneros
+        const { data: generos } = await supabase
+            .from('genero')
+            .select('id_genero, genero')
+            .order('id_genero');
+
+        // Determinar formato de etiquetas según tipoPeriodo
+        const formatearEtiqueta = (fechaStr) => {
+            const fecha = new Date(fechaStr);
+            switch(tipoPeriodo) {
+                case 'fecha':
+                    return formatearFechaCorta(fechaStr); // 20-ene
+                case 'mes':
+                    return `${obtenerNombreMesAbreviado(fecha.getMonth())}-${fecha.getFullYear()}`; // ene-2024
+                case 'anio':
+                    return fecha.getFullYear().toString(); // 2024
+                default:
+                    return fechaStr;
+            }
+        };
+
+        // Agrupar por período y género
+        const datosPorPeriodo = {};
+        const periodosUnicos = new Set();
+        const todosLosGeneros = generos.map(g => g.genero);
+        
+        // Inicializar estructura
+        participantes.forEach(participante => {
+            if (participante.fecha_visita && participante.genero) {
+                const periodo = formatearEtiqueta(participante.fecha_visita);
+                const genero = participante.genero.genero;
+                
+                periodosUnicos.add(periodo);
+                
+                if (!datosPorPeriodo[periodo]) {
+                    datosPorPeriodo[periodo] = {};
+                    todosLosGeneros.forEach(g => {
+                        datosPorPeriodo[periodo][g] = 0;
+                    });
+                }
+                
+                if (datosPorPeriodo[periodo][genero] !== undefined) {
+                    datosPorPeriodo[periodo][genero]++;
+                }
+            }
+        });
+
+        // Ordenar períodos cronológicamente
+        const periodosOrdenados = Array.from(periodosUnicos).sort((a, b) => {
+            // Convertir a fecha para ordenar correctamente
+            const getDateFromPeriod = (periodo) => {
+                if (tipoPeriodo === 'anio') {
+                    return new Date(periodo, 0, 1);
+                } else if (tipoPeriodo === 'mes') {
+                    const [mes, año] = periodo.split('-');
+                    const mesNum = obtenerNumeroMes(mes);
+                    return new Date(año, mesNum, 1);
+                } else {
+                    // Para fecha, usar el primer día del mes
+                    const partes = periodo.split('-');
+                    if (partes.length === 2) {
+                        const dia = parseInt(partes[0]);
+                        const mes = obtenerNumeroMes(partes[1]);
+                        return new Date(new Date().getFullYear(), mes, dia);
+                    }
+                    return new Date();
+                }
+            };
+            return getDateFromPeriod(a) - getDateFromPeriod(b);
+        });
+
+        // Crear datasets para cada género
+        const datasets = todosLosGeneros.map(genero => {
+            const color = coloresPorGenero[genero] || '#95a5a6';
+            return {
+                label: genero,
+                data: periodosOrdenados.map(periodo => datosPorPeriodo[periodo]?.[genero] || 0),
+                backgroundColor: color,
+                borderColor: darkenColor(color, 0.3),
+                borderWidth: 2,
+                borderRadius: 6,
+                barThickness: tipoPeriodo === 'anio' ? 25 : 20,
+                barPercentage: 0.8,
+                categoryPercentage: 0.9
+            };
+        });
+
+        // Filtrar si es género específico
+        let datasetsFinales = datasets;
+        if (generoSeleccionado !== 'todos') {
+            const generoDataset = datasets.find(d => d.label === generoSeleccionado);
+            datasetsFinales = generoDataset ? [{
+                ...generoDataset,
+                label: formatearGenero(generoSeleccionado),
+                backgroundColor: coloresPorGenero[generoSeleccionado] || '#3498db'
+            }] : datasets;
+        }
+
+        // Calcular totales
+        const totalPorPeriodo = periodosOrdenados.map(periodo => 
+            todosLosGeneros.reduce((sum, genero) => sum + (datosPorPeriodo[periodo]?.[genero] || 0), 0)
+        );
+        
+        const totalGeneral = totalPorPeriodo.reduce((a, b) => a + b, 0);
+
+        return {
+            type: 'grouped',
+            labels: periodosOrdenados,
+            datasets: datasetsFinales,
+            totalPorPeriodo: totalPorPeriodo,
+            totalGeneral: totalGeneral,
+            generos: todosLosGeneros,
+            generoFiltrado: generoSeleccionado !== 'todos' ? generoSeleccionado : null
+        };
+
+    } catch (error) {
+        console.error(`💥 Error procesando ${tipoPeriodo}:`, error);
+        throw error;
+    }
+}
+
+// Función auxiliar para obtener número de mes
+function obtenerNumeroMes(mesAbrev) {
+    const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 
+                   'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    return meses.indexOf(mesAbrev.toLowerCase());
+}
+
+
 // Función para obtener etiqueta descriptiva
 function obtenerEtiquetaDescriptiva(tipo) {
     const etiquetas = {
@@ -146,6 +299,12 @@ function formatearFechaCorta(fechaStr) {
     if (!fechaStr) return 'Fecha inválida';
     
     try {
+        // Si ya está en formato "23-ene", devolverlo tal cual
+        if (typeof fechaStr === 'string' && /^\d{1,2}-\w{3}$/.test(fechaStr)) {
+            return fechaStr;
+        }
+        
+        // Si es una fecha ISO completa
         const fecha = new Date(fechaStr);
         
         if (isNaN(fecha.getTime())) {
@@ -158,6 +317,50 @@ function formatearFechaCorta(fechaStr) {
         return `${dia}-${mes}`;
     } catch (error) {
         console.error('Error formateando fecha corta:', fechaStr, error);
+        return 'Fecha inválida';
+    }
+}
+
+// También mejora formatearFecha() para mayor robustez:
+function formatearFecha(fechaStr) {
+    if (!fechaStr) return 'Fecha inválida';
+    
+    try {
+        // Si ya está en formato "23-ene", convertirlo a fecha completa
+        if (typeof fechaStr === 'string' && /^\d{1,2}-\w{3}$/.test(fechaStr)) {
+            const [dia, mesAbrev] = fechaStr.split('-');
+            const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 
+                          'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+            const mesNum = meses.indexOf(mesAbrev.toLowerCase());
+            
+            if (mesNum === -1) return fechaStr;
+            
+            // Asumir año actual
+            const ahora = new Date();
+            const fecha = new Date(ahora.getFullYear(), mesNum, parseInt(dia));
+            
+            return fecha.toLocaleDateString('es-ES', {
+                day: '2-digit',
+                month: '2-digit', 
+                year: 'numeric'
+            });
+        }
+        
+        // Si es una fecha ISO
+        const fecha = new Date(fechaStr);
+        
+        if (isNaN(fecha.getTime())) {
+            console.warn('Fecha inválida:', fechaStr);
+            return 'Fecha inválida';
+        }
+        
+        return fecha.toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: '2-digit', 
+            year: 'numeric'
+        });
+    } catch (error) {
+        console.error('Error formateando fecha:', fechaStr, error);
         return 'Fecha inválida';
     }
 }
@@ -475,6 +678,7 @@ function procesarDatosPorTiempoDesdeFechasReales(fechasVisitas, generos) {
             if (item.fecha) {
                 const fecha = new Date(item.fecha);
                 
+            if (!isNaN(fecha.getTime())) {
                 // Por fecha específica (formato como en la imagen: 20-ene)
                 const fechaCorta = formatearFechaCorta(item.fecha);
                 visitasPorFecha[fechaCorta] = (visitasPorFecha[fechaCorta] || 0) + 1;
@@ -486,14 +690,17 @@ function procesarDatosPorTiempoDesdeFechasReales(fechasVisitas, generos) {
                 
                 // Por mes (formato como en la imagen)
                 const mesAbreviado = obtenerNombreMesAbreviado(fecha.getMonth());
-                const mesKey = `${fecha.getFullYear()}-${mesAbreviado}`;
+                const anio = fecha.getFullYear();
+                const mesKey = `${anio}-${mesAbreviado}`;
                 visitasPorMes[mesKey] = (visitasPorMes[mesKey] || 0) + 1;
                 
                 // Por año
-                const anio = fecha.getFullYear().toString();
                 visitasPorAnio[anio] = (visitasPorAnio[anio] || 0) + 1;
+            } else {
+                    console.warn('Fecha inválida en item:', item.fecha);
             }
-        }
+          }
+        }  
     });
 
     console.log('Conteo REAL por género:', conteoPorGenero);
@@ -529,11 +736,43 @@ function procesarDatosPorTiempoDesdeFechasReales(fechasVisitas, generos) {
             values: Object.values(visitasPorMes)
         },
         anio: {
-            labels: Object.keys(visitasPorAnio),
-            values: Object.values(visitasPorAnio)
+            labels: Object.keys(visitasPorAnio).sort(),
+            values: Object.keys(visitasPorAnio).sort().map(anio => visitasPorAnio[anio])
         }
     };
 }
+
+
+// funcion auxiliar
+// Función para ordenar fechas en formato "23-ene"
+function ordenarFechasCortas(fechasArray) {
+    if (!fechasArray || fechasArray.length === 0) return [];
+    
+    const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 
+                   'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    
+    return fechasArray.sort((a, b) => {
+        try {
+            const [diaA, mesA] = a.split('-');
+            const [diaB, mesB] = b.split('-');
+            
+            const mesIndexA = meses.indexOf(mesA.toLowerCase());
+            const mesIndexB = meses.indexOf(mesB.toLowerCase());
+            
+            // Primero comparar por mes
+            if (mesIndexA !== mesIndexB) {
+                return mesIndexA - mesIndexB;
+            }
+            
+            // Si mismo mes, comparar por día
+            return parseInt(diaA) - parseInt(diaB);
+        } catch (error) {
+            return 0;
+        }
+    });
+}
+// cierra funcion auxiliar
+
 
 // Función para cargar intereses REALES
 async function cargarDatosInteresesReales() {
@@ -787,18 +1026,23 @@ async function aplicarFiltroRangoFechas() {
     }
 }
 
-// Función para cargar datos por rango de fechas
+// Función para cargar datos por rango de fechas - VERSIÓN CORREGIDA
 async function cargarDatosPorRangoFechas(fechaInicial, fechaFinal) {
     try {
-        console.log('🔍 Cargando datos por rango de fechas:', fechaInicial, 'a', fechaFinal);
+        console.log('🔍 Cargando datos por rango de fechas AGRUPADOS:', fechaInicial, 'a', fechaFinal);
 
-        // Consultar participantes en el rango de fechas
+        // CONSULTA MEJORADA: Traer datos agrupados por fecha y género
         const { data: participantes, error } = await supabase
             .from('participantes_reserva')
-            .select('fecha_visita')
+            .select(`
+                fecha_visita,
+                genero!inner(id_genero, genero)
+            `)
             .not('fecha_visita', 'is', null)
+            .not('id_genero', 'is', null)
             .gte('fecha_visita', fechaInicial)
-            .lte('fecha_visita', fechaFinal);
+            .lte('fecha_visita', fechaFinal)
+            .order('fecha_visita', { ascending: true });
 
         if (error) {
             console.error('Error en consulta de fechas:', error);
@@ -807,27 +1051,24 @@ async function cargarDatosPorRangoFechas(fechaInicial, fechaFinal) {
 
         console.log('👥 Participantes encontrados en rango:', participantes);
 
-        // Procesar fechas en formato corto (como en la imagen)
-        const visitasPorFecha = {};
-        participantes.forEach(p => {
-            if (p.fecha_visita) {
-                const fechaCorta = formatearFechaCorta(p.fecha_visita);
-                visitasPorFecha[fechaCorta] = (visitasPorFecha[fechaCorta] || 0) + 1;
-            }
-        });
+        if (!participantes || participantes.length === 0) {
+            return {
+                labels: [],
+                values: [],
+                datasets: []
+            };
+        }
 
-        // Ordenar fechas cronológicamente
-        const fechasOrdenadas = Object.keys(visitasPorFecha).sort((a, b) => {
-            return new Date(a) - new Date(b);
-        });
+        // Obtener todos los géneros disponibles
+        const { data: generos } = await supabase
+            .from('genero')
+            .select('id_genero, genero')
+            .order('id_genero');
 
-        const datosFechas = {
-            labels: fechasOrdenadas,
-            values: fechasOrdenadas.map(fecha => visitasPorFecha[fecha])
-        };
+        console.log('🎭 Géneros disponibles:', generos);
 
-        console.log('✅ Datos de fechas procesados:', datosFechas);
-        return datosFechas;
+        // Procesar datos AGRUPADOS por fecha y género
+        return procesarDatosAgrupadosPorFechaYGenero(participantes, generos);
 
     } catch (error) {
         console.error('💥 Error cargando datos por rango de fechas:', error);
@@ -835,102 +1076,559 @@ async function cargarDatosPorRangoFechas(fechaInicial, fechaFinal) {
     }
 }
 
-// Función para actualizar gráfica de fechas
+
+
+// Función auxiliar para obtener número de mes desde abreviatura
+function obtenerNumeroMes(mesAbrev) {
+    const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 
+                   'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const mes = mesAbrev.toLowerCase();
+    const index = meses.indexOf(mes);
+    return index !== -1 ? index : 0;
+}
+
+// ====================================================================
+// FUNCIONES SIMPLIFICADAS DE FILTRADO - REEMPLAZAR EN data-functions.js
+// ====================================================================
+
+// Función SIMPLIFICADA para aplicar filtro por género y fecha
+async function aplicarFiltroPorGeneroYFecha() {
+    const fechaInicial = document.getElementById('filtroFechaInicial').value;
+    const fechaFinal = document.getElementById('filtroFechaFinal').value;
+    const generoSeleccionado = document.getElementById('filtroGeneroFecha').value;
+    
+    console.log('🎯 Aplicando filtro por FECHA:', { fechaInicial, fechaFinal, generoSeleccionado });
+    
+    // Validaciones básicas
+    if (!fechaInicial || !fechaFinal) {
+        mostrarMensajeSinDatos('Por favor selecciona ambas fechas');
+        return;
+    }
+    
+    if (fechaInicial > fechaFinal) {
+        mostrarMensajeSinDatos('La fecha inicial no puede ser mayor que la fecha final');
+        return;
+    }
+
+    try {
+        mostrarLoading('Cargando datos por fecha...');
+        
+        // Usar la función genérica para procesar fechas
+        const datosProcesados = await procesarDatosPorPeriodo('fecha', fechaInicial, fechaFinal, generoSeleccionado);
+        
+        cerrarLoading();
+        
+        // Verificar si hay datos
+        if (datosProcesados.totalGeneral === 0) {
+            mostrarMensajeSinDatos('No hay datos disponibles para el rango de fechas seleccionado');
+            return;
+        }
+        
+        // Actualizar datos
+        datosSimulados.fecha = datosProcesados;
+        tipoActual = 'fecha'; // IMPORTANTE: Actualizar el tipo actual
+        
+        // Crear título
+        let titulo;
+        if (generoSeleccionado !== 'todos') {
+            titulo = `${formatearGenero(generoSeleccionado)} por Fecha - ${formatearFecha(fechaInicial)} a ${formatearFecha(fechaFinal)}`;
+        } else {
+            titulo = `Visitantes por Fecha y Género - ${formatearFecha(fechaInicial)} a ${formatearFecha(fechaFinal)}`;
+        }
+        
+        // Actualizar gráfica en el modal
+        const modal = document.getElementById("chartModal");
+        if (modal && modal.classList.contains('show')) {
+            const modalTitle = document.getElementById("modalTitle");
+            if (modalTitle) {
+                modalTitle.innerHTML = `<i class="fas fa-calendar"></i> ${titulo}`;
+            }
+            
+            const tipoGraficaActual = document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica');
+            actualizarGraficaModal(tipoGraficaActual, titulo);
+        }
+        
+        mostrarExito(`Se encontraron ${datosProcesados.totalGeneral} visitantes en ${datosProcesados.labels.length} fechas`);
+
+    } catch (error) {
+        console.error('❌ Error aplicando filtro de fecha:', error);
+        cerrarLoading();
+        mostrarMensajeSinDatos('Error al cargar los datos: ' + error.message);
+    }
+}
+
+// Función SIMPLIFICADA para aplicar filtro por mes
+async function aplicarFiltroRangoMeses() {
+    const fechaInicial = document.getElementById('filtroFechaInicialMes').value;
+    const fechaFinal = document.getElementById('filtroFechaFinalMes').value;
+    const generoSeleccionado = document.getElementById('filtroGeneroMes').value;
+    
+    console.log('🎯 Aplicando filtro por MES:', { fechaInicial, fechaFinal, generoSeleccionado });
+    
+    // Validaciones básicas
+    if (!fechaInicial || !fechaFinal) {
+        mostrarMensajeSinDatos('Por favor selecciona ambas fechas');
+        return;
+    }
+    
+    if (fechaInicial > fechaFinal) {
+        mostrarMensajeSinDatos('La fecha inicial no puede ser mayor que la fecha final');
+        return;
+    }
+
+    try {
+        mostrarLoading('Cargando datos por mes...');
+        
+        // Usar la función genérica para procesar meses
+        const datosProcesados = await procesarDatosPorPeriodo('mes', fechaInicial, fechaFinal, generoSeleccionado);
+        
+        cerrarLoading();
+        
+        // Verificar si hay datos
+        if (datosProcesados.totalGeneral === 0) {
+            mostrarMensajeSinDatos('No hay datos disponibles para el rango de meses seleccionado');
+            return;
+        }
+        
+        // Actualizar datos
+        datosSimulados.mes = datosProcesados;
+        tipoActual = 'mes'; // IMPORTANTE: Actualizar el tipo actual
+        
+        // Crear título
+        let titulo;
+        const mesInicial = obtenerNombreMesDesdeFecha(fechaInicial);
+        const mesFinal = obtenerNombreMesDesdeFecha(fechaFinal);
+        const añoInicial = obtenerAnioDesdeFecha(fechaInicial);
+        const añoFinal = obtenerAnioDesdeFecha(fechaFinal);
+        
+        if (generoSeleccionado !== 'todos') {
+            titulo = `${formatearGenero(generoSeleccionado)} por Mes - ${mesInicial} ${añoInicial} a ${mesFinal} ${añoFinal}`;
+        } else {
+            titulo = `Visitantes por Mes y Género - ${mesInicial} ${añoInicial} a ${mesFinal} ${añoFinal}`;
+        }
+        
+        // Actualizar gráfica en el modal
+        const modal = document.getElementById("chartModal");
+        if (modal && modal.classList.contains('show')) {
+            const modalTitle = document.getElementById("modalTitle");
+            if (modalTitle) {
+                modalTitle.innerHTML = `<i class="fas fa-calendar-week"></i> ${titulo}`;
+            }
+            
+            const tipoGraficaActual = document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica');
+            actualizarGraficaModal(tipoGraficaActual, titulo);
+        }
+        
+        mostrarExito(`Se encontraron ${datosProcesados.totalGeneral} visitantes en ${datosProcesados.labels.length} meses`);
+
+    } catch (error) {
+        console.error('❌ Error aplicando filtro de mes:', error);
+        cerrarLoading();
+        mostrarMensajeSinDatos('Error al cargar los datos: ' + error.message);
+    }
+}
+
+// Función SIMPLIFICADA para aplicar filtro por año
+async function aplicarFiltroRangoAnios() {
+    const fechaInicial = document.getElementById('filtroFechaInicialAnio').value;
+    const fechaFinal = document.getElementById('filtroFechaFinalAnio').value;
+    const generoSeleccionado = document.getElementById('filtroGeneroAnio').value;
+    
+    console.log('🎯 Aplicando filtro por AÑO:', { fechaInicial, fechaFinal, generoSeleccionado });
+    
+    // Validaciones básicas
+    if (!fechaInicial || !fechaFinal) {
+        mostrarMensajeSinDatos('Por favor selecciona ambas fechas');
+        return;
+    }
+    
+    if (fechaInicial > fechaFinal) {
+        mostrarMensajeSinDatos('La fecha inicial no puede ser mayor que la fecha final');
+        return;
+    }
+
+    try {
+        mostrarLoading('Cargando datos por año...');
+        
+        // Usar la función genérica para procesar años
+        const datosProcesados = await procesarDatosPorPeriodo('anio', fechaInicial, fechaFinal, generoSeleccionado);
+        
+        cerrarLoading();
+        
+        // Verificar si hay datos
+        if (datosProcesados.totalGeneral === 0) {
+            mostrarMensajeSinDatos('No hay datos disponibles para el rango de años seleccionado');
+            return;
+        }
+        
+        // Actualizar datos
+        datosSimulados.anio = datosProcesados;
+        tipoActual = 'anio'; // IMPORTANTE: Actualizar el tipo actual
+        
+        // Crear título
+        let titulo;
+        const añoInicial = obtenerAnioDesdeFecha(fechaInicial);
+        const añoFinal = obtenerAnioDesdeFecha(fechaFinal);
+        
+        if (generoSeleccionado !== 'todos') {
+            titulo = `${formatearGenero(generoSeleccionado)} por Año - ${añoInicial} a ${añoFinal}`;
+        } else {
+            titulo = `Visitantes por Año y Género - ${añoInicial} a ${añoFinal}`;
+        }
+        
+        // Actualizar gráfica en el modal
+        const modal = document.getElementById("chartModal");
+        if (modal && modal.classList.contains('show')) {
+            const modalTitle = document.getElementById("modalTitle");
+            if (modalTitle) {
+                modalTitle.innerHTML = `<i class="fas fa-calendar-alt"></i> ${titulo}`;
+            }
+            
+            const tipoGraficaActual = document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica');
+            actualizarGraficaModal(tipoGraficaActual, titulo);
+        }
+        
+        mostrarExito(`Se encontraron ${datosProcesados.totalGeneral} visitantes en ${datosProcesados.labels.length} años`);
+
+    } catch (error) {
+        console.error('❌ Error aplicando filtro de año:', error);
+        cerrarLoading();
+        mostrarMensajeSinDatos('Error al cargar los datos: ' + error.message);
+    }
+}
+
+
+
+
+
+
+
+
+// Función para procesar datos agrupados por fecha y género
+function procesarDatosAgrupadosPorFechaYGenero(participantes, generos) {
+    console.log('📊 Procesando datos agrupados por fecha y género...');
+    
+    // Obtener todas las fechas únicas ordenadas
+    const fechasUnicas = [...new Set(
+        participantes
+            .filter(p => p.fecha_visita)
+            .map(p => p.fecha_visita.split('T')[0])
+    )].sort();
+    
+    // Obtener todos los géneros disponibles
+    const todosLosGeneros = generos.map(g => g.genero);
+    
+    // Inicializar estructura de datos
+    const datosPorFechaYGenero = {};
+    
+    // Inicializar para todas las fechas
+    fechasUnicas.forEach(fecha => {
+        datosPorFechaYGenero[fecha] = {};
+        todosLosGeneros.forEach(genero => {
+            datosPorFechaYGenero[fecha][genero] = 0;
+        });
+    });
+    
+    // Contar participantes por fecha y género
+    participantes.forEach(participante => {
+        if (participante.fecha_visita && participante.genero) {
+            const fecha = participante.fecha_visita.split('T')[0];
+            const genero = participante.genero.genero;
+            
+            if (datosPorFechaYGenero[fecha] && datosPorFechaYGenero[fecha][genero] !== undefined) {
+                datosPorFechaYGenero[fecha][genero]++;
+            }
+        }
+    });
+    
+    // Formatear fechas para mostrar (ej: 20-ene)
+    const fechasFormateadas = fechasUnicas.map(fecha => formatearFechaCorta(fecha));
+    
+    // Crear datasets para cada género
+    const datasets = todosLosGeneros.map(genero => {
+        const color = coloresPorGenero[genero] || '#95a5a6';
+        return {
+            label: genero,
+            data: fechasUnicas.map(fecha => datosPorFechaYGenero[fecha][genero] || 0),
+            backgroundColor: color,
+            borderColor: darkenColor(color, 0.3),
+            borderWidth: 2,
+            borderRadius: 6,
+            barThickness: 25
+        };
+    });
+    
+    // Calcular totales
+    const totalPorFecha = fechasUnicas.map(fecha => 
+        todosLosGeneros.reduce((sum, genero) => sum + (datosPorFechaYGenero[fecha][genero] || 0), 0)
+    );
+    
+    const totalGeneral = totalPorFecha.reduce((a, b) => a + b, 0);
+    
+    console.log('✅ Datos agrupados procesados:', {
+        fechas: fechasFormateadas,
+        datasets: datasets,
+        totalPorFecha: totalPorFecha,
+        totalGeneral: totalGeneral
+    });
+    
+    return {
+        type: 'grouped',
+        labels: fechasFormateadas,
+        datasets: datasets,
+        totalPorFecha: totalPorFecha,
+        totalGeneral: totalGeneral,
+        fechasOriginales: fechasUnicas,
+        generos: todosLosGeneros
+    };
+}
+
+// Función para actualizar gráfica de fechas - VERSIÓN CON DATOS AGRUPADOS
 function actualizarGraficaFechas(tipoGrafica, datosFechas, titulo) {
     const ctx = document.getElementById("chartAmpliado").getContext("2d");
     
     if (chartAmpliado) chartAmpliado.destroy();
 
-    const colors = generarColores('fecha', datosFechas.labels);
-
-    // Para gráficas de fecha, usar barras por defecto para mejor visualización
-    const tipoFinal = tipoGrafica === "bar" ? "bar" : "bar";
-
-    chartAmpliado = new Chart(ctx, {
-        type: tipoFinal,
-        data: {
-            labels: datosFechas.labels,
-            datasets: [
-                {
-                    label: "Visitantes por Fecha",
-                    data: datosFechas.values,
-                    backgroundColor: colors,
-                    borderColor: colors.map(color => darkenColor(color, 0.3)),
-                    borderWidth: 2,
-                    borderRadius: 6,
-                    barThickness: 25,
-                    hoverBackgroundColor: colors.map(color => lightenColor(color, 0.1)),
-                },
-            ],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false,
-                },
-                title: {
-                    display: true,
-                    text: titulo,
-                    font: { size: 18, weight: 'bold' },
-                    padding: 25
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(0,0,0,0.8)',
-                    titleFont: { size: 14 },
-                    bodyFont: { size: 14 },
-                    padding: 12,
-                    cornerRadius: 8,
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.label || '';
-                            const value = context.parsed.y;
-                            return `${label}: ${value.toLocaleString()} visitantes`;
-                        }
-                    }
-                }
+    // Verificar si tenemos datos agrupados
+    if (datosFechas.type === 'grouped' && datosFechas.datasets) {
+        // GRÁFICA AGRUPADA POR GÉNERO
+        chartAmpliado = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: datosFechas.labels,
+                datasets: datosFechas.datasets
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { 
-                        color: 'rgba(0,0,0,0.1)',
-                        drawBorder: false
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            font: { size: 13 }
+                        }
                     },
                     title: {
                         display: true,
-                        text: 'Cantidad de Visitantes',
-                        font: { weight: 'bold', size: 14 }
+                        text: titulo + ' - Agrupado por Género',
+                        font: { size: 18, weight: 'bold' },
+                        padding: 25
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 14 },
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                return `Fecha: ${tooltipItems[0].label}`;
+                            },
+                            label: function(context) {
+                                const fechaIndex = context.dataIndex;
+                                const totalFecha = datosFechas.totalPorFecha[fechaIndex] || 0;
+                                const valor = context.parsed.y;
+                                const porcentaje = totalFecha > 0 ? Math.round((valor / totalFecha) * 100) : 0;
+                                return `${context.dataset.label}: ${valor} visitantes (${porcentaje}%)`;
+                            }
+                        }
                     }
                 },
-                x: {
-                    grid: { 
-                        display: false 
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        stacked: false, // BARRAS JUNTAS, NO APILADAS
+                        grid: { 
+                            color: 'rgba(0,0,0,0.1)',
+                            drawBorder: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Cantidad de Visitantes',
+                            font: { weight: 'bold', size: 14 }
+                        }
+                    },
+                    x: {
+                        stacked: false, // BARRAS JUNTAS
+                        grid: { display: false },
+                        title: {
+                            display: true,
+                            text: 'Fechas de Visita',
+                            font: { weight: 'bold', size: 14 }
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 0,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
+                }
+            },
+        });
+
+        // Actualizar tabla con datos agrupados
+        actualizarTablaFechasAgrupadas(datosFechas);
+        
+    } else {
+        // GRÁFICA SIMPLE (fallback)
+        const colors = generarColores('fecha', datosFechas.labels);
+
+        chartAmpliado = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: datosFechas.labels,
+                datasets: [
+                    {
+                        label: "Total de Visitantes por Fecha",
+                        data: datosFechas.values,
+                        backgroundColor: colors,
+                        borderColor: colors.map(color => darkenColor(color, 0.3)),
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        barThickness: 25,
+                        hoverBackgroundColor: colors.map(color => lightenColor(color, 0.1)),
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false,
                     },
                     title: {
                         display: true,
-                        text: 'Fechas de Visita',
-                        font: { weight: 'bold', size: 14 }
+                        text: titulo,
+                        font: { size: 18, weight: 'bold' },
+                        padding: 25
                     },
-                    ticks: {
-                        maxRotation: 45,
-                        minRotation: 0,
-                        font: {
-                            size: 12
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 14 },
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed.y;
+                                return `${label}: ${value.toLocaleString()} visitantes`;
+                            }
                         }
                     }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { 
+                            color: 'rgba(0,0,0,0.1)',
+                            drawBorder: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Cantidad de Visitantes',
+                            font: { weight: 'bold', size: 14 }
+                        }
+                    },
+                    x: {
+                        grid: { 
+                            display: false 
+                        },
+                        title: {
+                            display: true,
+                            text: 'Fechas de Visita',
+                            font: { weight: 'bold', size: 14 }
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 0,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
                 }
             },
-            animation: {
-                duration: 1000,
-                easing: 'easeOutQuart'
-            }
-        },
+        });
+
+        // Actualizar tabla simple
+        actualizarTablaFechas(datosFechas);
+    }
+}
+
+
+// Función para actualizar tabla con datos agrupados por fecha y género
+function actualizarTablaFechasAgrupadas(datosFechas) {
+    const tbody = document.querySelector("#tablaDatos tbody");
+    if (!tbody) return;
+    
+    let tablaHTML = '';
+    
+    // Para cada fecha
+    datosFechas.labels.forEach((fecha, fechaIndex) => {
+        const totalFecha = datosFechas.totalPorFecha[fechaIndex] || 0;
+        
+        if (totalFecha > 0) {
+            // Encabezado de fecha
+            tablaHTML += `
+                <tr style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+                    <td colspan="3" style="font-weight: bold; color: #2c3e50; padding: 12px; border-bottom: 2px solid #dee2e6;">
+                        <i class="fas fa-calendar-day"></i> ${fecha} - Total: ${totalFecha} visitantes
+                    </td>
+                </tr>
+            `;
+            
+            // Detalle por género para esta fecha
+            datosFechas.datasets.forEach(dataset => {
+                const valor = dataset.data[fechaIndex] || 0;
+                if (valor > 0) {
+                    const porcentaje = totalFecha > 0 ? ((valor / totalFecha) * 100).toFixed(1) : 0;
+                    const claseGenero = obtenerClaseGenero(dataset.label.toLowerCase());
+                    
+                    tablaHTML += `
+                        <tr>
+                            <td style="padding-left: 30px;">
+                                <span class="gender-badge ${claseGenero}">
+                                    <i class="fas ${dataset.label === 'Masculino' ? 'fa-mars' : dataset.label === 'Femenino' ? 'fa-venus' : 'fa-genderless'}"></i>
+                                    ${formatearGenero(dataset.label)}
+                                </span>
+                            </td>
+                            <td style="text-align: center; font-weight: bold">${valor.toLocaleString()}</td>
+                            <td style="text-align: center; color: #2c3e50; font-weight: bold">${porcentaje}%</td>
+                        </tr>
+                    `;
+                }
+            });
+        }
     });
-
-    // Actualizar tabla con datos de fechas
-    actualizarTablaFechas(datosFechas);
+    
+    // Fila de total general
+    if (datosFechas.totalGeneral > 0) {
+        tablaHTML += `
+            <tr style="background: linear-gradient(135deg, #a8e6cf, #dcedc1); font-weight: bold;">
+                <td colspan="2" style="padding: 12px; border-top: 2px solid #2ecc71;">
+                    <i class="fas fa-chart-bar"></i> TOTAL GENERAL
+                </td>
+                <td style="text-align: center; border-top: 2px solid #2ecc71;">${datosFechas.totalGeneral.toLocaleString()}</td>
+            </tr>
+        `;
+    }
+    
+    tbody.innerHTML = tablaHTML;
 }
 
 // Función para actualizar tabla de fechas
@@ -1028,50 +1726,60 @@ async function cargarDatosMesesEspecificos() {
     }
 }
 
-// Función para cargar el mes actual - ACTUALIZADA
+// Función para cargar el mes actual - VERSIÓN CORREGIDA
 async function cargarMesActual() {
     try {
-        mostrarLoading('Cargando comparativa del mes actual...');
+        mostrarLoading('Cargando datos del mes actual...');
 
         const ahora = new Date();
         const añoActual = ahora.getFullYear();
         const mesActual = ahora.getMonth();
         
+        // Primer y último día del mes actual
         const fechaInicial = new Date(añoActual, mesActual, 1);
         const fechaFinal = new Date(añoActual, mesActual + 1, 0);
         
-        console.log('Cargando COMPARATIVA del mes actual:', fechaInicial, 'a', fechaFinal);
+        console.log('📅 Cargando mes actual:', fechaInicial.toISOString().split('T')[0], 'a', fechaFinal.toISOString().split('T')[0]);
 
-        // Cargar datos del mes actual
-        const datosFiltrados = await cargarDatosGeneroPorTiempo('fecha', {
-            fechaInicial: fechaInicial.toISOString().split('T')[0],
-            fechaFinal: fechaFinal.toISOString().split('T')[0]
-        });
+        // Consultar participantes del mes actual
+        const { data: participantes, error } = await supabase
+            .from('participantes_reserva')
+            .select(`
+                fecha_visita,
+                genero!inner(id_genero, genero)
+            `)
+            .not('fecha_visita', 'is', null)
+            .not('id_genero', 'is', null)
+            .gte('fecha_visita', fechaInicial.toISOString().split('T')[0])
+            .lte('fecha_visita', fechaFinal.toISOString().split('T')[0])
+            .order('fecha_visita', { ascending: true });
 
-        // ✅ GARANTIZAR LOS 4 GÉNEROS PARA COMPARACIÓN
-        const todosLosGeneros = ['Masculino', 'Femenino', 'Otro', 'Prefiero no decirlo'];
-        const valoresPorGenero = {};
-        
-        todosLosGeneros.forEach(genero => {
-            valoresPorGenero[genero] = 0;
-        });
-        
-        if (datosFiltrados && datosFiltrados.labels && datosFiltrados.values) {
-            datosFiltrados.labels.forEach((genero, index) => {
-                if (todosLosGeneros.includes(genero)) {
-                    valoresPorGenero[genero] = datosFiltrados.values[index] || 0;
-                }
-            });
+        if (error) {
+            console.error('❌ Error consultando mes actual:', error);
+            throw error;
         }
 
-        const datosComparativa = {
-            labels: todosLosGeneros,
-            values: todosLosGeneros.map(genero => valoresPorGenero[genero] || 0),
-            type: 'comparativa',
-            periodo: 'mes_actual',
-            mes: obtenerNombreMes(mesActual),
-            año: añoActual.toString()
-        };
+        console.log(`👥 Participantes encontrados en mes actual: ${participantes?.length || 0}`);
+
+        if (!participantes || participantes.length === 0) {
+            mostrarMensajeSinDatos('No hay datos disponibles para el mes actual');
+            cerrarLoading();
+            return;
+        }
+
+        // Obtener todos los géneros
+        const { data: generos } = await supabase
+            .from('genero')
+            .select('id_genero, genero')
+            .order('id_genero');
+
+        // Procesar datos AGRUPADOS (todos los géneros)
+        const datosProcesados = await procesarDatosAgrupadosPorGenero(
+            participantes, 
+            generos, 
+            fechaInicial.toISOString().split('T')[0], 
+            fechaFinal.toISOString().split('T')[0]
+        );
 
         // Actualizar los inputs de fecha
         document.getElementById('filtroFechaInicial').value = fechaInicial.toISOString().split('T')[0];
@@ -1079,7 +1787,7 @@ async function cargarMesActual() {
         document.getElementById('filtroGeneroFecha').value = 'todos';
 
         // Actualizar datos
-        datosSimulados.fecha = datosComparativa;
+        datosSimulados.fecha = datosProcesados;
         
         cerrarLoading();
 
@@ -1088,29 +1796,29 @@ async function cargarMesActual() {
         if (modal && modal.classList.contains('show')) {
             const modalTitle = document.getElementById("modalTitle");
             const mesNombre = obtenerNombreMes(mesActual);
-            const titulo = `Comparativa Mensual - ${mesNombre} ${añoActual}`;
+            const titulo = `Visitantes por Género - ${mesNombre} ${añoActual}`;
             
             if (modalTitle) {
                 modalTitle.innerHTML = `<i class="fas fa-chart-bar"></i> ${titulo}`;
             }
             
             const tipoGraficaActual = document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica');
-            actualizarGraficaComparativa(tipoGraficaActual, datosComparativa, titulo);
+            actualizarGraficaModalConDatosAgrupados(tipoGraficaActual, datosProcesados, titulo);
         }
 
-        // Mostrar resumen comparativo
-        const totalVisitantes = datosComparativa.values.reduce((a, b) => a + b, 0);
-        const resumen = `Comparativa mensual: ${totalVisitantes} visitantes en ${obtenerNombreMes(mesActual)}`;
+        // Mostrar resumen
+        const totalVisitantes = datosProcesados.total || 0;
+        const resumen = `Mes ${obtenerNombreMes(mesActual)}: ${totalVisitantes} visitantes totales`;
         mostrarExito(resumen);
 
     } catch (error) {
-        console.error('Error cargando comparativa del mes actual:', error);
+        console.error('❌ Error cargando mes actual:', error);
         cerrarLoading();
-        mostrarMensajeSinDatos('Error al cargar la comparativa mensual');
+        mostrarMensajeSinDatos('Error al cargar los datos del mes actual');
     }
 }
 
-// Función para aplicar filtro de rango de fechas - VERSIÓN MEJORADA
+// Función para aplicar filtro de rango de fechas con gráficas agrupadas - VERSIÓN CORREGIDA
 async function aplicarFiltroRangoFechasComparativo() {
     const fechaInicial = document.getElementById('filtroFechaInicial').value;
     const fechaFinal = document.getElementById('filtroFechaFinal').value;
@@ -1138,97 +1846,87 @@ async function aplicarFiltroRangoFechasComparativo() {
 
         console.log('🔍 Aplicando filtro COMPARATIVO para rango:', fechaInicial, 'a', fechaFinal);
         
-        // Cargar datos del rango seleccionado
-        const datosFiltrados = await cargarDatosGeneroPorTiempo('fecha', {
-            fechaInicial: fechaInicial,
-            fechaFinal: fechaFinal
-        });
+        // CONSULTA PARA OBTENER DATOS AGRUPADOS POR FECHA Y GÉNERO
+        let query = supabase
+            .from('participantes_reserva')
+            .select(`
+                fecha_visita,
+                genero!inner(id_genero, genero)
+            `)
+            .not('fecha_visita', 'is', null)
+            .not('id_genero', 'is', null)
+            .gte('fecha_visita', fechaInicial)
+            .lte('fecha_visita', fechaFinal)
+            .order('fecha_visita', { ascending: true });
 
-        console.log('✅ Datos filtrados obtenidos:', datosFiltrados);
+        const { data: participantes, error } = await query;
 
-        // ✅ GARANTIZAR QUE SIEMPRE HAYA 4 GÉNEROS PARA COMPARACIÓN
-        const todosLosGeneros = ['Masculino', 'Femenino', 'Otro', 'Prefiero no decirlo'];
-        
-        // Crear un objeto para mapear los valores por género
-        const valoresPorGenero = {};
-        
-        // Inicializar todos los géneros en 0
-        todosLosGeneros.forEach(genero => {
-            valoresPorGenero[genero] = 0;
-        });
-        
-        // Actualizar con los valores reales obtenidos
-        if (datosFiltrados && datosFiltrados.labels && datosFiltrados.values) {
-            datosFiltrados.labels.forEach((genero, index) => {
-                if (todosLosGeneros.includes(genero)) {
-                    valoresPorGenero[genero] = datosFiltrados.values[index] || 0;
-                }
-            });
+        if (error) {
+            console.error('❌ Error en consulta de participantes:', error);
+            throw error;
         }
 
-        // PREPARAR DATOS PARA COMPARACIÓN VISUAL
-        let datosFinales;
-        
-        // Obtener información del período para el título
-        const mesInicial = obtenerNombreMesDesdeFecha(fechaInicial);
-        const mesFinal = obtenerNombreMesDesdeFecha(fechaFinal);
-        const añoInicial = obtenerAnioDesdeFecha(fechaInicial);
-        const añoFinal = obtenerAnioDesdeFecha(fechaFinal);
-        
+        console.log('👥 Participantes encontrados en rango:', participantes);
+
+        if (!participantes || participantes.length === 0) {
+            mostrarMensajeSinDatos('No hay datos disponibles para el rango de fechas seleccionado');
+            cerrarLoading();
+            return;
+        }
+
+        // Obtener todos los géneros disponibles
+        const { data: generos } = await supabase
+            .from('genero')
+            .select('id_genero, genero')
+            .order('id_genero');
+
+        console.log('🎭 Géneros disponibles:', generos);
+
+        // Procesar datos según el tipo de filtro
+        let datosProcesados;
         let titulo;
-        if (mesInicial === mesFinal && añoInicial === añoFinal) {
-            titulo = `Comparativa por Género - ${mesInicial} ${añoInicial}`;
-        } else {
-            titulo = `Comparativa por Género (${formatearFecha(fechaInicial)} - ${formatearFecha(fechaFinal)})`;
-        }
-
+        
         if (generoSeleccionado !== 'todos') {
-            console.log(`🔍 Filtrando por género específico: "${generoSeleccionado}"`);
-            
-            // Para un género específico, mostrar solo ese género pero con el valor correcto
-            datosFinales = {
-                labels: [generoSeleccionado],
-                values: [valoresPorGenero[generoSeleccionado] || 0],
-                type: 'genero_especifico',
-                periodo: titulo
-            };
-            titulo += ` - ${formatearGenero(generoSeleccionado)}`;
-            console.log('✅ Datos para género específico:', datosFinales);
+            // CASO 1: GÉNERO ESPECÍFICO - Barras por fecha para un solo género
+            datosProcesados = await procesarDatosGeneroEspecifico(
+                participantes, 
+                generos, 
+                generoSeleccionado, 
+                fechaInicial, 
+                fechaFinal
+            );
+            titulo = `${formatearGenero(generoSeleccionado)} - ${formatearFecha(fechaInicial)} a ${formatearFecha(fechaFinal)}`;
         } else {
-            // ✅ PARA COMPARACIÓN: Mostrar SIEMPRE los 4 géneros
-            datosFinales = {
-                labels: todosLosGeneros,
-                values: todosLosGeneros.map(genero => valoresPorGenero[genero] || 0),
-                type: 'comparativa',
-                periodo: titulo,
-                mesInicial: mesInicial,
-                mesFinal: mesFinal,
-                añoInicial: añoInicial,
-                añoFinal: añoFinal
-            };
-            console.log('✅ Datos para COMPARACIÓN (4 géneros garantizados):', datosFinales);
+            // CASO 2: TODOS LOS GÉNEROS - Barras agrupadas por fecha
+            datosProcesados = await procesarDatosAgrupadosPorGenero(
+                participantes, 
+                generos, 
+                fechaInicial, 
+                fechaFinal
+            );
+            titulo = `Visitantes por Género y Fecha - ${formatearFecha(fechaInicial)} a ${formatearFecha(fechaFinal)}`;
         }
 
         cerrarLoading();
 
         // Verificar si hay datos
-        const totalVisitantes = datosFinales.values.reduce((a, b) => a + b, 0);
-        console.log('👥 Total de visitantes encontrados:', totalVisitantes);
+        const totalVisitantes = datosProcesados.total || 
+            (datosProcesados.values ? datosProcesados.values.reduce((a, b) => a + b, 0) : 0);
         
         if (totalVisitantes === 0) {
             mostrarMensajeSinDatos('No hay datos disponibles para el rango de fechas seleccionado');
             return;
         }
 
-        console.log('🎯 Datos finales para mostrar:', datosFinales);
+        console.log('🎯 Datos procesados para mostrar:', datosProcesados);
         
-        // Actualizar datos y gráfica
-        datosSimulados.fecha = datosFinales;
+        // Actualizar datos
+        datosSimulados.fecha = datosProcesados;
         
         // SIEMPRE actualizar la gráfica del modal
         const modal = document.getElementById("chartModal");
         if (modal && modal.classList.contains('show')) {
-            console.log('🔄 Actualizando gráfica COMPARATIVA en modal...');
+            console.log('🔄 Actualizando gráfica en modal...');
             
             // Actualizar título del modal
             const modalTitle = document.getElementById("modalTitle");
@@ -1238,12 +1936,11 @@ async function aplicarFiltroRangoFechasComparativo() {
             
             // FORZAR la actualización de la gráfica con los nuevos datos
             const tipoGraficaActual = document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica');
-            actualizarGraficaComparativa(tipoGraficaActual, datosFinales, titulo);
+            actualizarGraficaModalConDatosAgrupados(tipoGraficaActual, datosProcesados, titulo);
         }
 
-        // Mostrar resumen comparativo
-        const resumen = generarResumenComparativo(datosFinales);
-        mostrarExito(resumen);
+        // Mostrar resumen
+        mostrarExito(`Se encontraron ${totalVisitantes} visitantes en el rango seleccionado`);
 
     } catch (error) {
         console.error('💥 Error aplicando filtro de rango de fechas:', error);
@@ -1252,109 +1949,296 @@ async function aplicarFiltroRangoFechasComparativo() {
     }
 }
 
-// Función para actualizar gráfica comparativa
-function actualizarGraficaComparativa(tipoGrafica, datosComparativa, titulo) {
+// Función para procesar datos de un género específico (barras por fecha)
+async function procesarDatosGeneroEspecifico(participantes, generos, generoSeleccionado, fechaInicial, fechaFinal) {
+    console.log(`📊 Procesando datos para género específico: ${generoSeleccionado}`);
+    
+    // Filtrar participantes por el género seleccionado
+    const participantesFiltrados = participantes.filter(p => 
+        p.genero && p.genero.genero === generoSeleccionado
+    );
+    
+    console.log(`👥 Participantes del género ${generoSeleccionado}:`, participantesFiltrados.length);
+    
+    // Agrupar por fecha
+    const visitasPorFecha = {};
+    
+    participantesFiltrados.forEach(participante => {
+        if (participante.fecha_visita) {
+            // Formatear fecha en formato corto (como en la imagen: 20-ene)
+            const fechaCorta = formatearFechaCorta(participante.fecha_visita);
+            visitasPorFecha[fechaCorta] = (visitasPorFecha[fechaCorta] || 0) + 1;
+        }
+    });
+    
+    // Ordenar fechas cronológicamente
+    const fechasOrdenadas = Object.keys(visitasPorFecha).sort((a, b) => {
+        return new Date(a) - new Date(b);
+    });
+    
+    return {
+        type: 'genero_especifico',
+        genero: generoSeleccionado,
+        labels: fechasOrdenadas,
+        values: fechasOrdenadas.map(fecha => visitasPorFecha[fecha]),
+        total: participantesFiltrados.length,
+        fechaInicial: fechaInicial,
+        fechaFinal: fechaFinal
+    };
+}
+
+// Función para procesar datos agrupados por género (barras juntas por fecha)
+async function procesarDatosAgrupadosPorGenero(participantes, generos, fechaInicial, fechaFinal) {
+    console.log('📊 Procesando datos agrupados por género');
+    
+    // Obtener fechas únicas dentro del rango
+    const fechasUnicas = {};
+    const generosNombres = generos.map(g => g.genero);
+    
+    // Inicializar estructura de datos
+    participantes.forEach(participante => {
+        if (participante.fecha_visita) {
+            const fechaCorta = formatearFechaCorta(participante.fecha_visita);
+            if (!fechasUnicas[fechaCorta]) {
+                fechasUnicas[fechaCorta] = {};
+                generosNombres.forEach(genero => {
+                    fechasUnicas[fechaCorta][genero] = 0;
+                });
+            }
+            
+            if (participante.genero && participante.genero.genero) {
+                const generoNombre = participante.genero.genero;
+                fechasUnicas[fechaCorta][generoNombre] = 
+                    (fechasUnicas[fechaCorta][generoNombre] || 0) + 1;
+            }
+        }
+    });
+    
+    // Ordenar fechas cronológicamente
+    const fechasOrdenadas = Object.keys(fechasUnicas).sort((a, b) => {
+        return new Date(a) - new Date(b);
+    });
+    
+    // Crear datasets para cada género
+    const datasets = generosNombres.map(genero => {
+        const color = coloresPorGenero[genero] || '#95a5a6';
+        return {
+            label: genero,
+            data: fechasOrdenadas.map(fecha => fechasUnicas[fecha][genero] || 0),
+            backgroundColor: color,
+            borderColor: darkenColor(color, 0.3),
+            borderWidth: 2,
+            borderRadius: 6,
+            barThickness: 25,
+            maxBarThickness: 30,
+            barPercentage: 0.8,
+            categoryPercentage: 0.9
+        };
+    });
+    
+    // Calcular total general
+    const totalGeneral = datasets.reduce((total, dataset) => {
+        return total + dataset.data.reduce((sum, val) => sum + val, 0);
+    }, 0);
+    
+    return {
+        type: 'grouped',
+        labels: fechasOrdenadas,
+        datasets: datasets,
+        total: totalGeneral,
+        fechaInicial: fechaInicial,
+        fechaFinal: fechaFinal,
+        generos: generosNombres
+    };
+}
+
+
+// Función para actualizar gráfica modal con datos agrupados
+function actualizarGraficaModalConDatosAgrupados(tipoGrafica, datosProcesados, titulo) {
     const ctx = document.getElementById("chartAmpliado").getContext("2d");
     
     if (chartAmpliado) chartAmpliado.destroy();
 
-    const colors = generarColores('genero', datosComparativa.labels);
-    const etiquetaDescriptiva = 'Géneros';
-
-    // Configuración especial para gráfica comparativa
-    chartAmpliado = new Chart(ctx, {
-        type: tipoGrafica === "bar" ? "bar" : "bar", // Forzar barras para comparación
-        data: {
-            labels: datosComparativa.labels.map(formatearGenero),
-            datasets: [
-                {
-                    label: "Total de Visitantes",
-                    data: datosComparativa.values,
+    // Determinar el tipo de gráfica según los datos
+    const esGraficaAgrupada = datosProcesados.type === 'grouped';
+    
+    if (esGraficaAgrupada) {
+        // GRÁFICA AGRUPADA (todos los géneros)
+        chartAmpliado = new Chart(ctx, {
+            type: tipoGrafica === "bar" ? "bar" : "doughnut",
+            data: {
+                labels: datosProcesados.labels,
+                datasets: datosProcesados.datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            font: { size: 13 }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: titulo,
+                        font: { size: 18, weight: 'bold' },
+                        padding: 25
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 14 },
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                return `Fecha: ${tooltipItems[0].label}`;
+                            },
+                            label: function(context) {
+                                const totalFecha = datosProcesados.labels.reduce((sum, fecha, index) => {
+                                    return sum + datosProcesados.datasets.reduce((datasetSum, dataset) => 
+                                        datasetSum + (dataset.data[index] || 0), 0);
+                                }, 0);
+                                const percentage = totalFecha > 0 ? 
+                                    Math.round((context.parsed.y / totalFecha) * 100) : 0;
+                                return `${context.dataset.label}: ${context.parsed.y} visitantes (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        stacked: false, // NO apiladas, sino agrupadas
+                        grid: { 
+                            color: 'rgba(0,0,0,0.1)',
+                            drawBorder: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Cantidad de Visitantes',
+                            font: { weight: 'bold', size: 14 }
+                        },
+                        ticks: {
+                            precision: 0
+                        }
+                    },
+                    x: {
+                        stacked: false, // NO apiladas
+                        grid: { display: false },
+                        title: {
+                            display: true,
+                            text: 'Fechas de Visita',
+                            font: { weight: 'bold', size: 14 }
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 0,
+                            font: { size: 12 }
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+        
+        // Actualizar tabla con datos agrupados
+        actualizarTablaDatosAgrupados(datosProcesados);
+        
+    } else {
+        // GRÁFICA SIMPLE (género específico)
+        const colors = generarColores('fecha', datosProcesados.labels);
+        
+        chartAmpliado = new Chart(ctx, {
+            type: tipoGrafica === "bar" ? "bar" : "doughnut", 
+            data: {
+                labels: datosProcesados.labels,
+                datasets: [{
+                    label: `Visitantes ${formatearGenero(datosProcesados.genero)}`,
+                    data: datosProcesados.values,
                     backgroundColor: colors,
                     borderColor: colors.map(color => darkenColor(color, 0.3)),
                     borderWidth: 2,
-                    borderRadius: 8,
-                    barThickness: 35,
+                    borderRadius: 6,
+                    barThickness: 25,
                     hoverBackgroundColor: colors.map(color => lightenColor(color, 0.1)),
-                },
-            ],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false, // Ocultar leyenda ya que los colores están en las barras
-                },
-                title: {
-                    display: true,
-                    text: titulo,
-                    font: { size: 18, weight: 'bold' },
-                    padding: 25
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(0,0,0,0.8)',
-                    titleFont: { size: 14 },
-                    bodyFont: { size: 14 },
-                    padding: 12,
-                    cornerRadius: 8,
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.label || '';
-                            const value = context.parsed.y;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = Math.round((value / total) * 100);
-                            return `${label}: ${value.toLocaleString()} visitantes (${percentage}%)`;
-                        }
-                    }
-                }
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { 
-                        color: 'rgba(0,0,0,0.1)',
-                        drawBorder: false
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            padding: 15,
+                            font: { size: 13 }
+                        }
                     },
                     title: {
                         display: true,
-                        text: 'Cantidad de Visitantes',
-                        font: { weight: 'bold', size: 14 }
+                        text: titulo,
+                        font: { size: 18, weight: 'bold' },
+                        padding: 25
                     },
-                    // Mostrar siempre un valor mínimo para que se vean las barras pequeñas
-                    suggestedMin: 0,
-                    suggestedMax: function() {
-                        const maxValue = Math.max(...datosComparativa.values);
-                        return maxValue === 0 ? 10 : Math.ceil(maxValue * 1.2);
-                    }
-                },
-                x: {
-                    grid: { 
-                        display: false 
-                    },
-                    title: {
-                        display: true,
-                        text: etiquetaDescriptiva,
-                        font: { weight: 'bold', size: 14 }
-                    },
-                    ticks: {
-                        font: {
-                            size: 13,
-                            weight: 'bold'
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 14 },
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.parsed.y} visitantes`;
+                            }
                         }
                     }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { 
+                            color: 'rgba(0,0,0,0.1)',
+                            drawBorder: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Cantidad de Visitantes',
+                            font: { weight: 'bold', size: 14 }
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        title: {
+                            display: true,
+                            text: 'Fechas de Visita',
+                            font: { weight: 'bold', size: 14 }
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 0
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
                 }
-            },
-            // Animaciones para gráfica comparativa
-            animation: {
-                duration: 1000,
-                easing: 'easeOutQuart'
             }
-        },
-    });
-
-    // Actualizar tabla con datos comparativos
-    actualizarTablaComparativa(datosComparativa);
+        });
+        
+        // Actualizar tabla con datos simples
+        actualizarTablaDatosSimples(datosProcesados);
+    }
 }
 
 // Función para actualizar tabla comparativa
@@ -1542,19 +2426,15 @@ async function obtenerEstructuraGenerosVacia() {
     }
 }
 
-// Función para aplicar filtro de rango de meses - VERSIÓN MEJORADA
+// Función SIMPLIFICADA para aplicar filtro por mes
 async function aplicarFiltroRangoMeses() {
     const fechaInicial = document.getElementById('filtroFechaInicialMes').value;
     const fechaFinal = document.getElementById('filtroFechaFinalMes').value;
     const generoSeleccionado = document.getElementById('filtroGeneroMes').value;
     
-    console.log('🎯 Aplicando filtro MES con parámetros:', {
-        fechaInicial, 
-        fechaFinal, 
-        generoSeleccionado
-    });
+    console.log('🎯 Aplicando filtro por MES:', { fechaInicial, fechaFinal, generoSeleccionado });
     
-    // Validaciones
+    // Validaciones básicas
     if (!fechaInicial || !fechaFinal) {
         mostrarMensajeSinDatos('Por favor selecciona ambas fechas');
         return;
@@ -1566,164 +2446,52 @@ async function aplicarFiltroRangoMeses() {
     }
 
     try {
-        mostrarLoading('Cargando comparativa por mes...');
-
-        console.log('🔍 Aplicando filtro MES para rango:', fechaInicial, 'a', fechaFinal);
+        mostrarLoading('Cargando datos por mes...');
         
-        // Obtener información del mes y año para comparación
-        const mesInicialInfo = obtenerMesYAnioDesdeFecha(fechaInicial);
-        const mesFinalInfo = obtenerMesYAnioDesdeFecha(fechaFinal);
+        // Usar la función genérica para procesar meses
+        const datosProcesados = await procesarDatosPorPeriodo('mes', fechaInicial, fechaFinal, generoSeleccionado);
         
-        console.log('📅 Información del período:', {
-            mesInicial: mesInicialInfo,
-            mesFinal: mesFinalInfo
-        });
-
-        // Verificar si estamos comparando el mismo mes y año
-        const esMismoMesYAnio = mesInicialInfo.mes === mesFinalInfo.mes && mesInicialInfo.año === mesFinalInfo.año;
+        cerrarLoading();
         
-        let titulo;
-        if (esMismoMesYAnio) {
-            // SI ES EL MISMO MES: Mostrar comparativa por género
-            titulo = `Comparativa por Género - ${mesInicialInfo.mes} ${mesInicialInfo.año}`;
-            
-            // Cargar datos del rango seleccionado (por género)
-            const datosFiltrados = await cargarDatosGeneroPorTiempo('mes', {
-                fechaInicial: fechaInicial,
-                fechaFinal: fechaFinal
-            });
-
-            console.log('✅ Datos MES filtrados obtenidos:', datosFiltrados);
-
-            // ✅ GARANTIZAR LOS 4 GÉNEROS
-            const todosLosGeneros = ['Masculino', 'Femenino', 'Otro', 'Prefiero no decirlo'];
-            const valoresPorGenero = {};
-            
-            todosLosGeneros.forEach(genero => {
-                valoresPorGenero[genero] = 0;
-            });
-            
-            if (datosFiltrados && datosFiltrados.labels && datosFiltrados.values) {
-                datosFiltrados.labels.forEach((genero, index) => {
-                    if (todosLosGeneros.includes(genero)) {
-                        valoresPorGenero[genero] = datosFiltrados.values[index] || 0;
-                    }
-                });
-            }
-
-            // PREPARAR DATOS SEGÚN FILTRO DE GÉNERO
-            let datosFinales;
-
-            if (generoSeleccionado !== 'todos') {
-                console.log(`🔍 Filtrando por género: "${generoSeleccionado}"`);
-                
-                datosFinales = {
-                    labels: [generoSeleccionado],
-                    values: [valoresPorGenero[generoSeleccionado] || 0],
-                    type: 'genero_especifico',
-                    periodo: titulo,
-                    mes: mesInicialInfo.mes,
-                    año: mesInicialInfo.año
-                };
-                titulo += ` - ${formatearGenero(generoSeleccionado)}`;
-                console.log('✅ Género encontrado, datos filtrados:', datosFinales);
-            } else {
-                // Mostrar todos los géneros (siempre 4) - BARRAS JUNTAS
-                datosFinales = {
-                    labels: todosLosGeneros,
-                    values: todosLosGeneros.map(genero => valoresPorGenero[genero] || 0),
-                    type: 'comparativa_mensual',
-                    periodo: titulo,
-                    mes: mesInicialInfo.mes,
-                    año: mesInicialInfo.año,
-                    esMismoMes: true
-                };
-            }
-
-            cerrarLoading();
-
-            // Verificar si hay datos
-            const totalVisitantes = datosFinales.values.reduce((a, b) => a + b, 0);
-            console.log('👥 Total de visitantes encontrados:', totalVisitantes);
-            
-            if (totalVisitantes === 0) {
-                mostrarMensajeSinDatos(`No hay datos disponibles para ${mesInicialInfo.mes} ${mesInicialInfo.año}`);
-                return;
-            }
-
-            console.log('🎯 Datos finales para mostrar:', datosFinales);
-            
-            // Actualizar datos y gráfica
-            datosSimulados.mes = datosFinales;
-            
-            // Actualizar la gráfica del modal
-            const modal = document.getElementById("chartModal");
-            if (modal && modal.classList.contains('show')) {
-                console.log('🔄 Actualizando gráfica COMPARATIVA MENSUAL en modal...');
-                
-                // Actualizar título del modal
-                const modalTitle = document.getElementById("modalTitle");
-                if (modalTitle) {
-                    modalTitle.innerHTML = `<i class="fas fa-chart-bar"></i> ${titulo}`;
-                }
-                
-                // FORZAR la actualización de la gráfica con los nuevos datos
-                const tipoGraficaActual = document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica');
-                actualizarGraficaComparativaMensual(tipoGraficaActual, datosFinales, titulo);
-            }
-
-            // Mostrar resumen específico por mes
-            const resumen = `Comparativa de ${mesInicialInfo.mes} ${mesInicialInfo.año}: ${totalVisitantes} visitantes totales`;
-            mostrarExito(resumen);
-
-        } else {
-            // SI SON MESES DIFERENTES: Mostrar comparativa por fecha
-            titulo = `Visitantes por Fecha (${formatearFecha(fechaInicial)} - ${formatearFecha(fechaFinal)})`;
-            
-            // Cargar datos por fecha
-            const datosFiltrados = await cargarDatosPorRangoFechas(fechaInicial, fechaFinal);
-
-            console.log('✅ Datos FECHAS filtrados obtenidos:', datosFiltrados);
-
-            // Verificar si hay datos
-            const totalVisitantes = datosFiltrados.values.reduce((a, b) => a + b, 0);
-            console.log('👥 Total de visitantes encontrados:', totalVisitantes);
-            
-            if (totalVisitantes === 0) {
-                mostrarMensajeSinDatos('No hay datos disponibles para el rango de meses seleccionado');
-                return;
-            }
-
-            cerrarLoading();
-
-            console.log('🎯 Datos finales para mostrar:', datosFiltrados);
-            
-            // Actualizar datos y gráfica
-            datosSimulados.mes = datosFiltrados;
-            
-            // Actualizar la gráfica del modal
-            const modal = document.getElementById("chartModal");
-            if (modal && modal.classList.contains('show')) {
-                console.log('🔄 Actualizando gráfica FECHAS en modal...');
-                
-                // Actualizar título del modal
-                const modalTitle = document.getElementById("modalTitle");
-                if (modalTitle) {
-                    modalTitle.innerHTML = `<i class="fas fa-calendar"></i> ${titulo}`;
-                }
-                
-                // FORZAR la actualización de la gráfica con los nuevos datos
-                const tipoGraficaActual = document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica');
-                actualizarGraficaFechas(tipoGraficaActual, datosFiltrados, titulo);
-            }
-
-            // Mostrar resumen
-            const resumen = `Se encontraron ${totalVisitantes} visitantes entre ${mesInicialInfo.mes} ${mesInicialInfo.año} y ${mesFinalInfo.mes} ${mesFinalInfo.año}`;
-            mostrarExito(resumen);
+        // Verificar si hay datos
+        if (datosProcesados.totalGeneral === 0) {
+            mostrarMensajeSinDatos('No hay datos disponibles para el rango de meses seleccionado');
+            return;
         }
+        
+        // Actualizar datos
+        datosSimulados.mes = datosProcesados;
+        tipoActual = 'mes'; // IMPORTANTE: Actualizar el tipo actual
+        
+        // Crear título
+        let titulo;
+        const mesInicial = obtenerNombreMesDesdeFecha(fechaInicial);
+        const mesFinal = obtenerNombreMesDesdeFecha(fechaFinal);
+        const añoInicial = obtenerAnioDesdeFecha(fechaInicial);
+        const añoFinal = obtenerAnioDesdeFecha(fechaFinal);
+        
+        if (generoSeleccionado !== 'todos') {
+            titulo = `${formatearGenero(generoSeleccionado)} por Mes - ${mesInicial} ${añoInicial} a ${mesFinal} ${añoFinal}`;
+        } else {
+            titulo = `Visitantes por Mes y Género - ${mesInicial} ${añoInicial} a ${mesFinal} ${añoFinal}`;
+        }
+        
+        // Actualizar gráfica en el modal
+        const modal = document.getElementById("chartModal");
+        if (modal && modal.classList.contains('show')) {
+            const modalTitle = document.getElementById("modalTitle");
+            if (modalTitle) {
+                modalTitle.innerHTML = `<i class="fas fa-calendar-week"></i> ${titulo}`;
+            }
+            
+            const tipoGraficaActual = document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica');
+            actualizarGraficaModal(tipoGraficaActual, titulo);
+        }
+        
+        mostrarExito(`Se encontraron ${datosProcesados.totalGeneral} visitantes en ${datosProcesados.labels.length} meses`);
 
     } catch (error) {
-        console.error('💥 Error aplicando filtro de rango de meses:', error);
+        console.error('❌ Error aplicando filtro de mes:', error);
         cerrarLoading();
         mostrarMensajeSinDatos('Error al cargar los datos: ' + error.message);
     }
@@ -1885,19 +2653,110 @@ function actualizarTablaComparativaMensual(datosComparativa) {
     }
 }
 
-// Función para aplicar filtro de rango de años - VERSIÓN MEJORADA
+// AGREGAR ESTA FUNCIÓN NUEVA (antes de que se llame)
+function actualizarGraficaComparativa(tipoGrafica, datosComparativa, titulo) {
+    console.log('🎨 Actualizando gráfica comparativa:', { tipoGrafica, datosComparativa, titulo });
+    
+    const ctx = document.getElementById("chartAmpliado").getContext("2d");
+    
+    if (chartAmpliado) chartAmpliado.destroy();
+
+    const colors = generarColores(tipoActual, datosComparativa.labels);
+
+    chartAmpliado = new Chart(ctx, {
+        type: tipoGrafica === "bar" ? "bar" : "doughnut", // ← RESPETAR EL TIPO
+        data: {
+            labels: datosComparativa.labels.map(label => 
+                tipoActual === 'genero' ? formatearGenero(label) : label
+            ),
+            datasets: [{
+                label: "Total de Visitantes",
+                data: datosComparativa.values,
+                backgroundColor: colors,
+                borderColor: colors.map(color => darkenColor(color, 0.3)),
+                borderWidth: 2,
+                borderRadius: tipoGrafica === "bar" ? 6 : 0,
+                barThickness: tipoGrafica === "bar" ? 30 : undefined,
+                hoverBackgroundColor: colors.map(color => lightenColor(color, 0.1)),
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: tipoGrafica === "bar" ? 'top' : 'right',
+                    labels: {
+                        padding: 15,
+                        font: { size: 13 }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: titulo,
+                    font: { size: 18, weight: 'bold' },
+                    padding: 25
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    titleFont: { size: 14 },
+                    bodyFont: { size: 14 },
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed.y || context.parsed;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                            return `${label}: ${value} visitantes (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            scales: tipoGrafica === "bar" ? {
+                y: {
+                    beginAtZero: true,
+                    grid: { 
+                        color: 'rgba(0,0,0,0.1)',
+                        drawBorder: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cantidad de Visitantes',
+                        font: { weight: 'bold', size: 14 }
+                    }
+                },
+                x: {
+                    grid: { display: false },
+                    title: {
+                        display: true,
+                        text: obtenerEtiquetaDescriptiva(tipoActual),
+                        font: { weight: 'bold', size: 14 }
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 0
+                    }
+                }
+            } : {},
+            cutout: tipoGrafica === "bar" ? '0%' : '40%'
+        }
+    });
+
+    // Actualizar tabla
+    actualizarTablaComparativa(datosComparativa);
+}
+
+// Función SIMPLIFICADA para aplicar filtro por año
 async function aplicarFiltroRangoAnios() {
     const fechaInicial = document.getElementById('filtroFechaInicialAnio').value;
     const fechaFinal = document.getElementById('filtroFechaFinalAnio').value;
     const generoSeleccionado = document.getElementById('filtroGeneroAnio').value;
     
-    console.log('🎯 Aplicando filtro AÑO con parámetros:', {
-        fechaInicial, 
-        fechaFinal, 
-        generoSeleccionado
-    });
+    console.log('🎯 Aplicando filtro por AÑO:', { fechaInicial, fechaFinal, generoSeleccionado });
     
-    // Validaciones
+    // Validaciones básicas
     if (!fechaInicial || !fechaFinal) {
         mostrarMensajeSinDatos('Por favor selecciona ambas fechas');
         return;
@@ -1909,123 +2768,379 @@ async function aplicarFiltroRangoAnios() {
     }
 
     try {
-        mostrarLoading('Cargando comparativa por año...');
-
-        console.log('🔍 Aplicando filtro AÑO para rango:', fechaInicial, 'a', fechaFinal);
+        mostrarLoading('Cargando datos por año...');
         
-        // Obtener información del año para comparación
-        const añoInicial = obtenerAnioDesdeFecha(fechaInicial);
-        const añoFinal = obtenerAnioDesdeFecha(fechaFinal);
+        // Usar la función genérica para procesar años
+        const datosProcesados = await procesarDatosPorPeriodo('anio', fechaInicial, fechaFinal, generoSeleccionado);
         
-        // Verificar si estamos comparando el mismo año
-        const esMismoAnio = añoInicial === añoFinal;
-        
-        let titulo;
-        if (esMismoAnio) {
-            titulo = `Comparativa Anual - Año ${añoInicial}`;
-        } else {
-            titulo = `Comparativa por Año (${añoInicial} - ${añoFinal})`;
-        }
-
-        // Usar la función para cargar datos
-        const datosFiltrados = await cargarDatosGeneroPorTiempo('anio', {
-            fechaInicial: fechaInicial,
-            fechaFinal: fechaFinal
-        });
-
-        console.log('✅ Datos AÑO filtrados obtenidos:', datosFiltrados);
-
-        // ✅ GARANTIZAR LOS 4 GÉNEROS
-        const todosLosGeneros = ['Masculino', 'Femenino', 'Otro', 'Prefiero no decirlo'];
-        const valoresPorGenero = {};
-        
-        todosLosGeneros.forEach(genero => {
-            valoresPorGenero[genero] = 0;
-        });
-        
-        if (datosFiltrados && datosFiltrados.labels && datosFiltrados.values) {
-            datosFiltrados.labels.forEach((genero, index) => {
-                if (todosLosGeneros.includes(genero)) {
-                    valoresPorGenero[genero] = datosFiltrados.values[index] || 0;
-                }
-            });
-        }
-
-        // PREPARAR DATOS SEGÚN FILTRO DE GÉNERO
-        let datosFinales;
-
-        if (generoSeleccionado !== 'todos') {
-            console.log(`🔍 Filtrando por género: "${generoSeleccionado}"`);
-            
-            datosFinales = {
-                labels: [generoSeleccionado],
-                values: [valoresPorGenero[generoSeleccionado] || 0],
-                type: 'genero_especifico',
-                periodo: titulo,
-                año: esMismoAnio ? añoInicial : 'Varios años'
-            };
-            titulo += ` - ${formatearGenero(generoSeleccionado)}`;
-            console.log('✅ Género encontrado, datos filtrados:', datosFinales);
-        } else {
-            // Mostrar todos los géneros (siempre 4)
-            datosFinales = {
-                labels: todosLosGeneros,
-                values: todosLosGeneros.map(genero => valoresPorGenero[genero] || 0),
-                type: 'comparativa',
-                periodo: titulo,
-                año: esMismoAnio ? añoInicial : 'Varios años',
-                añoInicial: añoInicial,
-                añoFinal: añoFinal
-            };
-        }
-
         cerrarLoading();
-
-        // Verificar si hay datos
-        const totalVisitantes = datosFinales.values.reduce((a, b) => a + b, 0);
-        console.log('👥 Total de visitantes encontrados:', totalVisitantes);
         
-        if (totalVisitantes === 0) {
+        // Verificar si hay datos
+        if (datosProcesados.totalGeneral === 0) {
             mostrarMensajeSinDatos('No hay datos disponibles para el rango de años seleccionado');
             return;
         }
-
-        console.log('🎯 Datos finales para mostrar:', datosFinales);
         
-        // Actualizar datos y gráfica
-        datosSimulados.anio = datosFinales;
+        // Actualizar datos
+        datosSimulados.anio = datosProcesados;
+        tipoActual = 'anio'; // IMPORTANTE: Actualizar el tipo actual
         
-        // Actualizar la gráfica del modal
+        // Crear título
+        let titulo;
+        const añoInicial = obtenerAnioDesdeFecha(fechaInicial);
+        const añoFinal = obtenerAnioDesdeFecha(fechaFinal);
+        
+        if (generoSeleccionado !== 'todos') {
+            titulo = `${formatearGenero(generoSeleccionado)} por Año - ${añoInicial} a ${añoFinal}`;
+        } else {
+            titulo = `Visitantes por Año y Género - ${añoInicial} a ${añoFinal}`;
+        }
+        
+        // Actualizar gráfica en el modal
         const modal = document.getElementById("chartModal");
         if (modal && modal.classList.contains('show')) {
-            console.log('🔄 Actualizando gráfica en modal...');
-            
-            // Actualizar título del modal
             const modalTitle = document.getElementById("modalTitle");
             if (modalTitle) {
-                modalTitle.innerHTML = `<i class="fas fa-expand"></i> ${titulo}`;
+                modalTitle.innerHTML = `<i class="fas fa-calendar-alt"></i> ${titulo}`;
             }
             
-            // FORZAR la actualización de la gráfica con los nuevos datos Y el título personalizado
             const tipoGraficaActual = document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica');
-            actualizarGraficaComparativa(tipoGraficaActual, datosFinales, titulo);
-        }
-
-        // Mostrar resumen específico por año
-        let resumen;
-        if (esMismoAnio) {
-            resumen = `Comparativa del Año ${añoInicial}: ${totalVisitantes} visitantes`;
-        } else {
-            resumen = `Comparativa de ${añoInicial} a ${añoFinal}: ${totalVisitantes} visitantes`;
+            actualizarGraficaModal(tipoGraficaActual, titulo);
         }
         
-        mostrarExito(resumen);
+        mostrarExito(`Se encontraron ${datosProcesados.totalGeneral} visitantes en ${datosProcesados.labels.length} años`);
 
     } catch (error) {
-        console.error('💥 Error aplicando filtro de rango de años:', error);
+        console.error('❌ Error aplicando filtro de año:', error);
         cerrarLoading();
         mostrarMensajeSinDatos('Error al cargar los datos: ' + error.message);
     }
+}
+
+// AGREGAR esta función nueva para procesar datos por año
+function procesarDatosAgrupadosPorAnioYGenero(participantes, generos) {
+    console.log('📊 Procesando datos agrupados por año y género...');
+    
+    // Obtener todos los años únicos
+    const añosUnicos = [...new Set(
+        participantes
+            .filter(p => p.fecha_visita)
+            .map(p => new Date(p.fecha_visita).getFullYear())
+    )].sort((a, b) => a - b);
+    
+    // Obtener todos los géneros disponibles
+    const todosLosGeneros = generos.map(g => g.genero);
+    
+    // Inicializar estructura de datos
+    const datosPorAñoYGenero = {};
+    
+    // Inicializar para todos los años
+    añosUnicos.forEach(año => {
+        datosPorAñoYGenero[año] = {};
+        todosLosGeneros.forEach(genero => {
+            datosPorAñoYGenero[año][genero] = 0;
+        });
+    });
+    
+    // Contar participantes por año y género
+    participantes.forEach(participante => {
+        if (participante.fecha_visita && participante.genero) {
+            const año = new Date(participante.fecha_visita).getFullYear();
+            const genero = participante.genero.genero;
+            
+            if (datosPorAñoYGenero[año] && datosPorAñoYGenero[año][genero] !== undefined) {
+                datosPorAñoYGenero[año][genero]++;
+            }
+        }
+    });
+    
+    // Crear datasets para cada género
+    const datasets = todosLosGeneros.map(genero => {
+        const color = coloresPorGenero[genero] || '#95a5a6';
+        return {
+            label: genero,
+            data: añosUnicos.map(año => datosPorAñoYGenero[año][genero] || 0),
+            backgroundColor: color,
+            borderColor: darkenColor(color, 0.3),
+            borderWidth: 2,
+            borderRadius: 6,
+            barThickness: 25,
+            barPercentage: 0.8,
+            categoryPercentage: 0.9
+        };
+    });
+    
+    // Calcular totales
+    const totalPorAño = añosUnicos.map(año => 
+        todosLosGeneros.reduce((sum, genero) => sum + (datosPorAñoYGenero[año][genero] || 0), 0)
+    );
+    
+    const totalGeneral = totalPorAño.reduce((a, b) => a + b, 0);
+    
+    console.log('✅ Datos agrupados por año procesados:', {
+        años: añosUnicos,
+        datasets: datasets,
+        totalPorAño: totalPorAño,
+        totalGeneral: totalGeneral
+    });
+    
+    return {
+        type: 'grouped',
+        labels: añosUnicos.map(año => año.toString()),
+        datasets: datasets,
+        totalPorAño: totalPorAño,
+        totalGeneral: totalGeneral,
+        añosOriginales: añosUnicos,
+        generos: todosLosGeneros
+    };
+}
+
+// MODIFICAR la función actualizarGraficaAniosAgrupados() para barras JUNTAS
+function actualizarGraficaAniosAgrupados(tipoGrafica, datosProcesados, titulo) {
+    const ctx = document.getElementById("chartAmpliado").getContext("2d");
+    
+    if (chartAmpliado) chartAmpliado.destroy();
+
+    // Configurar gráfica de barras agrupadas (BARRAS JUNTAS)
+    chartAmpliado = new Chart(ctx, {
+        type: 'bar', // SIEMPRE barras para esta vista
+        data: {
+            labels: datosProcesados.labels,
+            datasets: datosProcesados.datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: { size: 13 }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: titulo,
+                    font: { size: 18, weight: 'bold' },
+                    padding: 25
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    titleFont: { size: 14 },
+                    bodyFont: { size: 14 },
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            return `Año: ${tooltipItems[0].label}`;
+                        },
+                        label: function(context) {
+                            const añoIndex = context.dataIndex;
+                            const totalAño = datosProcesados.totalPorAño[añoIndex] || 0;
+                            const valor = context.parsed.y;
+                            const porcentaje = totalAño > 0 ? Math.round((valor / totalAño) * 100) : 0;
+                            return `${context.dataset.label}: ${valor} visitantes (${porcentaje}%)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    stacked: false, // IMPORTANTE: BARRAS JUNTAS, NO APILADAS
+                    grid: { 
+                        color: 'rgba(0,0,0,0.1)',
+                        drawBorder: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cantidad de Visitantes',
+                        font: { weight: 'bold', size: 14 }
+                    },
+                    ticks: {
+                        precision: 0
+                    }
+                },
+                x: {
+                    stacked: false, // IMPORTANTE: BARRAS JUNTAS
+                    grid: { display: false },
+                    title: {
+                        display: true,
+                        text: 'Años',
+                        font: { weight: 'bold', size: 14 }
+                    },
+                    ticks: {
+                        font: { size: 12 }
+                    }
+                }
+            },
+            // Configuración para barras juntas
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeOutQuart'
+            }
+        }
+    });
+
+    // Actualizar tabla
+    actualizarTablaAñosAgrupados(datosProcesados);
+}
+
+// // AGREGAR función para actualizar gráfica de años agrupados
+// function actualizarGraficaAniosAgrupados(tipoGrafica, datosProcesados, titulo) {
+//     const ctx = document.getElementById("chartAmpliado").getContext("2d");
+    
+//     if (chartAmpliado) chartAmpliado.destroy();
+
+//     // Configurar gráfica de barras agrupadas
+//     chartAmpliado = new Chart(ctx, {
+//         type: tipoGrafica === "bar" ? "bar" : "doughnut",
+//         data: {
+//             labels: datosProcesados.labels,
+//             datasets: datosProcesados.datasets
+//         },
+//         options: {
+//             responsive: true,
+//             maintainAspectRatio: false,
+//             plugins: {
+//                 legend: {
+//                     position: 'top',
+//                     labels: {
+//                         padding: 15,
+//                         usePointStyle: true,
+//                         pointStyle: 'circle',
+//                         font: { size: 13 }
+//                     }
+//                 },
+//                 title: {
+//                     display: true,
+//                     text: titulo,
+//                     font: { size: 18, weight: 'bold' },
+//                     padding: 25
+//                 },
+//                 tooltip: {
+//                     backgroundColor: 'rgba(0,0,0,0.8)',
+//                     titleFont: { size: 14 },
+//                     bodyFont: { size: 14 },
+//                     padding: 12,
+//                     cornerRadius: 8,
+//                     callbacks: {
+//                         title: function(tooltipItems) {
+//                             return `Año: ${tooltipItems[0].label}`;
+//                         },
+//                         label: function(context) {
+//                             const añoIndex = context.dataIndex;
+//                             const totalAño = datosProcesados.totalPorAño[añoIndex] || 0;
+//                             const valor = context.parsed.y;
+//                             const porcentaje = totalAño > 0 ? Math.round((valor / totalAño) * 100) : 0;
+//                             return `${context.dataset.label}: ${valor} visitantes (${porcentaje}%)`;
+//                         }
+//                     }
+//                 }
+//             },
+//             scales: {
+//                 y: {
+//                     beginAtZero: true,
+//                     stacked: false, // BARRAS JUNTAS, NO APILADAS
+//                     grid: { 
+//                         color: 'rgba(0,0,0,0.1)',
+//                         drawBorder: false
+//                     },
+//                     title: {
+//                         display: true,
+//                         text: 'Cantidad de Visitantes',
+//                         font: { weight: 'bold', size: 14 }
+//                     }
+//                 },
+//                 x: {
+//                     stacked: false, // BARRAS JUNTAS
+//                     grid: { display: false },
+//                     title: {
+//                         display: true,
+//                         text: 'Años',
+//                         font: { weight: 'bold', size: 14 }
+//                     },
+//                     ticks: {
+//                         font: { size: 12 }
+//                     }
+//                 }
+//             },
+//             animation: {
+//                 duration: 1000,
+//                 easing: 'easeOutQuart'
+//             }
+//         }
+//     });
+
+//     // Actualizar tabla
+//     actualizarTablaAñosAgrupados(datosProcesados);
+// }
+
+// AGREGAR función para actualizar tabla de años agrupados
+function actualizarTablaAñosAgrupados(datosProcesados) {
+    const tbody = document.querySelector("#tablaDatos tbody");
+    if (!tbody) return;
+    
+    let tablaHTML = '';
+    
+    // Para cada año
+    datosProcesados.labels.forEach((año, añoIndex) => {
+        const totalAño = datosProcesados.totalPorAño[añoIndex] || 0;
+        
+        if (totalAño > 0) {
+            // Encabezado de año
+            tablaHTML += `
+                <tr style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+                    <td colspan="3" style="font-weight: bold; color: #2c3e50; padding: 12px; border-bottom: 2px solid #dee2e6;">
+                        <i class="fas fa-calendar-alt"></i> Año ${año} - Total: ${totalAño} visitantes
+                    </td>
+                </tr>
+            `;
+            
+            // Detalle por género para este año
+            datosProcesados.datasets.forEach(dataset => {
+                const valor = dataset.data[añoIndex] || 0;
+                if (valor > 0) {
+                    const porcentaje = totalAño > 0 ? ((valor / totalAño) * 100).toFixed(1) : 0;
+                    const claseGenero = obtenerClaseGenero(dataset.label.toLowerCase());
+                    
+                    tablaHTML += `
+                        <tr>
+                            <td style="padding-left: 30px;">
+                                <span class="gender-badge ${claseGenero}">
+                                    <i class="fas ${dataset.label === 'Masculino' ? 'fa-mars' : dataset.label === 'Femenino' ? 'fa-venus' : 'fa-genderless'}"></i>
+                                    ${formatearGenero(dataset.label)}
+                                </span>
+                            </td>
+                            <td style="text-align: center; font-weight: bold">${valor.toLocaleString()}</td>
+                            <td style="text-align: center; color: #2c3e50; font-weight: bold">${porcentaje}%</td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+    });
+    
+    // Fila de total general
+    if (datosProcesados.totalGeneral > 0) {
+        tablaHTML += `
+            <tr style="background: linear-gradient(135deg, #a8e6cf, #dcedc1); font-weight: bold;">
+                <td colspan="2" style="padding: 12px; border-top: 2px solid #2ecc71;">
+                    <i class="fas fa-chart-bar"></i> TOTAL GENERAL
+                </td>
+                <td style="text-align: center; border-top: 2px solid #2ecc71;">${datosProcesados.totalGeneral.toLocaleString()}</td>
+            </tr>
+        `;
+    }
+    
+    tbody.innerHTML = tablaHTML;
 }
 
 // Función para aplicar filtro de día específico
@@ -2118,6 +3233,110 @@ async function aplicarFiltroDiaEspecifico() {
         cerrarLoading();
         mostrarMensajeSinDatos('Error al cargar los datos para el día seleccionado');
     }
+}
+
+// Función para actualizar tabla con datos agrupados
+function actualizarTablaDatosAgrupados(datosProcesados) {
+    const tbody = document.querySelector("#tablaDatos tbody");
+    if (!tbody) return;
+    
+    let tablaHTML = '';
+    const totalGeneral = datosProcesados.total || 0;
+    
+    // Para cada fecha
+    datosProcesados.labels.forEach((fecha, fechaIndex) => {
+        let totalFecha = 0;
+        
+        // Calcular total por fecha
+        datosProcesados.datasets.forEach(dataset => {
+            totalFecha += dataset.data[fechaIndex] || 0;
+        });
+        
+        if (totalFecha > 0) {
+            // Encabezado de fecha
+            tablaHTML += `
+                <tr style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+                    <td colspan="3" style="font-weight: bold; color: #2c3e50; padding: 12px; border-bottom: 2px solid #dee2e6;">
+                        <i class="fas fa-calendar-day"></i> ${fecha} - Total: ${totalFecha} visitantes
+                    </td>
+                </tr>
+            `;
+            
+            // Detalle por género para esta fecha
+            datosProcesados.datasets.forEach(dataset => {
+                const valor = dataset.data[fechaIndex] || 0;
+                if (valor > 0) {
+                    const porcentaje = totalFecha > 0 ? ((valor / totalFecha) * 100).toFixed(1) : 0;
+                    const claseGenero = obtenerClaseGenero(dataset.label.toLowerCase());
+                    
+                    tablaHTML += `
+                        <tr>
+                            <td style="padding-left: 30px;">
+                                <span class="gender-badge-3d ${claseGenero}">
+                                    <i class="fas ${dataset.label === 'Masculino' ? 'fa-mars' : dataset.label === 'Femenino' ? 'fa-venus' : 'fa-genderless'}"></i>
+                                    ${formatearGenero(dataset.label)}
+                                </span>
+                            </td>
+                            <td style="text-align: center; font-weight: bold">${valor.toLocaleString()}</td>
+                            <td style="text-align: center; color: #2c3e50; font-weight: bold">${porcentaje}%</td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+    });
+    
+    // Fila de total general
+    if (totalGeneral > 0) {
+        tablaHTML += `
+            <tr style="background: linear-gradient(135deg, #a8e6cf, #dcedc1); font-weight: bold;">
+                <td colspan="2" style="padding: 12px; border-top: 2px solid #2ecc71;">
+                    <i class="fas fa-chart-bar"></i> TOTAL GENERAL (${formatearFecha(datosProcesados.fechaInicial)} - ${formatearFecha(datosProcesados.fechaFinal)})
+                </td>
+                <td style="text-align: center; border-top: 2px solid #2ecc71;">${totalGeneral.toLocaleString()}</td>
+            </tr>
+        `;
+    }
+    
+    tbody.innerHTML = tablaHTML;
+}
+
+// Función para actualizar tabla con datos simples (género específico)
+function actualizarTablaDatosSimples(datosProcesados) {
+    const tbody = document.querySelector("#tablaDatos tbody");
+    if (!tbody) return;
+    
+    const total = datosProcesados.total || datosProcesados.values.reduce((a, b) => a + b, 0);
+    
+    let tablaHTML = datosProcesados.labels.map((fecha, index) => {
+        const valor = datosProcesados.values[index];
+        const porcentaje = total > 0 ? ((valor / total) * 100).toFixed(1) : 0;
+        
+        return `
+            <tr>
+                <td style="padding: 10px; font-weight: bold;">
+                    <i class="fas fa-calendar-day"></i> ${fecha}
+                </td>
+                <td style="text-align: center; font-weight: bold">${valor.toLocaleString()}</td>
+                <td style="text-align: center; color: #2c3e50; font-weight: bold">${porcentaje}%</td>
+            </tr>
+        `;
+    }).join('');
+    
+    // Fila de total
+    if (total > 0) {
+        tablaHTML += `
+            <tr style="background: linear-gradient(135deg, #a8e6cf, #dcedc1); font-weight: bold;">
+                <td style="padding: 12px;">
+                    <i class="fas fa-users"></i> TOTAL ${formatearGenero(datosProcesados.genero)}
+                </td>
+                <td style="text-align: center;">${total.toLocaleString()}</td>
+                <td style="text-align: center;">100%</td>
+            </tr>
+        `;
+    }
+    
+    tbody.innerHTML = tablaHTML;
 }
 
 // Función para aplicar filtro de intereses
@@ -2230,6 +3449,191 @@ async function cargarDatosInteresesPorTiempo(fechaInicial, fechaFinal, interes) 
         values: [0, 0, 0, 0, 0],
         type: 'interes'
     };
+}
+
+// Función para procesar datos de género específico por fecha - VERSIÓN CORREGIDA
+function procesarDatosGeneroEspecificoPorFecha(participantes, generoSeleccionado) {
+    console.log(`📊 Procesando datos para género específico: ${generoSeleccionado}`);
+    
+    // Agrupar por fecha
+    const visitasPorFecha = {};
+    
+    participantes.forEach(participante => {
+        if (participante.fecha_visita) {
+            const fechaCorta = formatearFechaCorta(participante.fecha_visita);
+            visitasPorFecha[fechaCorta] = (visitasPorFecha[fechaCorta] || 0) + 1;
+        }
+    });
+    
+    // Ordenar fechas cronológicamente
+    const fechasOrdenadas = Object.keys(visitasPorFecha).sort((a, b) => {
+        return new Date(a) - new Date(b);
+    });
+    
+    return {
+        type: 'genero_especifico',
+        genero: generoSeleccionado,
+        labels: fechasOrdenadas,
+        values: fechasOrdenadas.map(fecha => visitasPorFecha[fecha] || 0),
+        total: Object.values(visitasPorFecha).reduce((a, b) => a + b, 0)
+    };
+}
+
+// Función para actualizar gráfica de género específico - VERSIÓN CORREGIDA
+function actualizarGraficaGeneroEspecifico(datosProcesados, titulo) {
+    const ctx = document.getElementById("chartAmpliado").getContext("2d");
+    
+    if (chartAmpliado) chartAmpliado.destroy();
+
+    const colors = generarColores('fecha', datosProcesados.labels);
+    
+    chartAmpliado = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: datosProcesados.labels,
+            datasets: [{
+                label: `Visitantes ${formatearGenero(datosProcesados.genero)}`,
+                data: datosProcesados.values,
+                backgroundColor: colors,
+                borderColor: colors.map(color => darkenColor(color, 0.3)),
+                borderWidth: 2,
+                borderRadius: 6,
+                barThickness: 25,
+                hoverBackgroundColor: colors.map(color => lightenColor(color, 0.1)),
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        padding: 15,
+                        font: { size: 13 }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: titulo,
+                    font: { size: 18, weight: 'bold' },
+                    padding: 25
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    titleFont: { size: 14 },
+                    bodyFont: { size: 14 },
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.parsed.y} visitantes`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { 
+                        color: 'rgba(0,0,0,0.1)',
+                        drawBorder: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cantidad de Visitantes',
+                        font: { weight: 'bold', size: 14 }
+                    }
+                },
+                x: {
+                    grid: { display: false },
+                    title: {
+                        display: true,
+                        text: 'Fechas de Visita',
+                        font: { weight: 'bold', size: 14 }
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 0
+                    }
+                }
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeOutQuart'
+            }
+        }
+    });
+    
+    // Actualizar tabla
+    actualizarTablaDatosSimples(datosProcesados);
+}
+
+// Función SIMPLIFICADA para aplicar filtro por género y fecha
+async function aplicarFiltroPorGeneroYFecha() {
+    const fechaInicial = document.getElementById('filtroFechaInicial').value;
+    const fechaFinal = document.getElementById('filtroFechaFinal').value;
+    const generoSeleccionado = document.getElementById('filtroGeneroFecha').value;
+    
+    console.log('🎯 Aplicando filtro por FECHA:', { fechaInicial, fechaFinal, generoSeleccionado });
+    
+    // Validaciones básicas
+    if (!fechaInicial || !fechaFinal) {
+        mostrarMensajeSinDatos('Por favor selecciona ambas fechas');
+        return;
+    }
+    
+    if (fechaInicial > fechaFinal) {
+        mostrarMensajeSinDatos('La fecha inicial no puede ser mayor que la fecha final');
+        return;
+    }
+
+    try {
+        mostrarLoading('Cargando datos por fecha...');
+        
+        // Usar la función genérica para procesar fechas
+        const datosProcesados = await procesarDatosPorPeriodo('fecha', fechaInicial, fechaFinal, generoSeleccionado);
+        
+        cerrarLoading();
+        
+        // Verificar si hay datos
+        if (datosProcesados.totalGeneral === 0) {
+            mostrarMensajeSinDatos('No hay datos disponibles para el rango de fechas seleccionado');
+            return;
+        }
+        
+        // Actualizar datos
+        datosSimulados.fecha = datosProcesados;
+        tipoActual = 'fecha'; // IMPORTANTE: Actualizar el tipo actual
+        
+        // Crear título
+        let titulo;
+        if (generoSeleccionado !== 'todos') {
+            titulo = `${formatearGenero(generoSeleccionado)} por Fecha - ${formatearFecha(fechaInicial)} a ${formatearFecha(fechaFinal)}`;
+        } else {
+            titulo = `Visitantes por Fecha y Género - ${formatearFecha(fechaInicial)} a ${formatearFecha(fechaFinal)}`;
+        }
+        
+        // Actualizar gráfica en el modal
+        const modal = document.getElementById("chartModal");
+        if (modal && modal.classList.contains('show')) {
+            const modalTitle = document.getElementById("modalTitle");
+            if (modalTitle) {
+                modalTitle.innerHTML = `<i class="fas fa-calendar"></i> ${titulo}`;
+            }
+            
+            const tipoGraficaActual = document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica');
+            actualizarGraficaModal(tipoGraficaActual, titulo);
+        }
+        
+        mostrarExito(`Se encontraron ${datosProcesados.totalGeneral} visitantes en ${datosProcesados.labels.length} fechas`);
+
+    } catch (error) {
+        console.error('❌ Error aplicando filtro de fecha:', error);
+        cerrarLoading();
+        mostrarMensajeSinDatos('Error al cargar los datos: ' + error.message);
+    }
 }
 
 // Función para actualizar gráfica con datos filtrados
@@ -2361,6 +3765,28 @@ function actualizarGraficaConFiltro(datosFiltrados, tituloPersonalizado) {
         })
         .join("");
 }
+
+// Agrega esto en data-functions.js para debug
+async function debugFechasBD() {
+    console.log('🔍 DEBUG: Consultando fechas en la BD...');
+    
+    const { data, error } = await supabase
+        .from('participantes_reserva')
+        .select('fecha_visita, id_genero')
+        .limit(10);
+        
+    if (error) {
+        console.error('❌ Error:', error);
+    } else {
+        console.log('📅 Fechas en BD:', data);
+        console.log('📅 Formato de fechas:');
+        data.forEach((item, i) => {
+            console.log(`${i + 1}. ${item.fecha_visita} (genero: ${item.id_genero})`);
+        });
+    }
+}
+
+// Ejecutar en consola: debugFechasBD()
 
 // Función placeholder para insertar datos de prueba
 function insertarDatosDePrueba() {

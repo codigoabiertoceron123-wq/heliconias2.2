@@ -20,6 +20,17 @@
     <style>
         /* Estilos para las nuevas funcionalidades de ciudad */
 
+.logo-img i {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-image: url("img/logo.png"); /* Tu logo real */
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    font-size: 0; /* Oculta el ícono de fontawesome */
+    color: transparent;
+}
 /* Acordeón de ciudades */
 .acordeon-ciudades {
     border: 1px solid #e9ecef;
@@ -364,10 +375,6 @@ input[type="number"]::-webkit-outer-spin-button {
                 <a href="reportes.html" class="nav-item tooltip">
                     <i class="fas fa-chart-line"></i>
                     <span>Reportes</span>
-                </a>
-                <a href="#" class="nav-item tooltip">
-                    <i class="fas fa-history"></i>
-                    <span>Historial</span>
                 </a>
                 <a href="configuracion.html" class="nav-item tooltip">
                     <i class="fas fa-cog"></i>

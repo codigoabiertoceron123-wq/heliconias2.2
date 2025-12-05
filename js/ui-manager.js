@@ -348,7 +348,58 @@ class UIManager {
                 </div>
             </div>
         `;
-    }
+    }   // En la función crearFiltrosModal, agregar el caso para 'institucion':
+        else if (tipoActual === 'institucion') {
+            // Fecha por defecto: últimos 30 días
+            const hoy = new Date();
+            const hace30Dias = new Date();
+            hace30Dias.setDate(hoy.getDate() - 30);
+            
+            filtrosHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 12px;">
+                    <!-- Filtros de Fecha -->
+                    <div class="filter-group">
+                        <label class="filter-label"><i class="fas fa-calendar-alt"></i> Fecha Inicial</label>
+                        <input type="date" class="filter-select" id="modal-filtro-fecha-inicio" value="${hace30Dias.toISOString().split('T')[0]}">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label"><i class="fas fa-calendar-alt"></i> Fecha Final</label>
+                        <input type="date" class="filter-select" id="modal-filtro-fecha-fin" value="${hoy.toISOString().split('T')[0]}">
+                    </div>
+                    
+                    <!-- Filtro de Institución -->
+                    <div class="filter-group">
+                        <label class="filter-label"><i class="fas fa-university"></i> Institución</label>
+                        <select class="filter-select" id="modal-filtro-institucion">
+                            <option value="todas">Todas las instituciones</option>
+                            <!-- Las instituciones se cargarán dinámicamente -->
+                        </select>
+                    </div>
+            
+                    
+                    <!-- Mostrar y Ordenar -->
+                    <div class="filter-group">
+                        <label class="filter-label"><i class="fas fa-list-ol"></i> Mostrar</label>
+                        <select class="filter-select" id="modal-filtro-cantidad">
+                            <option value="10">Top 10</option>
+                            <option value="5">Top 5</option>
+                            <option value="15">Top 15</option>
+                            <option value="20">Top 20</option>
+                            <option value="0">Todos</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label"><i class="fas fa-sort-amount-down"></i> Ordenar por</label>
+                        <select class="filter-select" id="modal-filtro-orden">
+                            <option value="desc">Mayor a menor</option>
+                            <option value="asc">Menor a mayor</option>
+                            <option value="alpha">Alfabético</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+        }
          
         else {
             // Filtros básicos para otras categorías
@@ -437,6 +488,11 @@ class UIManager {
         if (tipoActual === 'actividad') {
             this.cargarActividadesEnFiltro();
         }
+        // En crearFiltrosModal, después de crear el HTML, agregar:
+        // Cargar instituciones dinámicamente si es el caso
+        if (tipoActual === 'institucion') {
+            this.cargarInstitucionesEnFiltro();
+        }
     }
 
     obtenerTituloFiltros(tipoActual) {
@@ -504,6 +560,15 @@ class UIManager {
     }
 
     aplicarFiltrosModal() {
+        const tipoActual = this.chartManager ? this.chartManager.tipoActual : 'tipo_reserva';
+        
+        if (tipoActual === 'institucion') {
+            // Llamar a la función específica para institución
+            this.aplicarFiltrosInstitucion();
+            return;
+        }
+        
+        // Para otros tipos, usar la lógica original
         const fechaInicio = document.getElementById('modal-filtro-fecha-inicio');
         const fechaFin = document.getElementById('modal-filtro-fecha-fin');
         const tipoReserva = document.getElementById('modal-filtro-tipo-reserva');
@@ -536,8 +601,6 @@ class UIManager {
         console.log('🎯 Aplicando filtros:', filtros);
 
         // Aplicar filtros según el tipo de categoría
-        const tipoActual = this.chartManager ? this.chartManager.tipoActual : 'tipo_reserva';
-        
         if (tipoActual === 'tipo_reserva') {
             this.aplicarFiltrosTipoReserva(filtros);
         } else if (tipoActual === 'actividad') {
@@ -772,34 +835,322 @@ class UIManager {
         }
     }
 
-    limpiarFiltrosModal() {
-        // Limpiar filtros de fecha
-        const fechaInicio = document.getElementById('modal-filtro-fecha-inicio');
-        const fechaFin = document.getElementById('modal-filtro-fecha-fin');
-        const tipoReserva = document.getElementById('modal-filtro-tipo-reserva');
-        const estado = document.getElementById('modal-filtro-estado');
-        const actividad = document.getElementById('modal-filtro-actividad');
-        
-        if (fechaInicio) fechaInicio.value = '';
-        if (fechaFin) fechaFin.value = '';
-        if (tipoReserva) tipoReserva.value = '';
-        if (estado) estado.value = '';
-        if (actividad) actividad.value = '';
-        
-        // Recargar datos sin filtros
-        if (this.dataLoader) {
-            this.dataLoader.limpiarFiltros();
-            this.dataLoader.cargarDatosVisitantes();
-            
-            // Actualizar gráfica en el modal
-            const tipoGrafica = document.querySelector('.modal-chart-container')?.getAttribute('data-tipo-grafica') || 'bar';
-            setTimeout(() => {
-                this.actualizarGraficaModal(tipoGrafica);
-            }, 500);
-        } else if (typeof dataLoader !== 'undefined') {
-            dataLoader.limpiarFiltros();
-            dataLoader.cargarDatosVisitantes();
+    // Agregar esta función en UIManager
+    async aplicarFiltrosInstitucion() {
+        try {
+            // Obtener valores de los filtros (SOLO los que funcionan)
+            const fechaInicio = document.getElementById('modal-filtro-fecha-inicio')?.value;
+            const fechaFin = document.getElementById('modal-filtro-fecha-fin')?.value;
+            const institucion = document.getElementById('modal-filtro-institucion')?.value;
+            const cantidad = parseInt(document.getElementById('modal-filtro-cantidad')?.value || '10');
+            const orden = document.getElementById('modal-filtro-orden')?.value || 'desc';
+
+            // Validar fechas
+            if (fechaInicio && fechaFin && fechaInicio > fechaFin) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error en fechas',
+                        text: 'La fecha inicial no puede ser mayor que la fecha final',
+                        confirmButtonColor: '#e74c3c'
+                    });
+                }
+                return;
+            }
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Aplicando filtros...',
+                    text: 'Filtrando datos de instituciones',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+            }
+
+            console.log('🎯 Aplicando filtros para institución:', {
+                fechaInicio, fechaFin, institucion, cantidad, orden
+            });
+
+            // Construir consulta SIMPLIFICADA
+            let query = supabase
+                .from('participantes_reserva')
+                .select(`
+                    *,
+                    instituciones!inner(
+                        id_institucion,
+                        nombre_institucion
+                    )
+                `)
+                .not('id_institucion', 'is', null);
+
+            // Aplicar filtros de fecha si existen
+            if (fechaInicio) {
+                query = query.gte('fecha_visita', fechaInicio + 'T00:00:00');
+            }
+            if (fechaFin) {
+                query = query.lte('fecha_visita', fechaFin + 'T23:59:59');
+            }
+
+            // Filtrar por institución específica
+            if (institucion && institucion !== 'todas') {
+                query = query.eq('id_institucion', institucion);
+            }
+
+            const { data: participantesFiltrados, error } = await query;
+
+            if (error) throw error;
+
+            if (typeof Swal !== 'undefined') {
+                Swal.close();
+            }
+
+            if (participantesFiltrados && participantesFiltrados.length > 0) {
+                // Procesar los datos filtrados
+                this.procesarDatosInstitucionFiltrados(participantesFiltrados, cantidad, orden);
+                
+                // Actualizar la gráfica
+                const tipoGrafica = document.querySelector('.modal-chart-container')?.getAttribute('data-tipo-grafica') || 'bar';
+                this.actualizarGraficaModalConFiltrosInstitucion(tipoGrafica);
+                
+                // Mostrar mensaje de éxito
+                const institucionesUnicas = [...new Set(participantesFiltrados.map(p => p.id_institucion))].length;
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Filtros aplicados',
+                        text: `Se encontraron ${institucionesUnicas} instituciones y ${participantesFiltrados.length} participantes`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+            } else {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Sin resultados',
+                        text: 'No se encontraron datos para los filtros aplicados',
+                        confirmButtonColor: '#3498db'
+                    });
+                }
+            }
+
+        } catch (error) {
+            console.error('Error aplicando filtros de institución:', error);
+            if (typeof Swal !== 'undefined') {
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudieron aplicar los filtros: ' + error.message,
+                    confirmButtonColor: '#e74c3c'
+                });
+            }
         }
+    }
+
+    // Función para procesar datos filtrados de institución
+    procesarDatosInstitucionFiltrados(participantes, cantidad, orden) {
+        // Contar por institución
+        const conteo = {};
+        
+        participantes.forEach(participante => {
+            const institucion = participante.instituciones;
+            if (institucion && institucion.nombre_institucion) {
+                const nombreInstitucion = institucion.nombre_institucion;
+                conteo[nombreInstitucion] = (conteo[nombreInstitucion] || 0) + 1;
+            }
+        });
+
+        // Convertir a arrays
+        let labels = Object.keys(conteo);
+        let values = Object.values(conteo);
+        const total = values.reduce((a, b) => a + b, 0);
+        
+        // Aplicar orden
+        let indices = labels.map((label, index) => ({ label, value: values[index] }));
+        
+        if (orden === 'desc') {
+            indices.sort((a, b) => b.value - a.value);
+        } else if (orden === 'asc') {
+            indices.sort((a, b) => a.value - b.value);
+        } else if (orden === 'alpha') {
+            indices.sort((a, b) => a.label.localeCompare(b.label));
+        }
+        
+        // Aplicar cantidad
+        if (cantidad > 0 && cantidad < indices.length) {
+            indices = indices.slice(0, cantidad);
+        }
+        
+        // Reconstruir arrays
+        labels = indices.map(item => item.label);
+        values = indices.map(item => item.value);
+        
+        // Actualizar datos en el dataProcessor
+        if (this.dataProcessor) {
+            this.dataProcessor.datosSimulados.institucion = {
+                labels: labels,
+                values: values,
+                total: values.reduce((a, b) => a + b, 0)
+            };
+        }
+    }
+
+    // Agregar esta función en UIManager
+    async cargarInstitucionesEnFiltro() {
+        try {
+            const institucionSelect = document.getElementById('modal-filtro-institucion');
+            if (!institucionSelect) return;
+
+            // Cargar instituciones desde la base de datos
+            const { data: instituciones, error } = await supabase
+                .from('instituciones')
+                .select('id_institucion, nombre_institucion')
+                .order('nombre_institucion');
+
+            if (error) throw error;
+
+            // Limpiar opciones excepto la primera
+            while (institucionSelect.children.length > 1) {
+                institucionSelect.removeChild(institucionSelect.lastChild);
+            }
+
+            // Agregar instituciones al select
+            if (instituciones && instituciones.length > 0) {
+                instituciones.forEach(institucion => {
+                    const option = document.createElement('option');
+                    option.value = institucion.id_institucion;
+                    option.textContent = institucion.nombre_institucion;
+                    institucionSelect.appendChild(option);
+                });
+            }
+
+        } catch (error) {
+            console.error('Error cargando instituciones:', error);
+        }
+    }
+
+    // Función auxiliar para agrupar instituciones (similar a la del sistema de institución)
+    agruparInstituciones(conteoInstituciones) {
+        let univalleCount = 0;
+        let nacionalCount = 0;
+        let andesCount = 0;
+        let otrasInstituciones = {};
+
+        Object.keys(conteoInstituciones).forEach(nombreInstitucion => {
+            const cantidad = conteoInstituciones[nombreInstitucion];
+            const nombreLower = nombreInstitucion.toLowerCase();
+            
+            if (nombreLower.includes('universidad del valle') || nombreLower.includes('univalle')) {
+                univalleCount += cantidad;
+            } else if (nombreLower.includes('universidad nacional') || nombreLower.includes('nacional de colombia')) {
+                nacionalCount += cantidad;
+            } else if (nombreLower.includes('universidad de los andes') || nombreLower.includes('uniandes')) {
+                andesCount += cantidad;
+            } else {
+                otrasInstituciones[nombreInstitucion] = cantidad;
+            }
+        });
+
+        // Sumar otras instituciones
+        const otrasCount = Object.values(otrasInstituciones).reduce((a, b) => a + b, 0);
+
+        return {
+            institucionesPrincipales: {
+                'Universidad del Valle': univalleCount,
+                'Universidad Nacional': nacionalCount,
+                'Universidad de los Andes': andesCount,
+                'Otras Instituciones': otrasCount
+            },
+            otrasInstituciones: otrasInstituciones
+        };
+    }
+
+    // Agregar esta función en UIManager
+    async cargarInstitucionesEnFiltro() {
+        try {
+            const institucionSelect = document.getElementById('modal-filtro-institucion');
+            if (!institucionSelect) return;
+
+            // Cargar instituciones desde la base de datos
+            const { data: instituciones, error } = await supabase
+                .from('instituciones')
+                .select('id_institucion, nombre_institucion')
+                .order('nombre_institucion');
+
+            if (error) throw error;
+
+            // Limpiar opciones excepto la primera
+            while (institucionSelect.children.length > 1) {
+                institucionSelect.removeChild(institucionSelect.lastChild);
+            }
+
+            // Agregar instituciones al select
+            if (instituciones && instituciones.length > 0) {
+                instituciones.forEach(institucion => {
+                    const option = document.createElement('option');
+                    option.value = institucion.id_institucion;
+                    option.textContent = institucion.nombre_institucion;
+                    institucionSelect.appendChild(option);
+                });
+            }
+
+        } catch (error) {
+            console.error('Error cargando instituciones:', error);
+        }
+    }
+
+    limpiarFiltrosModal() {
+        const tipoActual = this.chartManager ? this.chartManager.tipoActual : 'tipo_reserva';
+        
+        if (tipoActual === 'institucion') {
+            // Limpiar filtros específicos de institución (SOLO los que funcionan)
+            const fechaInicio = document.getElementById('modal-filtro-fecha-inicio');
+            const fechaFin = document.getElementById('modal-filtro-fecha-fin');
+            const institucionSelect = document.getElementById('modal-filtro-institucion');
+            const cantidadSelect = document.getElementById('modal-filtro-cantidad');
+            const ordenSelect = document.getElementById('modal-filtro-orden');
+            
+            // Restaurar valores por defecto
+            const hoy = new Date();
+            const hace30Dias = new Date();
+            hace30Dias.setDate(hoy.getDate() - 30);
+            
+            if (fechaInicio) fechaInicio.value = hace30Dias.toISOString().split('T')[0];
+            if (fechaFin) fechaFin.value = hoy.toISOString().split('T')[0];
+            if (institucionSelect) institucionSelect.value = 'todas';
+            if (cantidadSelect) cantidadSelect.value = '10';
+            if (ordenSelect) ordenSelect.value = 'desc';
+            
+            // Recargar datos sin filtros para institución
+            this.recargarDatosInstitucionSinFiltros();
+            
+        } else {
+            // Limpiar filtros para otros tipos (mantener lógica original)
+            const fechaInicio = document.getElementById('modal-filtro-fecha-inicio');
+            const fechaFin = document.getElementById('modal-filtro-fecha-fin');
+            const tipoReserva = document.getElementById('modal-filtro-tipo-reserva');
+            const estado = document.getElementById('modal-filtro-estado');
+            const actividad = document.getElementById('modal-filtro-actividad');
+            
+            if (fechaInicio) fechaInicio.value = '';
+            if (fechaFin) fechaFin.value = '';
+            if (tipoReserva) tipoReserva.value = '';
+            if (estado) estado.value = '';
+            if (actividad) actividad.value = '';
+            
+            // Recargar datos sin filtros
+            if (this.dataLoader) {
+                this.dataLoader.limpiarFiltros();
+                this.dataLoader.cargarDatosVisitantes();
+            }
+        }
+        
+        // Actualizar gráfica en el modal
+        const tipoGrafica = document.querySelector('.modal-chart-container')?.getAttribute('data-tipo-grafica') || 'bar';
+        setTimeout(() => {
+            this.actualizarGraficaModal(tipoGrafica);
+        }, 500);
         
         if (typeof Swal !== 'undefined') {
             Swal.fire({
@@ -811,6 +1162,19 @@ class UIManager {
             });
         }
     }
+
+    // Agregar esta función para recargar datos de institución sin filtros
+    async recargarDatosInstitucionSinFiltros() {
+        try {
+            // Cargar todos los datos de institución sin filtros
+            if (this.dataLoader) {
+                await this.dataLoader.cargarDatosVisitantes();
+            }
+        } catch (error) {
+            console.error('Error recargando datos de institución:', error);
+        }
+    }
+
 
     actualizarGraficaModalDesdeFiltros() {
         // Actualizar la gráfica cuando cambian los filtros de tipo_reserva o estado
@@ -935,6 +1299,227 @@ class UIManager {
                 manager.chartAmpliado.resize();
             }
         }, 200);
+    }
+
+    // Función para aplicar orden y cantidad a datos de institución
+    aplicarOrdenYCantidadInstitucion(cantidad, orden) {
+        if (!this.dataProcessor || !this.dataProcessor.datosSimulados) return;
+        
+        const datos = this.dataProcessor.datosSimulados.institucion;
+        if (!datos || !datos.labels || !datos.values) return;
+        
+        let indices = datos.labels.map((label, index) => ({ label, value: datos.values[index], index }));
+        
+        // Aplicar orden
+        if (orden === 'desc') {
+            indices.sort((a, b) => b.value - a.value);
+        } else if (orden === 'asc') {
+            indices.sort((a, b) => a.value - b.value);
+        } else if (orden === 'alpha') {
+            indices.sort((a, b) => a.label.localeCompare(b.label));
+        }
+        
+        // Aplicar cantidad
+        if (cantidad > 0 && cantidad < indices.length) {
+            indices = indices.slice(0, cantidad);
+        }
+        
+        // Reconstruir arrays
+        datos.labels = indices.map(item => item.label);
+        datos.values = indices.map(item => item.value);
+        
+        // Actualizar datos en el dataProcessor
+        this.dataProcessor.datosSimulados.institucion = datos;
+    }
+
+    // Función para actualizar gráfica con filtros de institución
+    actualizarGraficaModalConFiltrosInstitucion(tipoGrafica) {
+        const canvas = document.getElementById("chartAmpliado");
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext("2d");
+        
+        if (!this.chartManager || !this.dataProcessor) {
+            console.error('❌ Módulos necesarios no disponibles para modal');
+            return;
+        }
+        
+        const datos = this.dataProcessor.datosSimulados.institucion;
+        if (!datos) {
+            console.error('❌ No hay datos para institución');
+            return;
+        }
+
+        // Destruir gráfica anterior si existe
+        if (this.chartManager.chartAmpliado) {
+            this.chartManager.chartAmpliado.destroy();
+        }
+
+        // Generar colores
+        const colors = this.chartManager.generarColores('institucion', datos.labels);
+        
+        // Obtener valores de filtros para el título (SOLO los que funcionan)
+        const fechaInicio = document.getElementById('modal-filtro-fecha-inicio')?.value;
+        const fechaFin = document.getElementById('modal-filtro-fecha-fin')?.value;
+        const institucion = document.getElementById('modal-filtro-institucion')?.value;
+        const cantidad = document.getElementById('modal-filtro-cantidad')?.value;
+        const orden = document.getElementById('modal-filtro-orden')?.value;
+        
+        // Generar título descriptivo
+        let titulo = 'Visitantes por Institución';
+        const partes = [];
+        
+        if (fechaInicio && fechaFin) {
+            partes.push(`Período: ${this.formatearFecha(fechaInicio)} - ${this.formatearFecha(fechaFin)}`);
+        }
+        
+        if (institucion && institucion !== 'todas') {
+            const institucionSelect = document.getElementById('modal-filtro-institucion');
+            const institucionNombre = institucionSelect?.options[institucionSelect.selectedIndex]?.text || 'Institución';
+            partes.push(`Institución: ${institucionNombre}`);
+        }
+        
+        if (cantidad && cantidad !== '10') {
+            partes.push(`Mostrando: ${cantidad === '0' ? 'Todos' : 'Top ' + cantidad}`);
+        }
+        
+        if (orden && orden !== 'desc') {
+            const ordenText = orden === 'asc' ? 'Menor a mayor' : 'Alfabético';
+            partes.push(`Orden: ${ordenText}`);
+        }
+        
+        if (partes.length > 0) {
+            titulo += ` (${partes.join(' | ')})`;
+        }
+
+        // Actualizar título del modal
+        const modalTitle = document.getElementById("modalTitle");
+        if (modalTitle) {
+            modalTitle.innerHTML = `<i class="fas fa-expand"></i> ${titulo}`;
+        }
+
+        this.chartManager.chartAmpliado = new Chart(ctx, {
+            type: tipoGrafica === "bar" ? "bar" : "doughnut",
+            data: {
+                labels: datos.labels,
+                datasets: [{
+                    label: "Total de Visitantes",
+                    data: datos.values,
+                    backgroundColor: colors,
+                    borderRadius: tipoGrafica === "bar" ? 6 : 0,
+                    borderWidth: tipoGrafica === "bar" ? 0 : 2,
+                    borderColor: tipoGrafica === "bar" ? 'transparent' : '#fff',
+                    barThickness: tipoGrafica === "bar" ? 18 : undefined,
+                    maxBarThickness: tipoGrafica === "bar" ? 30 : undefined,
+                    barPercentage: tipoGrafica === "bar" ? 0.6 : undefined
+                }],
+            },
+            options: this.obtenerOpcionesGraficaInstitucion(tipoGrafica, titulo)
+        });
+
+        // Actualizar tabla
+        this.actualizarTablaConDatosInstitucion(datos);
+    }
+
+    // Obtener opciones específicas para gráfica de institución
+    obtenerOpcionesGraficaInstitucion(tipoGrafica, titulo) {
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: tipoGrafica === "bar" ? 'top' : 'right',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true,
+                        font: { size: 13 }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: titulo,
+                    font: { size: 18, weight: 'bold' },
+                    padding: 25
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0,0,0,0.7)',
+                    titleFont: { size: 14 },
+                    bodyFont: { size: 14 },
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed.y || context.parsed;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((value / total) * 100);
+                            return `${label}: ${value.toLocaleString()} visitantes (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            scales: tipoGrafica === "bar" ? {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0,0,0,0.05)' },
+                    title: {
+                        display: true,
+                        text: 'Cantidad de Visitantes',
+                        font: { weight: 'bold', size: 14 }
+                    }
+                },
+                x: {
+                    grid: { display: false },
+                    title: {
+                        display: true,
+                        text: 'Institución',
+                        font: { weight: 'bold', size: 14 }
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 0
+                    }
+                }
+            } : {},
+            cutout: tipoGrafica === "bar" ? '0%' : '40%'
+        };
+    }
+
+    // Actualizar tabla con datos de institución
+    actualizarTablaConDatosInstitucion(datos) {
+        const tbody = document.querySelector("#tablaDatos tbody");
+        if (!tbody) return;
+
+        const total = datos.values.reduce((a, b) => a + b, 0);
+        
+        tbody.innerHTML = datos.labels.map((label, i) => {
+            const valor = datos.values[i];
+            const porcentaje = total > 0 ? ((valor / total) * 100).toFixed(1) : 0;
+            
+            return `
+                <tr>
+                    <td><strong>${label}</strong></td>
+                    <td style="text-align: center; font-weight: bold">${valor.toLocaleString()}</td>
+                    <td style="text-align: center; color: #2c3e50; font-weight: bold">${porcentaje}%</td>
+                </tr>
+            `;
+        }).join("") + (total > 0 ? `
+            <tr style="background: #f8f9fa; font-weight: bold;">
+                <td>TOTAL GENERAL</td>
+                <td style="text-align: center">${total.toLocaleString()}</td>
+                <td style="text-align: center">100%</td>
+            </tr>
+        ` : '');
+    }
+
+    // Función auxiliar para formatear fecha
+    formatearFecha(fechaStr) {
+        const fecha = new Date(fechaStr);
+        return fecha.toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+        });
     }
 
     obtenerOpcionesGraficaAgrupada(tipoGrafica, tituloDescriptivo, etiquetaDescriptiva, filtros) {

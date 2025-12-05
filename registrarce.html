@@ -255,11 +255,7 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-      const supabaseUrl = 'https://umncnddwzmjxgmvisvqz.supabase.co';
-      const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtbmNuZGR3em1qeGdtdmlzdnF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NDIyNzksImV4cCI6MjA3ODExODI3OX0.ODvus28cTCTD8gGewQ2sAZ8PcXbEe4CIy_zv6bip8J0';
-      const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-    </script>
+
 </head>
 <body>
     <!-- Header -->
@@ -361,254 +357,285 @@
     </main>
 
     <script>
-        document.getElementById('registerForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
+    // Configuración de Supabase
+      const supabaseUrl = 'https://umncnddwzmjxgmvisvqz.supabase.co';
+      const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtbmNuZGR3em1qeGdtdmlzdnF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NDIyNzksImV4cCI6MjA3ODExODI3OX0.ODvus28cTCTD8gGewQ2sAZ8PcXbEe4CIy_zv6bip8J0';
+      const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    // Obtener valores del formulario
-    const nombre = document.getElementById('nombre').value;
-    const apellido = document.getElementById('apellido').value;
-    const correo = document.getElementById('correo').value;
-    const documento = document.getElementById('documento').value;
-    const telefono = document.getElementById('telefono').value;
-    const genero = document.getElementById('genero').value;
-    const institucion = document.getElementById('institucion').value;
-    const fechaNacimiento = document.getElementById('fecha_nacimiento').value;
-    const contrasena = document.getElementById('contrasena').value;
-    const confirmarContrasena = document.getElementById('confirmar_contrasena').value;
+      // Función para cargar los géneros desde la base de datos
+      async function cargarGeneros() {
+          try {
+              console.log('🔄 Cargando géneros desde la base de datos...');
+              
+              // Consultar la tabla 'genero' en Supabase
+              const { data, error } = await supabase
+                  .from('genero')
+                  .select('*')
+                  .order('id_genero');
 
-    // Validar que las contraseñas coincidan
-    if (contrasena !== confirmarContrasena) {
-        Swal.fire({
-            title: 'Error',
-            text: 'Las contraseñas no coinciden',
-            icon: 'error',
-            confirmButtonText: 'Entendido'
-        });
-        return;
-    }
+              if (error) {
+                  console.error('❌ Error al cargar géneros:', error);
+                  document.getElementById('id_genero').innerHTML = '<option value="">Error al cargar géneros</option>';
+                  return;
+              }
 
-    // Validar longitud mínima de contraseña
-    if (contrasena.length < 6) {
-        Swal.fire({
-            title: 'Error',
-            text: 'La contraseña debe tener al menos 6 caracteres',
-            icon: 'error',
-            confirmButtonText: 'Entendido'
-        });
-        return;
-    }
+              console.log('✅ Géneros cargados:', data);
 
-    const loadingAlert = Swal.fire({
-        title: 'Creando cuenta...',
-        text: 'Por favor espera mientras creamos tu cuenta',
-        icon: 'info',
-        showConfirmButton: false,
-        allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading(); }
-    });
+              // Construir las opciones del select
+              const selectGenero = document.getElementById('id_genero');
+              selectGenero.innerHTML = '<option value="">Seleccionar género</option>';
+              
+              data.forEach(genero => {
+                  const option = document.createElement('option');
+                  option.value = genero.id_genero;
+                  option.textContent = genero.genero;
+                  selectGenero.appendChild(option);
+              });
+              
+          } catch (err) {
+              console.error('❌ Error inesperado:', err);
+              document.getElementById('id_genero').innerHTML = '<option value="">Error al cargar géneros</option>';
+          }
+      }
 
-    try {
-        // PRIMERO: Verificar si el correo o documento ya existen
-        console.log('🔍 Verificando si el usuario ya existe...');
-        
-        const { data: usuarioExistente, error: checkError } = await supabase
-            .from('usuarios')
-            .select('correo, documento')
-            .or(`correo.eq.${correo},documento.eq.${documento}`)
-            .single();
+      // Función para inicializar toda la aplicación
+      function inicializarApp() {
+          console.log('🚀 Inicializando aplicación...');
+          
+          // Cargar géneros
+          cargarGeneros();
+          
+          // Configurar event listener del formulario
+          const form = document.getElementById('registerForm');
+          if (form) {
+              form.addEventListener('submit', manejarRegistro);
+              console.log('✅ Event listener del formulario configurado');
+          } else {
+              console.error('❌ No se encontró el formulario con ID registerForm');
+          }
+      }
 
-        if (usuarioExistente) {
-            if (usuarioExistente.correo === correo) {
-                throw new Error('Este correo electrónico ya está registrado');
-            } else if (usuarioExistente.documento === documento) {
-                throw new Error('Este documento ya está registrado en el sistema');
-            }
-        }
+      // Función para manejar el registro
+      async function manejarRegistro(e) {
+          e.preventDefault();
 
-        // SEGUNDO: Crear usuario en Supabase Auth - VERSIÓN CORREGIDA
-        console.log('🛠️ Creando usuario en Auth...');
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-            email: correo,
-            password: contrasena,
-            options: {
-                data: {
-                    nombre: nombre,
-                    apellido: apellido,
-                    documento: documento
-                },
-                // ✅ ESTA LÍNEA ES CLAVE PARA NETLIFY:
-                emailRedirectTo: 'https://heliconias2.netlify.app/index.html'
-            }
-        });
+          // Obtener valores del formulario
+          const nombre = document.getElementById('nombre').value;
+          const apellido = document.getElementById('apellido').value;
+          const correo = document.getElementById('correo').value;
+          const documento = document.getElementById('documento').value;
+          const telefono = document.getElementById('telefono').value;
+          const id_genero = document.getElementById('id_genero').value;
+          const institucion = document.getElementById('institucion').value;
+          const fechaNacimiento = document.getElementById('fecha_nacimiento').value;
+          const contrasena = document.getElementById('contrasena').value;
+          const confirmarContrasena = document.getElementById('confirmar_contrasena').value;
 
-        if (authError) {
-            console.log('❌ Error en Auth:', authError);
-            
-            if (authError.message.includes('already registered')) {
-                throw new Error('Este correo electrónico ya está registrado en el sistema de autenticación');
-            } else if (authError.message.includes('invalid email')) {
-                throw new Error('El correo electrónico no es válido');
-            } else if (authError.message.includes('password')) {
-                throw new Error('La contraseña no cumple con los requisitos de seguridad');
-            } else {
-                throw new Error('Error al crear la cuenta: ' + authError.message);
-            }
-        }
+          console.log('📝 Datos del formulario:', {
+              nombre, apellido, correo, documento, id_genero
+          });
 
-        // TERCERO: Insertar usuario en la tabla usuarios
-        console.log('💾 Insertando en tabla usuarios...');
-        const { data: userData, error: userError } = await supabase
-            .from('usuarios')
-            .insert([
-                {
-                    nombre: nombre,
-                    apellido: apellido,
-                    correo: correo,
-                    documento: documento,
-                    contrasena: contrasena,
-                    telefono: telefono || null,
-                    genero: genero || null,
-                    institucion: institucion || null,
-                    fecha_nacimiento: fechaNacimiento || null,
-                    id_rol: 2,
-                    email_confirmado: false,
-                    fecha_registro: new Date().toISOString()
-                }
-            ])
-            .select();
+          // Validar que las contraseñas coincidan
+          if (contrasena !== confirmarContrasena) {
+              Swal.fire({
+                  title: 'Error',
+                  text: 'Las contraseñas no coinciden',
+                  icon: 'error',
+                  confirmButtonText: 'Entendido'
+              });
+              return;
+          }
 
-        if (userError) {
-            console.log('❌ Error en tabla usuarios:', userError);
-            
-            if (userError.code === '23505') {
-                if (userError.message.includes('correo')) {
-                    throw new Error('Este correo electrónico ya está registrado');
-                } else if (userError.message.includes('documento')) {
-                    throw new Error('Este documento ya está registrado');
-                }
-            }
-            
-            throw new Error('Error al guardar los datos: ' + userError.message);
-        }
+          // Validar longitud mínima de contraseña
+          if (contrasena.length < 6) {
+              Swal.fire({
+                  title: 'Error',
+                  text: 'La contraseña debe tener al menos 6 caracteres',
+                  icon: 'error',
+                  confirmButtonText: 'Entendido'
+              });
+              return;
+          }
 
-        await Swal.close();
+          const loadingAlert = Swal.fire({
+              title: 'Creando cuenta...',
+              text: 'Por favor espera mientras creamos tu cuenta',
+              icon: 'info',
+              showConfirmButton: false,
+              allowOutsideClick: false,
+              didOpen: () => { Swal.showLoading(); }
+          });
 
-        // VERIFICAR SI SE ENVIÓ CONFIRMACIÓN
-        if (authData.user && !authData.user.email_confirmed_at) {
-            // ✅ CORREO DE CONFIRMACIÓN ENVIADO
-            await Swal.fire({
-                title: '¡Cuenta creada! 📧',
-                html: `
-                    <div style="text-align: left;">
-                        <p>Tu cuenta ha sido creada exitosamente.</p>
-                        <div style="background: #e8f6f3; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                            <strong>¡Confirmación requerida!</strong><br><br>
-                            📨 Hemos enviado un enlace de activación a:<br>
-                            <strong>${correo}</strong><br><br>
-                            <strong>Por favor:</strong>
-                            <ul style="text-align: left; margin: 10px 0;">
-                                <li>Revisa tu bandeja de entrada</li>
-                                <li>Busca en la carpeta de SPAM</li>
-                                <li>Haz clic en "Confirmar mi email"</li>
-                                <li>Serás redirigido para iniciar sesión</li>
-                            </ul>
-                        </div>
-                        <p><small>¿No recibiste el correo? <a href="#" onclick="reenviarConfirmacion('${correo}')">Reenviar confirmación</a></small></p>
-                    </div>
-                `,
-                icon: 'info',
-                confirmButtonText: 'Entendido'
-            });
-        } else {
-            // Caso donde el email ya estaba confirmado (raro)
-            await Swal.fire({
-                title: '¡Cuenta creada!',
-                text: 'Tu cuenta ha sido creada exitosamente. Ya puedes iniciar sesión.',
-                icon: 'success',
-                confirmButtonText: 'Iniciar Sesión'
-            });
-        }
+          try {
+              // PRIMERO: Verificar si el correo o documento ya existen
+              console.log('🔍 Verificando si el usuario ya existe...');
+              
+              const { data: usuarioExistente, error: checkError } = await supabase
+                  .from('usuarios')
+                  .select('correo, documento')
+                  .or(`correo.eq.${correo},documento.eq.${documento}`)
+                  .single();
 
-        // Redirigir al login después de 5 segundos
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 5000);
+              if (usuarioExistente) {
+                  if (usuarioExistente.correo === correo) {
+                      throw new Error('Este correo electrónico ya está registrado');
+                  } else if (usuarioExistente.documento === documento) {
+                      throw new Error('Este documento ya está registrado en el sistema');
+                  }
+              }
 
-    } catch (error) {
-        await Swal.close();
-        console.error('❌ Error completo:', error);
-        
-        Swal.fire({
-            title: 'Error',
-            text: error.message,
-            icon: 'error',
-            confirmButtonText: 'Entendido'
-        });
-    }
-});
+              // SEGUNDO: Crear usuario en Supabase Auth
+              console.log('🛠️ Creando usuario en Auth...');
+              const { data: authData, error: authError } = await supabase.auth.signUp({
+                  email: correo,
+                  password: contrasena,
+                  options: {
+                      data: {
+                          nombre: nombre,
+                          apellido: apellido,
+                          documento: documento
+                      },
+                      emailRedirectTo: 'https://heliconias22.vercel.app/index.html'
+                  }
+              });
 
-// Función para reenviar confirmación - VERSIÓN CORREGIDA
-window.reenviarConfirmacion = async function(email) {
-    try {
-        const { error } = await supabase.auth.resend({
-            type: 'signup',
-            email: email,
-            options: {
-                emailRedirectTo: 'https://heliconias2.netlify.app/index.html'
-            }
-        });
+              if (authError) {
+                  console.log('❌ Error en Auth:', authError);
+                  
+                  if (authError.message.includes('already registered')) {
+                      throw new Error('Este correo electrónico ya está registrado en el sistema de autenticación');
+                  } else if (authError.message.includes('invalid email')) {
+                      throw new Error('El correo electrónico no es válido');
+                  } else if (authError.message.includes('password')) {
+                      throw new Error('La contraseña no cumple con los requisitos de seguridad');
+                  } else {
+                      throw new Error('Error al crear la cuenta: ' + authError.message);
+                  }
+              }
 
-        if (error) throw error;
+              // TERCERO: Insertar usuario en la tabla usuarios
+              console.log('💾 Insertando en tabla usuarios...');
+              const { data: userData, error: userError } = await supabase
+                  .from('usuarios')
+                  .insert([
+                      {
+                          nombre: nombre,
+                          apellido: apellido,
+                          correo: correo,
+                          documento: documento,
+                          contrasena: contrasena,
+                          telefono: telefono || null,
+                          id_genero: id_genero ? parseInt(id_genero) : null,
+                          institucion: institucion || null,
+                          fecha_nacimiento: fechaNacimiento || null,
+                          id_rol: 2,
+                          email_confirmado: false,
+                          fecha_registro: new Date().toISOString()
+                      }
+                  ])
+                  .select();
 
-        Swal.fire({
-            title: '📨 Correo reenviado',
-            text: 'Hemos enviado nuevamente el enlace de confirmación a tu correo.',
-            icon: 'success',
-            confirmButtonText: 'Gracias'
-        });
-    } catch (error) {
-        Swal.fire({
-            title: 'Error',
-            text: 'No se pudo reenviar el correo: ' + error.message,
-            icon: 'error',
-            confirmButtonText: 'Entendido'
-        });
-    }
-};
+              if (userError) {
+                  console.log('❌ Error en tabla usuarios:', userError);
+                  
+                  if (userError.code === '23505') {
+                      if (userError.message.includes('correo')) {
+                          throw new Error('Este correo electrónico ya está registrado');
+                      } else if (userError.message.includes('documento')) {
+                          throw new Error('Este documento ya está registrado');
+                      }
+                  }
+                  
+                  throw new Error('Error al guardar los datos: ' + userError.message);
+              }
 
-// Busca todos los iconos con la clase toggle-password
-document.querySelectorAll('.toggle-password').forEach(function(icon) {
-icon.addEventListener('click', function() {
-    const targetId = this.getAttribute('data-target');
-    const input = document.getElementById(targetId);
-    if (!input) return;
+              await Swal.close();
 
-    if (input.type === 'password') {
-    input.type = 'text';
-    this.classList.remove('fa-eye');
-    this.classList.add('fa-eye-slash');
-    this.setAttribute('aria-label', 'Ocultar contraseña');
-    this.setAttribute('aria-pressed', 'true');
-    } else {
-    input.type = 'password';
-    this.classList.remove('fa-eye-slash');
-    this.classList.add('fa-eye');
-    this.setAttribute('aria-label', 'Mostrar contraseña');
-    this.setAttribute('aria-pressed', 'false');
-    }
-});
+              // VERIFICAR SI SE ENVIÓ CONFIRMACIÓN
+              if (authData.user && !authData.user.email_confirmed_at) {
+                  // ✅ CORREO DE CONFIRMACIÓN ENVIADO
+                  await Swal.fire({
+                      title: '¡Cuenta creada! 📧',
+                      html: `
+                          <div style="text-align: left;">
+                              <p>Tu cuenta ha sido creada exitosamente.</p>
+                              <div style="background: #e8f6f3; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                                  <strong>¡Confirmación requerida!</strong><br><br>
+                                  📨 Hemos enviado un enlace de activación a:<br>
+                                  <strong>${correo}</strong><br><br>
+                                  <strong>Por favor:</strong>
+                                  <ul style="text-align: left; margin: 10px 0;">
+                                      <li>Revisa tu bandeja de entrada</li>
+                                      <li>Busca en la carpeta de SPAM</li>
+                                      <li>Haz clic en "Confirmar mi email"</li>
+                                      <li>Serás redirigido para iniciar sesión</li>
+                                  </ul>
+                              </div>
+                              <p><small>¿No recibiste el correo? <a href="#" onclick="reenviarConfirmacion('${correo}')">Reenviar confirmación</a></small></p>
+                          </div>
+                      `,
+                      icon: 'info',
+                      confirmButtonText: 'Entendido'
+                  });
+              } else {
+                  // Caso donde el email ya estaba confirmado (raro)
+                  await Swal.fire({
+                      title: '¡Cuenta creada!',
+                      text: 'Tu cuenta ha sido creada exitosamente. Ya puedes iniciar sesión.',
+                      icon: 'success',
+                      confirmButtonText: 'Iniciar Sesión'
+                  });
+              }
 
-// Soporta teclado (Enter / Space)
-icon.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' || e.key === ' ') {
-    e.preventDefault();
-    this.click();
-    }
-});
-// Hacer el i focusable para accesibilidad
-icon.setAttribute('tabindex', '0');
-});
+              // Redirigir al login después de 5 segundos
+              setTimeout(() => {
+                  window.location.href = 'index.html';
+              }, 5000);
 
+          } catch (error) {
+              await Swal.close();
+              console.error('❌ Error completo:', error);
+              
+              Swal.fire({
+                  title: 'Error',
+                  text: error.message,
+                  icon: 'error',
+                  confirmButtonText: 'Entendido'
+              });
+          }
+      }
+
+      // Función para reenviar confirmación
+      window.reenviarConfirmacion = async function(email) {
+          try {
+              const { error } = await supabase.auth.resend({
+                  type: 'signup',
+                  email: email,
+                  options: {
+                      emailRedirectTo: 'https://heliconias22.vercel.app/index.html'
+                  }
+              });
+
+              if (error) throw error;
+
+              Swal.fire({
+                  title: '📨 Correo reenviado',
+                  text: 'Hemos enviado nuevamente el enlace de confirmación a tu correo.',
+                  icon: 'success',
+                  confirmButtonText: 'Gracias'
+              });
+          } catch (error) {
+              Swal.fire({
+                  title: 'Error',
+                  text: 'No se pudo reenviar el correo: ' + error.message,
+                  icon: 'error',
+                  confirmButtonText: 'Entendido'
+              });
+          }
+      };
+
+      // Inicializar la aplicación cuando el DOM esté listo
+      document.addEventListener('DOMContentLoaded', inicializarApp);
     </script>
 </body>
 </html>
