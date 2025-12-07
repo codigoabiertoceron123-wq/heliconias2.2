@@ -139,6 +139,11 @@
         try {
             mostrarLoading('Cargando datos completos...');
             
+            // Primero asegurar que las instituciones estén cargadas
+            if (!Array.isArray(todasLasInstituciones) || todasLasInstituciones.length === 0) {
+                await cargarInstitucionesBase();
+            }
+            
             // Cargar datos de instituciones
             await cargarDatosInstitucion();
             
@@ -155,10 +160,10 @@
             mostrarError('Error al cargar los datos: ' + error.message);
         }
     }
-
-    // Función para cargar datos de instituciones
-    async function cargarDatosInstitucion() {
-        try {
+       
+        // Función para cargar datos de instituciones
+        async function cargarDatosInstitucion() {
+            try {
             console.log('=== CARGANDO DATOS DE INSTITUCIÓN ===');
             
             // 1. Obtener todos los participantes con institución
@@ -174,7 +179,7 @@
                 return;
             }
 
-            // 2. Obtener información de instituciones
+            // 2. Obtener información de instituciones - ASEGURAR QUE ES UN ARRAY
             const { data: instituciones, error: errorInstituciones } = await supabase
                 .from('instituciones')
                 .select('id_institucion, nombre_institucion')
@@ -182,7 +187,12 @@
 
             if (errorInstituciones) throw errorInstituciones;
 
-            todasLasInstituciones = instituciones || [];
+            // Asegurar que es un array
+            todasLasInstituciones = Array.isArray(instituciones) ? instituciones : [];
+            
+            if (todasLasInstituciones.length === 0) {
+                console.warn('No se encontraron instituciones en la base de datos');
+            }
             
             // 3. Contar participantes por institución
             const conteoInstituciones = {};
@@ -205,6 +215,43 @@
             throw error;
         }
     }
+
+    //depronto quitar
+    // Función para inicializar el sistema de manera segura
+    async function inicializarSistemaSeguro() {
+        try {
+            // Primero cargar las instituciones
+            await cargarInstitucionesBase();
+            // Luego cargar los datos completos
+            await cargarDatosCompletos();
+        } catch (error) {
+            console.error('Error inicializando sistema:', error);
+            mostrarError('Error al inicializar el sistema: ' + error.message);
+        }
+    }
+
+    // Función para cargar solo las instituciones
+    async function cargarInstitucionesBase() {
+        try {
+            const { data: instituciones, error } = await supabase
+                .from('instituciones')
+                .select('id_institucion, nombre_institucion')
+                .order('nombre_institucion');
+
+            if (error) throw error;
+            
+            // Asegurar que es un array
+            todasLasInstituciones = Array.isArray(instituciones) ? instituciones : [];
+            
+            console.log(`✅ Cargadas ${todasLasInstituciones.length} instituciones`);
+            
+        } catch (error) {
+            console.error('Error cargando instituciones base:', error);
+            todasLasInstituciones = []; // Asegurar que sea array vacío
+            throw error;
+        }
+    }
+    //finnn
 
     // Agrupar instituciones en principales y otras
     function agruparInstituciones(conteoInstituciones) {
@@ -299,61 +346,98 @@
     }
 
     // Procesar datos por tiempo
+    // Reemplaza la función procesarDatosTiempo actual por esta nueva versión
     function procesarDatosTiempo(participantes, tipo) {
-        const conteo = {};
+        // Verificar si todasLasInstituciones es un array
+        if (!Array.isArray(todasLasInstituciones)) {
+            console.error('todasLasInstituciones no es un array:', todasLasInstituciones);
+            return { labels: [], datasets: [], instituciones: [], fechas: [] };
+        }
         
+        const datosPorInstitucion = {};
+        const institucionesSet = new Set();
+        const fechasSet = new Set();
+        
+        // Primero, procesar todos los participantes para obtener instituciones y fechas
         participantes.forEach(participante => {
-            if (participante.fecha_visita) {
+            if (participante.fecha_visita && participante.id_institucion) {
                 const fecha = new Date(participante.fecha_visita);
-                let clave = '';
+                let claveFecha = '';
                 
                 switch(tipo) {
                     case 'fecha':
-                        clave = fecha.toISOString().split('T')[0];
+                        claveFecha = fecha.toISOString().split('T')[0];
                         break;
                     case 'mes':
                         const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                                     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-                        clave = `${meses[fecha.getMonth()]} ${fecha.getFullYear()}`;
+                                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                        claveFecha = `${meses[fecha.getMonth()]} ${fecha.getFullYear()}`;
                         break;
                     case 'anio':
-                        clave = fecha.getFullYear().toString();
+                        claveFecha = fecha.getFullYear().toString();
                         break;
                 }
                 
-                conteo[clave] = (conteo[clave] || 0) + 1;
+                // Encontrar el nombre de la institución
+                let nombreInstitucion = 'Sin institución';
+                if (Array.isArray(todasLasInstituciones)) {
+                    const institucionEncontrada = todasLasInstituciones.find(
+                        i => i.id_institucion === participante.id_institucion
+                    );
+                    if (institucionEncontrada && institucionEncontrada.nombre_institucion) {
+                        nombreInstitucion = institucionEncontrada.nombre_institucion;
+                    }
+                }
+                
+                fechasSet.add(claveFecha);
+                institucionesSet.add(nombreInstitucion);
+                
+                // Inicializar estructura si no existe
+                if (!datosPorInstitucion[nombreInstitucion]) {
+                    datosPorInstitucion[nombreInstitucion] = {};
+                }
+                
+                // Contar por fecha
+                datosPorInstitucion[nombreInstitucion][claveFecha] = 
+                    (datosPorInstitucion[nombreInstitucion][claveFecha] || 0) + 1;
             }
         });
-
-        // Ordenar datos
-        let labels, values;
         
-        switch(tipo) {
-            case 'fecha':
-                labels = Object.keys(conteo).sort((a, b) => new Date(a) - new Date(b)).slice(-15);
-                break;
-            case 'mes':
-                labels = Object.keys(conteo).sort((a, b) => ordenarMeses(a, b));
-                break;
-            case 'anio':
-                labels = Object.keys(conteo).sort((a, b) => parseInt(a) - parseInt(b));
-                break;
-        }
+        // Ordenar fechas
+        const fechasOrdenadas = Array.from(fechasSet).sort();
+        const institucionesLista = Array.from(institucionesSet);
         
-        values = labels.map(label => conteo[label]);
-
+        // Preparar datasets para Chart.js
+        const datasets = institucionesLista.map((institucion, index) => {
+            const datosInstitucion = datosPorInstitucion[institucion] || {};
+            const data = fechasOrdenadas.map(fecha => datosInstitucion[fecha] || 0);
+            
+            return {
+                label: institucion,
+                data: data,
+                backgroundColor: coloresInstituciones[index % coloresInstituciones.length],
+                borderColor: darkenColor(coloresInstituciones[index % coloresInstituciones.length], 0.2),
+                borderWidth: 1,
+                borderRadius: 6,
+                barThickness: 20
+            };
+        });
+        
         // Guardar datos
         const datosTiempo = {
-            labels: labels,
-            values: values,
-            total: values.reduce((a, b) => a + b, 0)
+            labels: fechasOrdenadas,
+            datasets: datasets,
+            instituciones: institucionesLista,
+            fechas: fechasOrdenadas
         };
-
+        
         switch(tipo) {
             case 'fecha': datosFecha = datosTiempo; break;
             case 'mes': datosMes = datosTiempo; break;
             case 'anio': datosAnio = datosTiempo; break;
         }
+        
+        return datosTiempo;
     }
 
     // =============================================
@@ -394,12 +478,42 @@
 
     // Funciones auxiliares para tiempo
     function getDatosTiempo(tipo) {
+        let datos;
         switch(tipo) {
-            case 'fecha': return datosFecha;
-            case 'mes': return datosMes;
-            case 'anio': return datosAnio;
-            default: return { labels: [], values: [], total: 0 };
+            case 'fecha': datos = datosFecha; break;
+            case 'mes': datos = datosMes; break;
+            case 'anio': datos = datosAnio; break;
+            default: datos = { labels: [], datasets: [], instituciones: [], fechas: [] };
         }
+        
+        // Si los datos no tienen estructura de barras agrupadas, convertirlos
+        if (datos && (!datos.datasets || datos.datasets.length === 0)) {
+            // Convertir datos antiguos a nuevo formato
+            datos = convertirDatosAntiguos(tipo, datos);
+        }
+        
+        return datos;
+    }
+
+    // Función auxiliar para convertir datos antiguos al nuevo formato
+    function convertirDatosAntiguos(tipo, datosAntiguos) {
+        if (!datosAntiguos.labels || datosAntiguos.labels.length === 0) {
+            return { labels: [], datasets: [], instituciones: [], fechas: [] };
+        }
+        
+        // Crear un dataset único con los datos antiguos
+        const dataset = {
+            label: 'Total Visitantes',
+            data: datosAntiguos.values || [],
+            backgroundColor: '#3498db'
+        };
+        
+        return {
+            labels: datosAntiguos.labels || [],
+            datasets: [dataset],
+            instituciones: ['Total Visitantes'],
+            fechas: datosAntiguos.labels || []
+        };
     }
 
     function getTituloTiempo(tipo) {
@@ -652,48 +766,75 @@
     }
 
     // Generar filas de tabla para tiempo
+    // Actualiza la función generarFilasTablaTiempo:
     function generarFilasTablaTiempo(datos, tipo) {
-        const total = datos.values.reduce((a, b) => a + b, 0);
+        let html = '';
+        const totalGeneral = datos.total || 0;
         
-        return datos.labels.map((label, index) => {
-            const valor = datos.values[index];
-            const porcentaje = total > 0 ? ((valor / total) * 100).toFixed(1) : 0;
-            
-            // Calcular tendencia
-            let tendencia = '';
-            if (index > 0) {
-                const valorAnterior = datos.values[index - 1];
-                const diferencia = valor - valorAnterior;
-                const porcentajeCambio = valorAnterior > 0 ? ((diferencia / valorAnterior) * 100).toFixed(1) : 100;
-                
-                if (diferencia > 0) {
-                    tendencia = `<span style="color: #27ae60;"><i class="fas fa-arrow-up"></i> ${porcentajeCambio}%</span>`;
-                } else if (diferencia < 0) {
-                    tendencia = `<span style="color: #e74c3c;"><i class="fas fa-arrow-down"></i> ${Math.abs(porcentajeCambio)}%</span>`;
-                } else {
-                    tendencia = `<span style="color: #f39c12;"><i class="fas fa-minus"></i> 0%</span>`;
-                }
-            } else {
-                tendencia = '<span style="color: #95a5a6;">-</span>';
-            }
-            
-            return `
-                <tr>
-                    <td style="font-weight: bold; text-align: center;">${index + 1}</td>
-                    <td><strong>${label}</strong></td>
-                    <td style="text-align: center; font-weight: bold">${valor.toLocaleString()}</td>
-                    <td style="text-align: center; color: #2e7d32; font-weight: bold">${porcentaje}%</td>
-                    <td style="text-align: center;">${tendencia}</td>
+        // Para cada fecha
+        datos.labels.forEach((fecha, fechaIndex) => {
+            html += `
+                <tr style="background-color: #f8f9fa;">
+                    <td colspan="5" style="font-weight: bold; color: #2c3e50;">
+                        <i class="fas fa-calendar-day"></i> ${fecha}
+                    </td>
                 </tr>
             `;
-        }).join('') + (total > 0 ? `
-            <tr style="background: #f8f9fa; font-weight: bold;">
+            
+            // Para cada institución en esa fecha
+            let totalFecha = 0;
+            datos.instituciones.forEach((institucion, instIndex) => {
+                const valor = datos.datasets[instIndex]?.data[fechaIndex] || 0;
+                totalFecha += valor;
+                
+                if (valor > 0) {
+                    html += `
+                        <tr>
+                            <td style="padding-left: 30px;">
+                                <span class="institution-badge">
+                                    <i class="fas fa-university"></i>
+                                    ${institucion}
+                                </span>
+                            </td>
+                            <td>${getDescripcionTiempo(tipo, fecha)}</td>
+                            <td style="text-align: center; font-weight: bold">${valor.toLocaleString()}</td>
+                            <td style="text-align: center; color: #2e7d32; font-weight: bold">
+                                ${totalGeneral > 0 ? ((valor / totalGeneral) * 100).toFixed(1) : 0}%
+                            </td>
+                            <td style="text-align: center;">
+                                <span style="color: #95a5a6;">-</span>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+            
+            // Total de la fecha
+            html += `
+                <tr style="background-color: #e8f5e8;">
+                    <td colspan="2" style="padding-left: 30px; font-weight: bold;">
+                        <i class="fas fa-plus-circle"></i> Total ${fecha}
+                    </td>
+                    <td style="text-align: center; font-weight: bold">${totalFecha.toLocaleString()}</td>
+                    <td style="text-align: center; font-weight: bold">
+                        ${totalGeneral > 0 ? ((totalFecha / totalGeneral) * 100).toFixed(1) : 0}%
+                    </td>
+                    <td style="text-align: center;">-</td>
+                </tr>
+            `;
+        });
+        
+        // Total general
+        html += `
+            <tr style="background: #2e7d32; color: white; font-weight: bold;">
                 <td colspan="2">TOTAL GENERAL</td>
-                <td style="text-align: center">${total.toLocaleString()}</td>
+                <td style="text-align: center">${totalGeneral.toLocaleString()}</td>
                 <td style="text-align: center">100%</td>
                 <td style="text-align: center;">-</td>
             </tr>
-        ` : '');
+        `;
+        
+        return html;
     }
 
     // =============================================
@@ -778,11 +919,12 @@
     }
 
     // Mostrar gráficas para tiempo
+    // Reemplaza la función mostrarGraficasTiempo actual por esta:
+    // Mostrar gráficas para tiempo CON BARRAS AGRUPADAS
     function mostrarGraficasTiempo(tipo) {
         const datos = getDatosTiempo(tipo);
-        const colors = generarColoresTiempo(tipo, datos.labels.length);
         
-        // Gráfica de barras
+        // Gráfica de barras AGRUPADAS
         const ctxBar = document.getElementById(`chart${tipo.charAt(0).toUpperCase() + tipo.slice(1)}Bar`);
         if (chartFechaBar) chartFechaBar.destroy();
         if (chartMesBar) chartMesBar.destroy();
@@ -792,50 +934,82 @@
             type: "bar",
             data: {
                 labels: datos.labels,
-                datasets: [{
-                    label: "Visitantes",
-                    data: datos.values,
-                    backgroundColor: colors,
-                    borderRadius: 8,
-                    barThickness: 25,
-                }],
+                datasets: datos.datasets
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false },
+                    legend: { 
+                        position: 'top',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true,
+                            font: { size: 12 }
+                        }
+                    },
                     title: {
                         display: true,
-                        text: getTituloTiempo(tipo),
+                        text: getTituloTiempo(tipo) + ' (Barras Agrupadas)',
                         font: { size: 16, weight: 'bold' }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += context.parsed.y + ' visitantes';
+                                return label;
+                            }
+                        }
                     }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        title: { display: true, text: 'Cantidad de Visitantes' }
+                        title: { 
+                            display: true, 
+                            text: 'Cantidad de Visitantes',
+                            font: { weight: 'bold' }
+                        },
+                        stacked: false
                     },
                     x: {
-                        title: { display: true, text: getTituloTiempo(tipo).split(' ')[1] }
+                        title: { 
+                            display: true, 
+                            text: getTituloTiempo(tipo).split(' ')[1],
+                            font: { weight: 'bold' }
+                        },
+                        stacked: false
                     }
                 }
-            },
+            }
         });
 
-        // Gráfica circular
+        // Gráfica circular (se mantiene igual o puedes ajustarla)
         const ctxPie = document.getElementById(`chart${tipo.charAt(0).toUpperCase() + tipo.slice(1)}Pie`);
         if (chartFechaPie) chartFechaPie.destroy();
         if (chartMesPie) chartMesPie.destroy();
         if (chartAnioPie) chartAnioPie.destroy();
         
+        // Para el gráfico circular, mostrar distribución por institución general
+        const totalPorInstitucion = {};
+        datos.datasets.forEach(dataset => {
+            const total = dataset.data.reduce((a, b) => a + b, 0);
+            totalPorInstitucion[dataset.label] = total;
+        });
+        
         const chartPie = new Chart(ctxPie, {
             type: "doughnut",
             data: {
-                labels: datos.labels,
+                labels: Object.keys(totalPorInstitucion),
                 datasets: [{
-                    data: datos.values,
-                    backgroundColor: colors,
+                    data: Object.values(totalPorInstitucion),
+                    backgroundColor: datos.datasets.map(d => d.backgroundColor),
                     borderWidth: 2,
                     borderColor: '#fff'
                 }],
@@ -847,6 +1021,11 @@
                     legend: {
                         position: 'right',
                         labels: { usePointStyle: true, padding: 15 }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Distribución por Institución',
+                        font: { size: 16, weight: 'bold' }
                     }
                 },
                 cutout: '60%'
@@ -875,6 +1054,7 @@
     // =============================================
 
     // Aplicar filtros combinados
+    // Aplicar filtros combinados - VERSIÓN CORREGIDA
     async function aplicarFiltrosCombinados() {
         try {
             const fechaInicial = document.getElementById('filtro-fecha-inicial').value;
@@ -894,17 +1074,23 @@
 
             mostrarLoading('Aplicando filtros...');
 
+            // Construir consulta base
             let query = supabase
                 .from('participantes_reserva')
-                .select('id_institucion, fecha_visita')
-                .gte('fecha_visita', fechaInicial + 'T00:00:00')
-                .lte('fecha_visita', fechaFinal + 'T23:59:59');
+                .select('id_institucion, fecha_visita');
+
+            // Filtrar por fecha
+            query = query.gte('fecha_visita', fechaInicial + 'T00:00:00');
+            query = query.lte('fecha_visita', fechaFinal + 'T23:59:59');
 
             // Filtrar por institución si no es "todas"
             if (institucion !== 'todas') {
+                // Buscar el id_institucion correspondiente al nombre
                 const institucionObj = todasLasInstituciones.find(inst => inst.nombre_institucion === institucion);
                 if (institucionObj) {
                     query = query.eq('id_institucion', institucionObj.id_institucion);
+                } else {
+                    console.warn(`No se encontró la institución: ${institucion}`);
                 }
             }
 
@@ -912,9 +1098,21 @@
 
             if (error) throw error;
 
+            console.log(`✅ Filtros aplicados: ${participantesFiltrados?.length || 0} registros encontrados`);
+
             if (participantesFiltrados && participantesFiltrados.length > 0) {
-                procesarDatosFiltrados(participantesFiltrados, tipoActual);
-                mostrarExito(`Filtros aplicados: ${participantesFiltrados.length} participantes encontrados`);
+                // Determinar qué tipo de datos mostrar
+                let tipoAMostrar = tipoActual;
+                
+                // Si estamos en "institucion", procesar datos de institución
+                if (tipoActual === 'institucion') {
+                    procesarDatosInstitucionFiltrados(participantesFiltrados);
+                    mostrarExito(`Filtros aplicados: ${participantesFiltrados.length} participantes encontrados`);
+                } else {
+                    // Para fecha, mes, año procesar datos de tiempo
+                    procesarDatosTiempoFiltrados(participantesFiltrados, tipoActual);
+                    mostrarExito(`Filtros aplicados: ${participantesFiltrados.length} participantes encontrados`);
+                }
             } else {
                 mostrarSinDatosFiltrados();
             }
@@ -926,6 +1124,38 @@
             cerrarLoading();
             mostrarError('Error al aplicar los filtros: ' + error.message);
         }
+    }
+
+    // Nueva función para procesar datos de institución filtrados
+    function procesarDatosInstitucionFiltrados(participantes) {
+        const conteoInstituciones = {};
+        
+        participantes.forEach(participante => {
+            const institucion = todasLasInstituciones.find(i => i.id_institucion === participante.id_institucion);
+            if (institucion && institucion.nombre_institucion) {
+                const nombreInstitucion = institucion.nombre_institucion;
+                conteoInstituciones[nombreInstitucion] = (conteoInstituciones[nombreInstitucion] || 0) + 1;
+            }
+        });
+
+        const { institucionesPrincipales, otrasInstituciones } = agruparInstituciones(conteoInstituciones);
+        procesarDatosInstitucion(institucionesPrincipales, otrasInstituciones);
+    }
+
+    // Nueva función para procesar datos de tiempo filtrados
+    function procesarDatosTiempoFiltrados(participantes, tipo) {
+        // Usar la función procesarDatosTiempo existente
+        const datosTiempo = procesarDatosTiempo(participantes, tipo);
+        
+        // Guardar datos según el tipo
+        switch(tipo) {
+            case 'fecha': datosFecha = datosTiempo; break;
+            case 'mes': datosMes = datosTiempo; break;
+            case 'anio': datosAnio = datosTiempo; break;
+        }
+        
+        // Mostrar interfaz
+        mostrarInterfazTiempo(tipo);
     }
 
     // Procesar datos filtrados
@@ -961,7 +1191,7 @@
         mostrarExito('Filtros limpiados - Mostrando todos los datos');
     }
 
-    // Cambiar tipo de reporte
+    // Cambiar tipo de reporte - VERSIÓN CORREGIDA
     function cambiarTipoReporte(tipo) {
         console.log('🔄 Cambiando a reporte:', tipo);
         
@@ -971,22 +1201,43 @@
         });
         document.querySelector(`.chart-btn[data-type="${tipo}"]`).classList.add('active');
         
+        // Actualizar variable global
+        tipoActual = tipo;
+        
         // Mostrar/ocultar filtros combinados
         const filtrosDiv = document.getElementById('filtros-combinados');
         if (filtrosDiv) {
-            filtrosDiv.style.display = tipo !== 'institucion' ? 'block' : 'none';
+            filtrosDiv.style.display = 'block'; // Siempre mostrar filtros
         }
-
-        tipoActual = tipo;
-
+        
+        // Si ya tenemos datos de este tipo, mostrarlos
+        let tieneDatos = false;
+        
         if (tipo === 'institucion') {
-            if (datosInstituciones.labels && datosInstituciones.labels.length > 0) {
+            tieneDatos = datosInstituciones && datosInstituciones.labels && datosInstituciones.labels.length > 0;
+        } else {
+            const datosTipo = getDatosTiempo(tipo);
+            tieneDatos = datosTipo && datosTipo.labels && datosTipo.labels.length > 0;
+        }
+        
+        if (tieneDatos) {
+            if (tipo === 'institucion') {
                 mostrarInterfazInstitucion();
             } else {
-                cargarDatosCompletos();
+                mostrarInterfazTiempo(tipo);
             }
         } else {
-            cargarDatosTiempo(tipo);
+            // Cargar datos si no los tenemos
+            if (tipo === 'institucion') {
+                if (datosOriginales.labels && datosOriginales.labels.length > 0) {
+                    datosInstituciones = JSON.parse(JSON.stringify(datosOriginales));
+                    mostrarInterfazInstitucion();
+                } else {
+                    cargarDatosInstitucion();
+                }
+            } else {
+                cargarDatosTiempo(tipo);
+            }
         }
     }
 
@@ -1220,7 +1471,7 @@
         return 'institucion';
     }
 
-    // Función para aplicar filtros del modal
+    // Función para aplicar filtros del modal - VERSIÓN CON VALIDACIÓN
     async function aplicarFiltrosModal() {
         try {
             mostrarLoading('Aplicando filtros...');
@@ -1238,16 +1489,29 @@
             if (tipo === 'institucion') {
                 // Filtrar datos de instituciones
                 datosFiltrados = await filtrarDatosInstitucionModal(institucion, cantidad, orden);
-                crearGraficaAmpliadaInstitucionConDatos(datosFiltrados, tipoGrafica);
-                llenarTablaModalInstitucionConDatos(datosFiltrados);
+                
+                // Validar datos
+                if (validarDatosFiltrados(datosFiltrados)) {
+                    crearGraficaAmpliadaInstitucionConDatos(datosFiltrados, tipoGrafica);
+                    llenarTablaModalInstitucionConDatos(datosFiltrados);
+                    mostrarExito(`Filtros aplicados: ${datosFiltrados.total || 0} registros encontrados`);
+                } else {
+                    mostrarError('No se encontraron datos con los filtros aplicados');
+                }
             } else {
                 // Filtrar datos de tiempo
                 datosFiltrados = await filtrarDatosTiempoModal(tipo, fechaInicio, fechaFin, institucion, cantidad, orden);
-                crearGraficaAmpliadaTiempoConDatos(tipo, datosFiltrados, tipoGrafica);
-                llenarTablaModalTiempoConDatos(tipo, datosFiltrados);
+                
+                // Validar datos
+                if (validarDatosFiltrados(datosFiltrados)) {
+                    crearGraficaAmpliadaTiempoConDatos(tipo, datosFiltrados, tipoGrafica);
+                    llenarTablaModalTiempoConDatos(tipo, datosFiltrados);
+                    mostrarExito(`Filtros aplicados: ${datosFiltrados.total || 0} registros encontrados`);
+                } else {
+                    mostrarError('No se encontraron datos con los filtros aplicados');
+                }
             }
             
-            mostrarExito(`Filtros aplicados: ${datosFiltrados.total || 0} registros encontrados`);
             cerrarLoading();
             
         } catch (error) {
@@ -1257,157 +1521,82 @@
         }
     }
 
-    // Función para filtrar datos de institución en modal
-    async function filtrarDatosInstitucionModal(institucion, cantidad, orden) {
-        let datos = { ...datosInstituciones };
-        
-        // Filtrar por institución específica
-        if (institucion !== 'todas') {
-            const index = datos.labels.indexOf(institucion);
-            if (index !== -1) {
-                datos = {
-                    labels: [institucion],
-                    values: [datos.values[index]],
-                    total: datos.values[index],
-                    datosCompletos: { [institucion]: datos.values[index] }
+    // Función para filtrar datos de tiempo en modal CON AGRUPACIÓN - VERSIÓN CORREGIDA
+    async function filtrarDatosTiempoModal(tipo, fechaInicio, fechaFin, institucion, cantidad, orden) {
+        try {
+            let query = supabase
+                .from('participantes_reserva')
+                .select('fecha_visita, id_institucion')
+                .not('fecha_visita', 'is', null);
+            
+            // Aplicar filtros de fecha si existen
+            if (fechaInicio) {
+                query = query.gte('fecha_visita', fechaInicio + 'T00:00:00');
+            }
+            if (fechaFin) {
+                query = query.lte('fecha_visita', fechaFin + 'T23:59:59');
+            }
+            
+            // Filtrar por institución si no es "todas"
+            if (institucion !== 'todas') {
+                const institucionObj = todasLasInstituciones.find(inst => inst.nombre_institucion === institucion);
+                if (institucionObj) {
+                    query = query.eq('id_institucion', institucionObj.id_institucion);
+                }
+            }
+            
+            const { data: participantes, error } = await query;
+            if (error) throw error;
+            
+            // Si no hay participantes, devolver estructura vacía
+            if (!participantes || participantes.length === 0) {
+                return {
+                    labels: [],
+                    values: [],
+                    total: 0,
+                    datasets: [],
+                    instituciones: [],
+                    fechas: []
                 };
             }
-        }
-        
-        // Ordenar datos
-        if (orden === 'desc') {
-            // Orden descendente (mayor a menor)
-            const indices = datos.labels
-                .map((label, i) => ({ label, value: datos.values[i] }))
-                .sort((a, b) => b.value - a.value)
-                .map(item => datos.labels.indexOf(item.label));
             
-            datos.labels = indices.map(i => datos.labels[i]);
-            datos.values = indices.map(i => datos.values[i]);
-        } else if (orden === 'asc') {
-            // Orden ascendente (menor a mayor)
-            const indices = datos.labels
-                .map((label, i) => ({ label, value: datos.values[i] }))
-                .sort((a, b) => a.value - b.value)
-                .map(item => datos.labels.indexOf(item.label));
+            // Procesar datos con la función de agrupación
+            const datosAgrupados = procesarDatosTiempo(participantes, tipo);
             
-            datos.labels = indices.map(i => datos.labels[i]);
-            datos.values = indices.map(i => datos.values[i]);
-        } else if (orden === 'alpha') {
-            // Orden alfabético
-            const indices = datos.labels
-                .map((label, i) => ({ label, value: datos.values[i] }))
-                .sort((a, b) => a.label.localeCompare(b.label))
-                .map(item => datos.labels.indexOf(item.label));
+            // Aplicar límite de cantidad si es necesario
+            if (cantidad > 0 && cantidad < datosAgrupados.labels.length) {
+                datosAgrupados.labels = datosAgrupados.labels.slice(0, cantidad);
+                datosAgrupados.datasets.forEach(dataset => {
+                    dataset.data = dataset.data.slice(0, cantidad);
+                });
+                datosAgrupados.fechas = datosAgrupados.labels;
+            }
             
-            datos.labels = indices.map(i => datos.labels[i]);
-            datos.values = indices.map(i => datos.values[i]);
+            // Asegurar que tenemos los campos necesarios
+            return {
+                labels: datosAgrupados.labels || [],
+                values: datosAgrupados.datasets?.[0]?.data || [],
+                total: datosAgrupados.datasets?.reduce((total, dataset) => 
+                    total + dataset.data.reduce((sum, val) => sum + val, 0), 0) || 0,
+                datasets: datosAgrupados.datasets || [],
+                instituciones: datosAgrupados.instituciones || [],
+                fechas: datosAgrupados.fechas || []
+            };
+            
+        } catch (error) {
+            console.error('Error filtrando datos de tiempo:', error);
+            // Devolver estructura vacía en caso de error
+            return {
+                labels: [],
+                values: [],
+                total: 0,
+                datasets: [],
+                instituciones: [],
+                fechas: []
+            };
         }
-        
-        // Limitar cantidad
-        if (cantidad > 0 && cantidad < datos.labels.length) {
-            datos.labels = datos.labels.slice(0, cantidad);
-            datos.values = datos.values.slice(0, cantidad);
-            datos.total = datos.values.reduce((a, b) => a + b, 0);
-        }
-        
-        return datos;
     }
 
-    // Función para filtrar datos de tiempo en modal
-    async function filtrarDatosTiempoModal(tipo, fechaInicio, fechaFin, institucion, cantidad, orden) {
-        let query = supabase
-            .from('participantes_reserva')
-            .select('fecha_visita, id_institucion')
-            .not('fecha_visita', 'is', null);
-        
-        // Aplicar filtros de fecha si existen
-        if (fechaInicio) {
-            query = query.gte('fecha_visita', fechaInicio + 'T00:00:00');
-        }
-        if (fechaFin) {
-            query = query.lte('fecha_visita', fechaFin + 'T23:59:59');
-        }
-        
-        // Filtrar por institución si no es "todas"
-        if (institucion !== 'todas') {
-            const institucionObj = todasLasInstituciones.find(inst => inst.nombre_institucion === institucion);
-            if (institucionObj) {
-                query = query.eq('id_institucion', institucionObj.id_institucion);
-            }
-        }
-        
-        const { data: participantes, error } = await query;
-        if (error) throw error;
-        
-        // Procesar datos
-        const conteo = {};
-        participantes.forEach(participante => {
-            if (participante.fecha_visita) {
-                const fecha = new Date(participante.fecha_visita);
-                let clave = '';
-                
-                switch(tipo) {
-                    case 'fecha':
-                        clave = fecha.toISOString().split('T')[0];
-                        break;
-                    case 'mes':
-                        const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                                     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-                        clave = `${meses[fecha.getMonth()]} ${fecha.getFullYear()}`;
-                        break;
-                    case 'anio':
-                        clave = fecha.getFullYear().toString();
-                        break;
-                }
-                
-                conteo[clave] = (conteo[clave] || 0) + 1;
-            }
-        });
-        
-        // Convertir a arrays
-        let labels = Object.keys(conteo);
-        let values = Object.values(conteo);
-        
-        // Ordenar
-        if (orden === 'desc') {
-            const indices = labels
-                .map((label, i) => ({ label, value: values[i] }))
-                .sort((a, b) => b.value - a.value)
-                .map(item => labels.indexOf(item.label));
-            
-            labels = indices.map(i => labels[i]);
-            values = indices.map(i => values[i]);
-        } else if (orden === 'asc') {
-            const indices = labels
-                .map((label, i) => ({ label, value: values[i] }))
-                .sort((a, b) => a.value - b.value)
-                .map(item => labels.indexOf(item.label));
-            
-            labels = indices.map(i => labels[i]);
-            values = indices.map(i => values[i]);
-        } else if (orden === 'alpha') {
-            const indices = labels
-                .map((label, i) => ({ label, value: values[i] }))
-                .sort((a, b) => a.label.localeCompare(b.label))
-                .map(item => labels.indexOf(item.label));
-            
-            labels = indices.map(i => labels[i]);
-            values = indices.map(i => values[i]);
-        }
-        
-        // Limitar cantidad
-        if (cantidad > 0 && cantidad < labels.length) {
-            labels = labels.slice(0, cantidad);
-            values = values.slice(0, cantidad);
-        }
-        
-        return {
-            labels: labels,
-            values: values,
-            total: values.reduce((a, b) => a + b, 0)
-        };
-    }
 
     // Función para crear gráfica con datos filtrados de institución
     function crearGraficaAmpliadaInstitucionConDatos(datosFiltrados, tipoGrafica) {
@@ -1497,7 +1686,16 @@
         });
     }
 
-    // Función para crear gráfica con datos filtrados de tiempo
+    // Función para validar datos antes de usarlos
+    function validarDatosFiltrados(datos) {
+        return datos && 
+            (datos.labels || datos.values || datos.datasets) &&
+            ((datos.labels && datos.labels.length > 0) || 
+                (datos.values && datos.values.length > 0) || 
+                (datos.datasets && datos.datasets.length > 0));
+    }
+
+    // Función para crear gráfica con datos filtrados de tiempo - VERSIÓN SEGURA
     function crearGraficaAmpliadaTiempoConDatos(tipo, datosFiltrados, tipoGrafica) {
         const ctx = document.getElementById("chartAmpliadoInstitucion");
         if (!ctx) return;
@@ -1506,83 +1704,182 @@
             chartAmpliadoInstitucion.destroy();
         }
 
-        const colors = generarColoresTiempo(tipo, datosFiltrados.labels.length);
-        const tipoChart = tipoGrafica;
+        // Verificar que tenemos datos
+        if (!datosFiltrados || (!datosFiltrados.datasets && !datosFiltrados.values)) {
+            // Mostrar gráfica vacía con mensaje
+            chartAmpliadoInstitucion = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Sin datos'],
+                    datasets: [{
+                        label: 'Sin datos',
+                        data: [0],
+                        backgroundColor: '#95a5a6'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: 'No hay datos disponibles con los filtros aplicados',
+                            font: { size: 16, weight: 'bold' }
+                        }
+                    }
+                }
+            });
+            return;
+        }
 
-        chartAmpliadoInstitucion = new Chart(ctx, {
-            type: tipoChart,
-            data: {
-                labels: datosFiltrados.labels,
-                datasets: [{
-                    label: "Cantidad de Visitantes",
-                    data: datosFiltrados.values,
-                    backgroundColor: colors,
-                    borderColor: tipoChart === "bar" ? 'transparent' : colors.map(color => darkenColor(color, 0.2)),
-                    borderWidth: tipoChart === "bar" ? 0 : 2,
-                    borderRadius: tipoChart === "bar" ? 8 : 0,
-                    barThickness: tipoChart === "bar" ? 35 : undefined,
-                }],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: tipoChart === "bar" ? 'top' : 'right',
-                        labels: {
-                            padding: 15,
-                            usePointStyle: true,
-                            font: { size: 12 }
+        if (tipoGrafica === 'bar' && datosFiltrados.datasets && datosFiltrados.datasets.length > 0) {
+            // BARRAS AGRUPADAS
+            chartAmpliadoInstitucion = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: datosFiltrados.labels || [],
+                    datasets: datosFiltrados.datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                font: { size: 12 }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: `${getTituloTiempo(tipo)} (Filtrado) - Barras Agrupadas`,
+                            font: { size: 18, weight: 'bold' },
+                            padding: 20
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 14 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.parsed.y + ' visitantes';
+                                    return label;
+                                }
+                            }
                         }
                     },
-                    title: {
-                        display: true,
-                        text: `${getTituloTiempo(tipo)} (Filtrado)`,
-                        font: { size: 18, weight: 'bold' },
-                        padding: 20
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        titleFont: { size: 14 },
-                        bodyFont: { size: 14 },
-                        padding: 12,
-                        cornerRadius: 8,
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.parsed.y || context.parsed;
-                                const percentage = Math.round((value / datosFiltrados.total) * 100);
-                                return `${label}: ${value} visitantes (${percentage}%)`;
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.1)' },
+                            title: {
+                                display: true,
+                                text: 'Cantidad de Visitantes',
+                                font: { weight: 'bold', size: 14 }
+                            },
+                            stacked: false
+                        },
+                        x: {
+                            grid: { display: false },
+                            title: {
+                                display: true,
+                                text: getTituloTiempo(tipo).split(' ')[2] || 'Período',
+                                font: { weight: 'bold', size: 14 }
+                            },
+                            stacked: false,
+                            ticks: {
+                                maxRotation: tipo === 'fecha' ? 45 : 0,
+                                minRotation: 0
                             }
                         }
                     }
-                },
-                scales: tipoChart === "bar" ? {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: 'rgba(0,0,0,0.1)' },
-                        title: {
-                            display: true,
-                            text: 'Cantidad de Visitantes',
-                            font: { weight: 'bold', size: 14 }
-                        }
+                }
+            });
+        } else if (datosFiltrados.values && datosFiltrados.values.length > 0) {
+            // Gráfico de barras simple o circular con datos antiguos
+            if (tipoGrafica === 'bar') {
+                chartAmpliadoInstitucion = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: datosFiltrados.labels || [],
+                        datasets: [{
+                            label: 'Visitantes',
+                            data: datosFiltrados.values || [],
+                            backgroundColor: '#3498db',
+                            borderRadius: 8
+                        }]
                     },
-                    x: {
-                        grid: { display: false },
-                        title: {
-                            display: true,
-                            text: getTituloTiempo(tipo).split(' ')[2] || 'Período',
-                            font: { weight: 'bold', size: 14 }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            title: {
+                                display: true,
+                                text: `${getTituloTiempo(tipo)} (Filtrado)`,
+                                font: { size: 18, weight: 'bold' },
+                                padding: 20
+                            }
                         },
-                        ticks: {
-                            maxRotation: tipo === 'fecha' ? 45 : 0,
-                            minRotation: 0
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Cantidad de Visitantes',
+                                    font: { weight: 'bold', size: 14 }
+                                }
+                            }
                         }
                     }
-                } : {},
-                cutout: tipoChart === "bar" ? '0%' : (tipoChart === 'doughnut' ? '40%' : '0%')
-            },
-        });
+                });
+            } else {
+                // Gráficos circulares
+                chartAmpliadoInstitucion = new Chart(ctx, {
+                    type: tipoGrafica,
+                    data: {
+                        labels: datosFiltrados.labels || [],
+                        datasets: [{
+                            data: datosFiltrados.values || [],
+                            backgroundColor: generarColoresTiempo(tipo, datosFiltrados.labels?.length || 0),
+                            borderWidth: 2
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    padding: 15,
+                                    usePointStyle: true,
+                                    font: { size: 12 }
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: `${getTituloTiempo(tipo)} (Filtrado)`,
+                                font: { size: 18, weight: 'bold' },
+                                padding: 20
+                            }
+                        },
+                        cutout: tipoGrafica === 'doughnut' ? '40%' : '0%'
+                    }
+                });
+            }
+        }
     }
 
     // Función para llenar tabla con datos filtrados de institución
@@ -1612,50 +1909,130 @@
         ` : '');
     }
 
-    // Función para llenar tabla con datos filtrados de tiempo
+    // Función para llenar tabla con datos filtrados de tiempo - VERSIÓN SEGURA
     function llenarTablaModalTiempoConDatos(tipo, datosFiltrados) {
         const tbody = document.getElementById("tbodyDatosInstitucion");
         if (!tbody) return;
 
-        tbody.innerHTML = datosFiltrados.labels.map((label, index) => {
-            const valor = datosFiltrados.values[index];
-            const porcentaje = datosFiltrados.total > 0 ? ((valor / datosFiltrados.total) * 100).toFixed(1) : 0;
-            
-            // Calcular tendencia
-            let tendencia = '';
-            if (index > 0) {
-                const valorAnterior = datosFiltrados.values[index - 1];
-                const diferencia = valor - valorAnterior;
-                const porcentajeCambio = valorAnterior > 0 ? ((diferencia / valorAnterior) * 100).toFixed(1) : 100;
-                
-                if (diferencia > 0) {
-                    tendencia = `<span style="color: #27ae60;"><i class="fas fa-arrow-up"></i> ${porcentajeCambio}%</span>`;
-                } else if (diferencia < 0) {
-                    tendencia = `<span style="color: #e74c3c;"><i class="fas fa-arrow-down"></i> ${Math.abs(porcentajeCambio)}%</span>`;
-                } else {
-                    tendencia = `<span style="color: #f39c12;"><i class="fas fa-minus"></i> 0%</span>`;
-                }
-            } else {
-                tendencia = '<span style="color: #95a5a6;">-</span>';
-            }
-            
-            return `
+        // Verificar que tenemos datos válidos
+        if (!datosFiltrados || (!datosFiltrados.labels && !datosFiltrados.datasets)) {
+            tbody.innerHTML = `
                 <tr>
-                    <td><strong>${label}</strong></td>
-                    <td>${getDescripcionTiempo(tipo, label)}</td>
-                    <td style="text-align: center; font-weight: bold">${valor.toLocaleString()}</td>
-                    <td style="text-align: center; color: #2e7d32; font-weight: bold">${porcentaje}%</td>
-                    <td style="text-align: center;">${tendencia}</td>
+                    <td colspan="5" style="text-align: center; padding: 20px; color: #7f8c8d;">
+                        <i class="fas fa-exclamation-circle"></i> No hay datos disponibles con los filtros aplicados
+                    </td>
                 </tr>
             `;
-        }).join('') + (datosFiltrados.total > 0 ? `
-            <tr style="background: #f8f9fa; font-weight: bold;">
-                <td colspan="2">TOTAL GENERAL</td>
-                <td style="text-align: center">${datosFiltrados.total.toLocaleString()}</td>
-                <td style="text-align: center">100%</td>
-                <td style="text-align: center;">-</td>
-            </tr>
-        ` : '');
+            return;
+        }
+
+        let html = '';
+        
+        // Verificar si tenemos datos en formato de barras agrupadas (con datasets)
+        if (datosFiltrados.datasets && datosFiltrados.datasets.length > 0) {
+            // FORMATO NUEVO: Barras agrupadas
+            // Encabezado para formato de barras agrupadas
+            html += `
+                <tr style="background: #f8f9fa; font-weight: bold;">
+                    <th>Fecha/Período</th>
+                    ${datosFiltrados.instituciones.map(inst => `<th>${inst}</th>`).join('')}
+                    <th>Total por Fecha</th>
+                </tr>
+            `;
+            
+            // Filas de datos para cada fecha
+            (datosFiltrados.labels || []).forEach((fecha, fechaIndex) => {
+                const totalPorFecha = datosFiltrados.datasets.reduce((sum, dataset) => 
+                    sum + (dataset.data[fechaIndex] || 0), 0);
+                
+                html += `
+                    <tr>
+                        <td><strong>${fecha}</strong></td>
+                        ${datosFiltrados.datasets.map(dataset => 
+                            `<td style="text-align: center; font-weight: ${dataset.data[fechaIndex] > 0 ? 'bold' : 'normal'}">
+                                ${(dataset.data[fechaIndex] || 0).toLocaleString()}
+                            </td>`
+                        ).join('')}
+                        <td style="text-align: center; background: #e8f5e9; font-weight: bold;">
+                            ${totalPorFecha.toLocaleString()}
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            // Fila de totales por institución
+            html += `
+                <tr style="background: #f0f7ff; font-weight: bold;">
+                    <td><strong>Total por Institución</strong></td>
+                    ${datosFiltrados.datasets.map(dataset => {
+                        const totalInstitucion = dataset.data.reduce((sum, val) => sum + (val || 0), 0);
+                        return `<td style="text-align: center; color: #2e7d32;">${totalInstitucion.toLocaleString()}</td>`;
+                    }).join('')}
+                    <td style="text-align: center; background: #2e7d32; color: white;">
+                        ${datosFiltrados.datasets.reduce((total, dataset) => 
+                            total + dataset.data.reduce((sum, val) => sum + (val || 0), 0), 0
+                        ).toLocaleString()}
+                    </td>
+                </tr>
+            `;
+        } else if (datosFiltrados.values && datosFiltrados.values.length > 0) {
+            // FORMATO ANTIGUO: Una sola serie de datos
+            const total = datosFiltrados.values.reduce((a, b) => a + b, 0);
+            
+            (datosFiltrados.labels || []).forEach((label, index) => {
+                const valor = datosFiltrados.values[index] || 0;
+                const porcentaje = total > 0 ? ((valor / total) * 100).toFixed(1) : 0;
+                
+                // Calcular tendencia
+                let tendencia = '';
+                if (index > 0) {
+                    const valorAnterior = datosFiltrados.values[index - 1] || 0;
+                    const diferencia = valor - valorAnterior;
+                    const porcentajeCambio = valorAnterior > 0 ? ((diferencia / valorAnterior) * 100).toFixed(1) : 100;
+                    
+                    if (diferencia > 0) {
+                        tendencia = `<span style="color: #27ae60;"><i class="fas fa-arrow-up"></i> ${porcentajeCambio}%</span>`;
+                    } else if (diferencia < 0) {
+                        tendencia = `<span style="color: #e74c3c;"><i class="fas fa-arrow-down"></i> ${Math.abs(porcentajeCambio)}%</span>`;
+                    } else {
+                        tendencia = `<span style="color: #f39c12;"><i class="fas fa-minus"></i> 0%</span>`;
+                    }
+                } else {
+                    tendencia = '<span style="color: #95a5a6;">-</span>';
+                }
+                
+                html += `
+                    <tr>
+                        <td><strong>${label}</strong></td>
+                        <td>${getDescripcionTiempo(tipo, label)}</td>
+                        <td style="text-align: center; font-weight: bold">${valor.toLocaleString()}</td>
+                        <td style="text-align: center; color: #2e7d32; font-weight: bold">${porcentaje}%</td>
+                        <td style="text-align: center;">${tendencia}</td>
+                    </tr>
+                `;
+            });
+            
+            // Total general
+            html += `
+                <tr style="background: #f8f9fa; font-weight: bold;">
+                    <td colspan="2">TOTAL GENERAL</td>
+                    <td style="text-align: center">${total.toLocaleString()}</td>
+                    <td style="text-align: center">100%</td>
+                    <td style="text-align: center;">-</td>
+                </tr>
+            `;
+        } else {
+            // Sin datos
+            html = `
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 20px; color: #7f8c8d;">
+                        <i class="fas fa-exclamation-circle"></i> No hay datos disponibles con los filtros aplicados
+                    </td>
+                </tr>
+            `;
+        }
+        
+        tbody.innerHTML = html;
     }
 
     // Función para limpiar filtros del modal
@@ -1820,6 +2197,7 @@
     }
 
     // Crear gráfica ampliada de tiempo
+    // Actualiza la función crearGraficaAmpliadaTiempo para el modal:
     function crearGraficaAmpliadaTiempo(tipo, tipoGrafica) {
         const ctx = document.getElementById("chartAmpliadoInstitucion");
         if (!ctx) return;
@@ -1830,133 +2208,195 @@
         }
 
         const datos = getDatosTiempo(tipo);
-        const colors = generarColoresTiempo(tipo, datos.labels.length);
-        const total = datos.values.reduce((a, b) => a + b, 0);
-        const tipoChart = tipoGrafica;
-
-        chartAmpliadoInstitucion = new Chart(ctx, {
-            type: tipoChart,
-            data: {
-                labels: datos.labels,
-                datasets: [{
-                    label: "Cantidad de Visitantes",
-                    data: datos.values,
-                    backgroundColor: colors,
-                    borderColor: tipoChart === "bar" ? 'transparent' : colors.map(color => darkenColor(color, 0.2)),
-                    borderWidth: tipoChart === "bar" ? 0 : 2,
-                    borderRadius: tipoChart === "bar" ? 8 : 0,
-                    barThickness: tipoChart === "bar" ? 35 : undefined,
-                }],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: tipoChart === "bar" ? 'top' : 'right',
-                        labels: {
-                            padding: 15,
-                            usePointStyle: true,
-                            font: { size: 12 }
+        
+        if (tipoGrafica === 'bar') {
+            // GRÁFICO DE BARRAS AGRUPADAS
+            chartAmpliadoInstitucion = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: datos.labels,
+                    datasets: datos.datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                font: { size: 12 }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: `${getTituloTiempo(tipo)} - Vista Ampliada (Barras Agrupadas)`,
+                            font: { size: 18, weight: 'bold' },
+                            padding: 20
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 14 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.parsed.y + ' visitantes';
+                                    return label;
+                                }
+                            }
                         }
                     },
-                    title: {
-                        display: true,
-                        text: `${getTituloTiempo(tipo)} - Vista Ampliada`,
-                        font: { size: 18, weight: 'bold' },
-                        padding: 20
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        titleFont: { size: 14 },
-                        bodyFont: { size: 14 },
-                        padding: 12,
-                        cornerRadius: 8,
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.parsed.y || context.parsed;
-                                const percentage = Math.round((value / total) * 100);
-                                return `${label}: ${value} visitantes (${percentage}%)`;
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.1)' },
+                            title: {
+                                display: true,
+                                text: 'Cantidad de Visitantes',
+                                font: { weight: 'bold', size: 14 }
+                            },
+                            stacked: false
+                        },
+                        x: {
+                            grid: { display: false },
+                            title: {
+                                display: true,
+                                text: getTituloTiempo(tipo).split(' ')[2] || 'Período',
+                                font: { weight: 'bold', size: 14 }
+                            },
+                            stacked: false,
+                            ticks: {
+                                maxRotation: tipo === 'fecha' ? 45 : 0,
+                                minRotation: 0
                             }
                         }
                     }
+                }
+            });
+        } else {
+            // Para gráficos circulares, usar distribución general
+            const totalPorInstitucion = {};
+            datos.datasets.forEach(dataset => {
+                const total = dataset.data.reduce((a, b) => a + b, 0);
+                totalPorInstitucion[dataset.label] = total;
+            });
+            
+            chartAmpliadoInstitucion = new Chart(ctx, {
+                type: tipoGrafica,
+                data: {
+                    labels: Object.keys(totalPorInstitucion),
+                    datasets: [{
+                        data: Object.values(totalPorInstitucion),
+                        backgroundColor: datos.datasets.map(d => d.backgroundColor),
+                        borderColor: datos.datasets.map(color => darkenColor(color.backgroundColor, 0.2)),
+                        borderWidth: 2
+                    }],
                 },
-                scales: tipoChart === "bar" ? {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: 'rgba(0,0,0,0.1)' },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                font: { size: 12 }
+                            }
+                        },
                         title: {
                             display: true,
-                            text: 'Cantidad de Visitantes',
-                            font: { weight: 'bold', size: 14 }
+                            text: 'Distribución por Institución - Vista Ampliada',
+                            font: { size: 18, weight: 'bold' },
+                            padding: 20
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 14 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = Object.values(totalPorInstitucion).reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                    return `${label}: ${value} visitantes (${percentage}%)`;
+                                }
+                            }
                         }
                     },
-                    x: {
-                        grid: { display: false },
-                        title: {
-                            display: true,
-                            text: getTituloTiempo(tipo).split(' ')[2] || 'Período',
-                            font: { weight: 'bold', size: 14 }
-                        },
-                        ticks: {
-                            maxRotation: tipo === 'fecha' ? 45 : 0,
-                            minRotation: 0
-                        }
-                    }
-                } : {},
-                cutout: tipoChart === "bar" ? '0%' : (tipoChart === 'doughnut' ? '40%' : '0%')
-            },
-        });
+                    cutout: tipoGrafica === 'doughnut' ? '40%' : '0%'
+                }
+            });
+        }
     }
 
     // Llenar tabla del modal de tiempo
+    // Llenar tabla del modal de tiempo CON DATOS AGRUPADOS
     function llenarTablaModalTiempo(tipo) {
         const tbody = document.getElementById("tbodyDatosInstitucion");
         if (!tbody) return;
 
         const datos = getDatosTiempo(tipo);
-        const total = datos.values.reduce((a, b) => a + b, 0);
-
-        tbody.innerHTML = datos.labels.map((label, index) => {
-            const valor = datos.values[index];
-            const porcentaje = total > 0 ? ((valor / total) * 100).toFixed(1) : 0;
+        
+        let html = '';
+        
+        // Encabezado
+        html += `
+            <tr style="background: #f8f9fa; font-weight: bold;">
+                <th>Fecha/Período</th>
+                ${datos.instituciones.map(inst => `<th>${inst}</th>`).join('')}
+                <th>Total por Fecha</th>
+            </tr>
+        `;
+        
+        // Filas de datos
+        datos.labels.forEach((fecha, fechaIndex) => {
+            const totalPorFecha = datos.datasets.reduce((sum, dataset) => sum + dataset.data[fechaIndex], 0);
             
-            // Calcular tendencia
-            let tendencia = '';
-            if (index > 0) {
-                const valorAnterior = datos.values[index - 1];
-                const diferencia = valor - valorAnterior;
-                const porcentajeCambio = valorAnterior > 0 ? ((diferencia / valorAnterior) * 100).toFixed(1) : 100;
-                
-                if (diferencia > 0) {
-                    tendencia = `<span style="color: #27ae60;"><i class="fas fa-arrow-up"></i> ${porcentajeCambio}%</span>`;
-                } else if (diferencia < 0) {
-                    tendencia = `<span style="color: #e74c3c;"><i class="fas fa-arrow-down"></i> ${Math.abs(porcentajeCambio)}%</span>`;
-                } else {
-                    tendencia = `<span style="color: #f39c12;"><i class="fas fa-minus"></i> 0%</span>`;
-                }
-            } else {
-                tendencia = '<span style="color: #95a5a6;">-</span>';
-            }
-            
-            return `
+            html += `
                 <tr>
-                    <td><strong>${label}</strong></td>
-                    <td>${getDescripcionTiempo(tipo, label)}</td>
-                    <td style="text-align: center; font-weight: bold">${valor.toLocaleString()}</td>
-                    <td style="text-align: center; color: #2e7d32; font-weight: bold">${porcentaje}%</td>
-                    <td style="text-align: center;">${tendencia}</td>
+                    <td><strong>${fecha}</strong></td>
+                    ${datos.datasets.map(dataset => 
+                        `<td style="text-align: center; font-weight: ${dataset.data[fechaIndex] > 0 ? 'bold' : 'normal'}">
+                            ${dataset.data[fechaIndex].toLocaleString()}
+                        </td>`
+                    ).join('')}
+                    <td style="text-align: center; background: #e8f5e9; font-weight: bold;">
+                        ${totalPorFecha.toLocaleString()}
+                    </td>
                 </tr>
             `;
-        }).join('') + (total > 0 ? `
-            <tr style="background: #f8f9fa; font-weight: bold;">
-                <td colspan="2">TOTAL GENERAL</td>
-                <td style="text-align: center">${total.toLocaleString()}</td>
-                <td style="text-align: center">100%</td>
-                <td style="text-align: center;">-</td>
+        });
+        
+        // Fila de totales por institución
+        html += `
+            <tr style="background: #f0f7ff; font-weight: bold;">
+                <td><strong>Total por Institución</strong></td>
+                ${datos.datasets.map(dataset => {
+                    const totalInstitucion = dataset.data.reduce((sum, val) => sum + val, 0);
+                    return `<td style="text-align: center; color: #2e7d32;">${totalInstitucion.toLocaleString()}</td>`;
+                }).join('')}
+                <td style="text-align: center; background: #2e7d32; color: white;">
+                    ${datos.datasets.reduce((total, dataset) => 
+                        total + dataset.data.reduce((sum, val) => sum + val, 0), 0
+                    ).toLocaleString()}
+                </td>
             </tr>
-        ` : '');
+        `;
+        
+        tbody.innerHTML = html;
     }
 
     // =============================================
@@ -2031,6 +2471,26 @@
             text: 'Función de exportación de datos filtrados',
             confirmButtonColor: '#3498db'
         });
+    }
+
+    // Limpiar filtros combinados - VERSIÓN MEJORADA
+    function limpiarFiltrosCombinados() {
+        // Limpiar campos
+        document.getElementById('filtro-fecha-inicial').value = '';
+        document.getElementById('filtro-fecha-final').value = '';
+        document.getElementById('filtro-institucion-comb').value = 'todas';
+        
+        // Recargar datos sin filtros según el tipo actual
+        if (tipoActual === 'institucion') {
+            // Recargar datos de institución originales
+            datosInstituciones = JSON.parse(JSON.stringify(datosOriginales));
+            mostrarInterfazInstitucion();
+        } else {
+            // Recargar datos de tiempo
+            cargarDatosTiempo(tipoActual);
+        }
+        
+        mostrarExito('Filtros limpiados - Mostrando todos los datos');
     }
 
     // =============================================
@@ -2114,6 +2574,9 @@
         // Métodos generales
         window.InstitucionManager.descargarGraficoPrincipal = () => descargarGraficoPrincipal();
         window.InstitucionManager.descargarExcel = () => descargarExcel();
+
+        // En la API pública, agrega:
+        window.InstitucionManager.recargarInstituciones = () => cargarInstitucionesBase();
     }
 
     // Inicializar la API completa
@@ -2121,13 +2584,37 @@
 
     console.log('✅ Sistema de Institución con filtros en modal cargado correctamente');
 
-    // Auto-inicializar
+    // Auto-inicializar con manejo de errores mejorado
     document.addEventListener('DOMContentLoaded', function() {
+        // Primero actualizar la fecha/hora
+        updateDateTime();
+        setInterval(updateDateTime, 60000);
+        
+        // Configurar eventos de botones
+        document.getElementById('help-btn')?.addEventListener('click', function() {
+            // Tu código de ayuda...
+        });
+
+        document.getElementById('logout-btn')?.addEventListener('click', function() {
+            // Tu código de logout...
+        });
+        
+        // Inicializar sistema con retraso para evitar bloqueos
         setTimeout(() => {
             if (window.InstitucionManager && window.InstitucionManager.inicializar) {
-                window.InstitucionManager.inicializar();
+                console.log('🚀 Inicializando sistema de reportes...');
+                // Usar un pequeño retraso para evitar conflictos con el bloqueo del navegador
+                setTimeout(() => {
+                    window.InstitucionManager.inicializar().catch(error => {
+                        console.error('Error en inicialización:', error);
+                        // Intentar nuevamente después de 2 segundos
+                        setTimeout(() => {
+                            window.InstitucionManager.inicializar();
+                        }, 2000);
+                    });
+                }, 500);
             }
-        }, 1000);
+        }, 1500);
     });
 
 })();
