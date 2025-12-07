@@ -409,19 +409,23 @@
         
         // Preparar datasets para Chart.js
         const datasets = institucionesLista.map((institucion, index) => {
-            const datosInstitucion = datosPorInstitucion[institucion] || {};
-            const data = fechasOrdenadas.map(fecha => datosInstitucion[fecha] || 0);
-            
-            return {
-                label: institucion,
-                data: data,
-                backgroundColor: coloresInstituciones[index % coloresInstituciones.length],
-                borderColor: darkenColor(coloresInstituciones[index % coloresInstituciones.length], 0.2),
-                borderWidth: 1,
-                borderRadius: 6,
-                barThickness: 20
-            };
+        const datosInstitucion = datosPorInstitucion[institucion] || {};
+        const data = fechasOrdenadas.map(fecha => {
+            const valor = datosInstitucion[fecha];
+            // Asegurar que siempre devuelva un número
+            return (typeof valor === 'number' && !isNaN(valor)) ? valor : 0;
         });
+        
+        return {
+            label: institucion,
+            data: data,
+            backgroundColor: coloresInstituciones[index % coloresInstituciones.length],
+            borderColor: darkenColor(coloresInstituciones[index % coloresInstituciones.length], 0.2),
+            borderWidth: 1,
+            borderRadius: 6,
+            barThickness: 20
+        };
+    });
         
         // Guardar datos
         const datosTiempo = {
@@ -919,8 +923,7 @@
     }
 
     // Mostrar gráficas para tiempo
-    // Reemplaza la función mostrarGraficasTiempo actual por esta:
-    // Mostrar gráficas para tiempo CON BARRAS AGRUPADAS
+    // Mostrar gráficas para tiempo - VERSIÓN CORREGIDA CON TOOLTIPS
     function mostrarGraficasTiempo(tipo) {
         const datos = getDatosTiempo(tipo);
         
@@ -930,11 +933,22 @@
         if (chartMesBar) chartMesBar.destroy();
         if (chartAnioBar) chartAnioBar.destroy();
         
+        // Asegurar que los datos estén en el formato correcto
+        const datasetsCorregidos = (datos.datasets || []).map((dataset, index) => ({
+            ...dataset,
+            data: dataset.data.map(val => val || 0), // Convertir undefined/NaN a 0
+            backgroundColor: dataset.backgroundColor || coloresInstituciones[index % coloresInstituciones.length],
+            borderColor: dataset.borderColor || darkenColor(dataset.backgroundColor || coloresInstituciones[index % coloresInstituciones.length], 0.2),
+            borderWidth: 1,
+            borderRadius: 6,
+            barThickness: 25
+        }));
+        
         const chartBar = new Chart(ctxBar, {
             type: "bar",
             data: {
-                labels: datos.labels,
-                datasets: datos.datasets
+                labels: datos.labels || [],
+                datasets: datasetsCorregidos
             },
             options: {
                 responsive: true,
@@ -956,14 +970,39 @@
                     tooltip: {
                         mode: 'index',
                         intersect: false,
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 14 },
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: true,
                         callbacks: {
+                            title: function(tooltipItems) {
+                                // Mostrar la fecha como título
+                                const index = tooltipItems[0].dataIndex;
+                                return datos.labels ? datos.labels[index] : 'Fecha no disponible';
+                            },
                             label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
+                                const datasetLabel = context.dataset.label || '';
+                                const value = context.parsed.y;
+                                
+                                if (value === 0) {
+                                    return `${datasetLabel}: 0 visitantes`;
                                 }
-                                label += context.parsed.y + ' visitantes';
-                                return label;
+                                
+                                // Calcular porcentaje del total para esta fecha
+                                const fechaIndex = context.dataIndex;
+                                let totalFecha = 0;
+                                if (datos.datasets) {
+                                    totalFecha = datos.datasets.reduce((sum, ds) => 
+                                        sum + (ds.data[fechaIndex] || 0), 0);
+                                }
+                                
+                                const porcentaje = totalFecha > 0 ? Math.round((value / totalFecha) * 100) : 0;
+                                return `${datasetLabel}: ${value} visitantes (${porcentaje}% del total de la fecha)`;
+                            },
+                            filter: function(tooltipItem) {
+                                return true; // Mostrar todos los tooltips
                             }
                         }
                     }
@@ -986,11 +1025,22 @@
                         },
                         stacked: false
                     }
+                },
+                elements: {
+                    bar: {
+                        backgroundColor: function(context) {
+                            const value = context.raw;
+                            if (value === 0 || value === null) {
+                                return context.dataset.backgroundColor + '40';
+                            }
+                            return context.dataset.backgroundColor;
+                        }
+                    }
                 }
             }
         });
 
-        // Gráfica circular (se mantiene igual o puedes ajustarla)
+        // Gráfica circular
         const ctxPie = document.getElementById(`chart${tipo.charAt(0).toUpperCase() + tipo.slice(1)}Pie`);
         if (chartFechaPie) chartFechaPie.destroy();
         if (chartMesPie) chartMesPie.destroy();
@@ -998,7 +1048,7 @@
         
         // Para el gráfico circular, mostrar distribución por institución general
         const totalPorInstitucion = {};
-        datos.datasets.forEach(dataset => {
+        datasetsCorregidos.forEach(dataset => {
             const total = dataset.data.reduce((a, b) => a + b, 0);
             totalPorInstitucion[dataset.label] = total;
         });
@@ -1009,7 +1059,7 @@
                 labels: Object.keys(totalPorInstitucion),
                 datasets: [{
                     data: Object.values(totalPorInstitucion),
-                    backgroundColor: datos.datasets.map(d => d.backgroundColor),
+                    backgroundColor: datasetsCorregidos.map(d => d.backgroundColor),
                     borderWidth: 2,
                     borderColor: '#fff'
                 }],
@@ -1047,6 +1097,26 @@
                 chartAnioPie = chartPie;
                 break;
         }
+    }
+
+    // Función para limpiar y normalizar datos antes de crear gráficos
+    function normalizarDatosParaGrafico(datos) {
+        if (!datos || !datos.datasets) return datos;
+        
+        return {
+            ...datos,
+            datasets: datos.datasets.map((dataset, index) => ({
+                ...dataset,
+                label: dataset.label || `Institución ${index + 1}`,
+                data: (dataset.data || []).map(val => {
+                    // Convertir cualquier valor no numérico a 0
+                    const num = Number(val);
+                    return isNaN(num) ? 0 : num;
+                }),
+                backgroundColor: dataset.backgroundColor || coloresInstituciones[index % coloresInstituciones.length],
+                borderColor: dataset.borderColor || darkenColor(dataset.backgroundColor || coloresInstituciones[index % coloresInstituciones.length], 0.2)
+            }))
+        };
     }
 
     // =============================================
@@ -1449,6 +1519,12 @@
         if (selectTipoGrafica) {
             selectTipoGrafica.value = tipoGrafica || 'bar';
         }
+
+        // En la función actualizarContenidoModal, agrega este evento:
+        document.getElementById('modalTipoGrafica').addEventListener('change', function(e) {
+            const tipoGrafica = e.target.value;
+            cambiarTipoGraficaModal(tipoGrafica);
+        });
     }
 
     // Función para cambiar tipo de gráfica en modal
@@ -1597,8 +1673,7 @@
         }
     }
 
-
-    // Función para crear gráfica con datos filtrados de institución
+    // Función para crear gráfica con datos filtrados de institución - VERSIÓN COMPLETA
     function crearGraficaAmpliadaInstitucionConDatos(datosFiltrados, tipoGrafica) {
         const ctx = document.getElementById("chartAmpliadoInstitucion");
         if (!ctx) return;
@@ -1607,83 +1682,157 @@
             chartAmpliadoInstitucion.destroy();
         }
 
-        const colors = generarColoresInstitucion(datosFiltrados.labels.length);
-        const tipoChart = tipoGrafica;
+        // Verificar datos
+        if (!datosFiltrados || !datosFiltrados.labels || datosFiltrados.labels.length === 0) {
+            chartAmpliadoInstitucion = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Sin datos'],
+                    datasets: [{
+                        data: [100],
+                        backgroundColor: ['#95a5a6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'No hay datos disponibles',
+                            font: { size: 16, weight: 'bold' }
+                        }
+                    }
+                }
+            });
+            return;
+        }
 
-        chartAmpliadoInstitucion = new Chart(ctx, {
-            type: tipoChart,
-            data: {
-                labels: datosFiltrados.labels,
-                datasets: [{
-                    label: "Cantidad de Visitantes",
-                    data: datosFiltrados.values,
-                    backgroundColor: colors,
-                    borderColor: tipoChart === "bar" ? 'transparent' : colors.map(color => darkenColor(color, 0.2)),
-                    borderWidth: tipoChart === "bar" ? 0 : 2,
-                    borderRadius: tipoChart === "bar" ? 8 : 0,
-                    barThickness: tipoChart === "bar" ? 35 : undefined,
-                }],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: tipoChart === "bar" ? 'top' : 'right',
-                        labels: {
-                            padding: 15,
-                            usePointStyle: true,
-                            font: { size: 12 }
+        // GRÁFICOS CIRCULARES PARA INSTITUCIÓN
+        if (tipoGrafica === 'doughnut' || tipoGrafica === 'pie') {
+            chartAmpliadoInstitucion = new Chart(ctx, {
+                type: tipoGrafica,
+                data: {
+                    labels: datosFiltrados.labels,
+                    datasets: [{
+                        data: datosFiltrados.values,
+                        backgroundColor: generarColoresInstitucion(datosFiltrados.labels.length),
+                        borderColor: '#fff',
+                        borderWidth: 2,
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                font: { size: 12 }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Distribución por Institución' + 
+                                (tipoGrafica === 'doughnut' ? ' (Dona)' : ' (Pastel)'),
+                            font: { size: 18, weight: 'bold' },
+                            padding: 20
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 14 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = datosFiltrados.total;
+                                    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                    return `${label}: ${value} visitantes (${percentage}%)`;
+                                }
+                            }
                         }
                     },
-                    title: {
-                        display: true,
-                        text: 'Distribución por Institución (Filtrado)',
-                        font: { size: 18, weight: 'bold' },
-                        padding: 20
+                    cutout: tipoGrafica === 'doughnut' ? '50%' : '0%'
+                }
+            });
+        } 
+        // GRÁFICO DE BARRAS PARA INSTITUCIÓN
+        else if (tipoGrafica === 'bar') {
+            chartAmpliadoInstitucion = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: datosFiltrados.labels,
+                    datasets: [{
+                        label: "Cantidad de Visitantes",
+                        data: datosFiltrados.values,
+                        backgroundColor: generarColoresInstitucion(datosFiltrados.labels.length),
+                        borderColor: datosFiltrados.values.map((_, i) => 
+                            darkenColor(coloresInstituciones[i % coloresInstituciones.length], 0.2)),
+                        borderWidth: 1,
+                        borderRadius: 8,
+                        barThickness: 35,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: 'Distribución por Institución - Barras',
+                            font: { size: 18, weight: 'bold' },
+                            padding: 20
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 14 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed.y;
+                                    const percentage = datosFiltrados.total > 0 ? 
+                                        Math.round((value / datosFiltrados.total) * 100) : 0;
+                                    return `${label}: ${value} visitantes (${percentage}%)`;
+                                }
+                            }
+                        }
                     },
-                    tooltip: {
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        titleFont: { size: 14 },
-                        bodyFont: { size: 14 },
-                        padding: 12,
-                        cornerRadius: 8,
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.parsed.y || context.parsed;
-                                const percentage = Math.round((value / datosFiltrados.total) * 100);
-                                return `${label}: ${value} visitantes (${percentage}%)`;
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.1)' },
+                            title: {
+                                display: true,
+                                text: 'Cantidad de Visitantes',
+                                font: { weight: 'bold', size: 14 }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            title: {
+                                display: true,
+                                text: 'Institución',
+                                font: { weight: 'bold', size: 14 }
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 0
                             }
                         }
                     }
-                },
-                scales: tipoChart === "bar" ? {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: 'rgba(0,0,0,0.1)' },
-                        title: {
-                            display: true,
-                            text: 'Cantidad de Visitantes',
-                            font: { weight: 'bold', size: 14 }
-                        }
-                    },
-                    x: {
-                        grid: { display: false },
-                        title: {
-                            display: true,
-                            text: 'Institución',
-                            font: { weight: 'bold', size: 14 }
-                        },
-                        ticks: {
-                            maxRotation: 45,
-                            minRotation: 0
-                        }
-                    }
-                } : {},
-                cutout: tipoChart === "bar" ? '0%' : (tipoChart === 'doughnut' ? '40%' : '0%')
-            },
-        });
+                }
+            });
+        }
     }
 
     // Función para validar datos antes de usarlos
@@ -1695,7 +1844,7 @@
                 (datos.datasets && datos.datasets.length > 0));
     }
 
-    // Función para crear gráfica con datos filtrados de tiempo - VERSIÓN SEGURA
+    // Función para crear gráfica con datos filtrados de tiempo - VERSIÓN COMPLETA CON GRÁFICOS CIRCULARES
     function crearGraficaAmpliadaTiempoConDatos(tipo, datosFiltrados, tipoGrafica) {
         const ctx = document.getElementById("chartAmpliadoInstitucion");
         if (!ctx) return;
@@ -1708,20 +1857,20 @@
         if (!datosFiltrados || (!datosFiltrados.datasets && !datosFiltrados.values)) {
             // Mostrar gráfica vacía con mensaje
             chartAmpliadoInstitucion = new Chart(ctx, {
-                type: 'bar',
+                type: 'doughnut',
                 data: {
                     labels: ['Sin datos'],
                     datasets: [{
                         label: 'Sin datos',
-                        data: [0],
-                        backgroundColor: '#95a5a6'
+                        data: [100],
+                        backgroundColor: ['#95a5a6']
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false },
+                        legend: { display: true },
                         title: {
                             display: true,
                             text: 'No hay datos disponibles con los filtros aplicados',
@@ -1733,13 +1882,130 @@
             return;
         }
 
-        if (tipoGrafica === 'bar' && datosFiltrados.datasets && datosFiltrados.datasets.length > 0) {
+        // ============================================
+        // GRÁFICOS CIRCULARES (doughnut o pie)
+        // ============================================
+        if (tipoGrafica === 'doughnut' || tipoGrafica === 'pie') {
+            // Para gráficos circulares, necesitamos mostrar distribución por institución
+            let labels = [];
+            let data = [];
+            let backgroundColor = [];
+            let borderColor = [];
+            
+            if (datosFiltrados.datasets && datosFiltrados.datasets.length > 0) {
+                // Calcular total por institución para el gráfico circular
+                datosFiltrados.datasets.forEach((dataset, index) => {
+                    const totalInstitucion = dataset.data.reduce((sum, val) => sum + (val || 0), 0);
+                    if (totalInstitucion > 0) {
+                        labels.push(dataset.label || `Institución ${index + 1}`);
+                        data.push(totalInstitucion);
+                        backgroundColor.push(dataset.backgroundColor || coloresInstituciones[index % coloresInstituciones.length]);
+                        borderColor.push(dataset.borderColor || darkenColor(dataset.backgroundColor || coloresInstituciones[index % coloresInstituciones.length], 0.2));
+                    }
+                });
+                
+                // Si no hay datos después del filtrado, mostrar mensaje
+                if (data.length === 0) {
+                    labels = ['Sin datos con los filtros aplicados'];
+                    data = [100];
+                    backgroundColor = ['#95a5a6'];
+                    borderColor = ['#7f8c8d'];
+                }
+            } else if (datosFiltrados.values && datosFiltrados.values.length > 0) {
+                // Formato antiguo - mostrar distribución por fecha
+                labels = datosFiltrados.labels || [];
+                data = datosFiltrados.values.map(val => val || 0);
+                backgroundColor = generarColoresTiempo(tipo, labels.length);
+                borderColor = backgroundColor.map(color => darkenColor(color, 0.2));
+            }
+            
+            chartAmpliadoInstitucion = new Chart(ctx, {
+                type: tipoGrafica,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColor,
+                        borderColor: borderColor,
+                        borderWidth: 2,
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                font: { 
+                                    size: 12,
+                                    family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+                                },
+                                // Solo mostrar leyenda para valores mayores a 0
+                                filter: function(legendItem, chartData) {
+                                    return chartData.datasets[0].data[legendItem.index] > 0;
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: tipoGrafica === 'doughnut' ? 
+                                'Distribución por Institución (Dona)' : 
+                                'Distribución por Institución (Pastel)',
+                            font: { size: 18, weight: 'bold' },
+                            padding: 20
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 14 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                    return `${label}: ${value} visitantes (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: tipoGrafica === 'doughnut' ? '50%' : '0%',
+                    // Animaciones suaves
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true
+                    }
+                }
+            });
+        } 
+        // ============================================
+        // GRÁFICO DE BARRAS
+        // ============================================
+        else if (tipoGrafica === 'bar' && datosFiltrados.datasets && datosFiltrados.datasets.length > 0) {
             // BARRAS AGRUPADAS
             chartAmpliadoInstitucion = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: datosFiltrados.labels || [],
-                    datasets: datosFiltrados.datasets
+                    datasets: datosFiltrados.datasets.map((dataset, index) => ({
+                        ...dataset,
+                        // Asegurar que los datos sean números válidos
+                        data: dataset.data.map(val => val || 0),
+                        // Asignar color específico a cada institución
+                        backgroundColor: dataset.backgroundColor || coloresInstituciones[index % coloresInstituciones.length],
+                        borderColor: dataset.borderColor || darkenColor(dataset.backgroundColor || coloresInstituciones[index % coloresInstituciones.length], 0.2),
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        barThickness: 25,
+                        // Nombre específico para cada barra
+                        label: dataset.label || `Institución ${index + 1}`
+                    }))
                 },
                 options: {
                     responsive: true,
@@ -1767,14 +2033,34 @@
                             bodyFont: { size: 14 },
                             padding: 12,
                             cornerRadius: 8,
+                            displayColors: true,
                             callbacks: {
+                                title: function(tooltipItems) {
+                                    // Mostrar la fecha como título
+                                    const index = tooltipItems[0].dataIndex;
+                                    return datosFiltrados.labels ? datosFiltrados.labels[index] : 'Fecha no disponible';
+                                },
                                 label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
+                                    const datasetLabel = context.dataset.label || '';
+                                    const value = context.parsed.y;
+                                    
+                                    if (value === 0) {
+                                        return `${datasetLabel}: 0 visitantes`;
                                     }
-                                    label += context.parsed.y + ' visitantes';
-                                    return label;
+                                    
+                                    // Calcular porcentaje del total para esta fecha
+                                    const fechaIndex = context.dataIndex;
+                                    let totalFecha = 0;
+                                    if (datosFiltrados.datasets) {
+                                        totalFecha = datosFiltrados.datasets.reduce((sum, ds) => 
+                                            sum + (ds.data[fechaIndex] || 0), 0);
+                                    }
+                                    
+                                    const porcentaje = totalFecha > 0 ? Math.round((value / totalFecha) * 100) : 0;
+                                    return `${datasetLabel}: ${value} visitantes (${porcentaje}% del total de la fecha)`;
+                                },
+                                filter: function(tooltipItem) {
+                                    return true;
                                 }
                             }
                         }
@@ -1806,79 +2092,6 @@
                     }
                 }
             });
-        } else if (datosFiltrados.values && datosFiltrados.values.length > 0) {
-            // Gráfico de barras simple o circular con datos antiguos
-            if (tipoGrafica === 'bar') {
-                chartAmpliadoInstitucion = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: datosFiltrados.labels || [],
-                        datasets: [{
-                            label: 'Visitantes',
-                            data: datosFiltrados.values || [],
-                            backgroundColor: '#3498db',
-                            borderRadius: 8
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            title: {
-                                display: true,
-                                text: `${getTituloTiempo(tipo)} (Filtrado)`,
-                                font: { size: 18, weight: 'bold' },
-                                padding: 20
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Cantidad de Visitantes',
-                                    font: { weight: 'bold', size: 14 }
-                                }
-                            }
-                        }
-                    }
-                });
-            } else {
-                // Gráficos circulares
-                chartAmpliadoInstitucion = new Chart(ctx, {
-                    type: tipoGrafica,
-                    data: {
-                        labels: datosFiltrados.labels || [],
-                        datasets: [{
-                            data: datosFiltrados.values || [],
-                            backgroundColor: generarColoresTiempo(tipo, datosFiltrados.labels?.length || 0),
-                            borderWidth: 2
-                        }],
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                                labels: {
-                                    padding: 15,
-                                    usePointStyle: true,
-                                    font: { size: 12 }
-                                }
-                            },
-                            title: {
-                                display: true,
-                                text: `${getTituloTiempo(tipo)} (Filtrado)`,
-                                font: { size: 18, weight: 'bold' },
-                                padding: 20
-                            }
-                        },
-                        cutout: tipoGrafica === 'doughnut' ? '40%' : '0%'
-                    }
-                });
-            }
         }
     }
 
@@ -2197,7 +2410,6 @@
     }
 
     // Crear gráfica ampliada de tiempo
-    // Actualiza la función crearGraficaAmpliadaTiempo para el modal:
     function crearGraficaAmpliadaTiempo(tipo, tipoGrafica) {
         const ctx = document.getElementById("chartAmpliadoInstitucion");
         if (!ctx) return;
@@ -2209,8 +2421,78 @@
 
         const datos = getDatosTiempo(tipo);
         
-        if (tipoGrafica === 'bar') {
-            // GRÁFICO DE BARRAS AGRUPADAS
+        // GRÁFICOS CIRCULARES
+        if (tipoGrafica === 'doughnut' || tipoGrafica === 'pie') {
+            // Para gráficos circulares, usar distribución general por institución
+            let labels = [];
+            let data = [];
+            let backgroundColor = [];
+            
+            if (datos.datasets && datos.datasets.length > 0) {
+                // Calcular total por institución
+                datos.datasets.forEach((dataset, index) => {
+                    const totalInstitucion = dataset.data.reduce((a, b) => a + b, 0);
+                    if (totalInstitucion > 0) {
+                        labels.push(dataset.label);
+                        data.push(totalInstitucion);
+                        backgroundColor.push(dataset.backgroundColor || coloresInstituciones[index % coloresInstituciones.length]);
+                    }
+                });
+            }
+            
+            chartAmpliadoInstitucion = new Chart(ctx, {
+                type: tipoGrafica,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColor,
+                        borderColor: '#fff',
+                        borderWidth: 2,
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                font: { size: 12 }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Distribución por Institución - Vista Ampliada',
+                            font: { size: 18, weight: 'bold' },
+                            padding: 20
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 14 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                    return `${label}: ${value} visitantes (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: tipoGrafica === 'doughnut' ? '50%' : '0%'
+                }
+            });
+        } 
+        // GRÁFICO DE BARRAS
+        else if (tipoGrafica === 'bar') {
             chartAmpliadoInstitucion = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -2282,63 +2564,23 @@
                     }
                 }
             });
+        }
+    }
+
+    // Función para cambiar tipo de gráfica en modal - VERSIÓN MEJORADA
+    function cambiarTipoGraficaModal(tipoGrafica) {
+        const tipo = determinarTipoActual();
+        
+        // Obtener los datos actuales del modal
+        let datosActuales;
+        if (tipo === 'institucion') {
+            datosActuales = datosInstituciones;
+            crearGraficaAmpliadaInstitucionConDatos(datosActuales, tipoGrafica);
+            llenarTablaModalInstitucion();
         } else {
-            // Para gráficos circulares, usar distribución general
-            const totalPorInstitucion = {};
-            datos.datasets.forEach(dataset => {
-                const total = dataset.data.reduce((a, b) => a + b, 0);
-                totalPorInstitucion[dataset.label] = total;
-            });
-            
-            chartAmpliadoInstitucion = new Chart(ctx, {
-                type: tipoGrafica,
-                data: {
-                    labels: Object.keys(totalPorInstitucion),
-                    datasets: [{
-                        data: Object.values(totalPorInstitucion),
-                        backgroundColor: datos.datasets.map(d => d.backgroundColor),
-                        borderColor: datos.datasets.map(color => darkenColor(color.backgroundColor, 0.2)),
-                        borderWidth: 2
-                    }],
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                padding: 15,
-                                usePointStyle: true,
-                                font: { size: 12 }
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Distribución por Institución - Vista Ampliada',
-                            font: { size: 18, weight: 'bold' },
-                            padding: 20
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0,0,0,0.8)',
-                            titleFont: { size: 14 },
-                            bodyFont: { size: 14 },
-                            padding: 12,
-                            cornerRadius: 8,
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label || '';
-                                    const value = context.parsed;
-                                    const total = Object.values(totalPorInstitucion).reduce((a, b) => a + b, 0);
-                                    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                                    return `${label}: ${value} visitantes (${percentage}%)`;
-                                }
-                            }
-                        }
-                    },
-                    cutout: tipoGrafica === 'doughnut' ? '40%' : '0%'
-                }
-            });
+            datosActuales = getDatosTiempo(tipo);
+            crearGraficaAmpliadaTiempoConDatos(tipo, datosActuales, tipoGrafica);
+            llenarTablaModalTiempo(tipo);
         }
     }
 
