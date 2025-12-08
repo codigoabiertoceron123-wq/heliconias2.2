@@ -74,10 +74,16 @@
         if (typeof Swal !== 'undefined') {
             Swal.fire({
                 icon: 'success',
-                title: 'Éxito',
+                title: '¡Éxito!',
                 text: mensaje,
-                timer: 2000,
-                showConfirmButton: false
+                timer: 2500, // 2.5 segundos
+                timerProgressBar: true,
+                showConfirmButton: false,
+                position: 'top-end',
+                toast: true, // Hace que aparezca como notificación pequeña
+                background: '#f8f9fa',
+                color: '#2e7d32',
+                iconColor: '#2e7d32'
             });
         }
     }
@@ -161,60 +167,62 @@
         }
     }
        
-        // Función para cargar datos de instituciones
+        // Función para cargar datos de instituciones - VERSIÓN CORREGIDA
         async function cargarDatosInstitucion() {
             try {
-            console.log('=== CARGANDO DATOS DE INSTITUCIÓN ===');
-            
-            // 1. Obtener todos los participantes con institución
-            const { data: participantes, error: errorParticipantes } = await supabase
-                .from('participantes_reserva')
-                .select('id_institucion, fecha_visita')
-                .not('id_institucion', 'is', null);
-
-            if (errorParticipantes) throw errorParticipantes;
-
-            if (!participantes || participantes.length === 0) {
-                mostrarSinDatos();
-                return;
-            }
-
-            // 2. Obtener información de instituciones - ASEGURAR QUE ES UN ARRAY
-            const { data: instituciones, error: errorInstituciones } = await supabase
-                .from('instituciones')
-                .select('id_institucion, nombre_institucion')
-                .order('nombre_institucion');
-
-            if (errorInstituciones) throw errorInstituciones;
-
-            // Asegurar que es un array
-            todasLasInstituciones = Array.isArray(instituciones) ? instituciones : [];
-            
-            if (todasLasInstituciones.length === 0) {
-                console.warn('No se encontraron instituciones en la base de datos');
-            }
-            
-            // 3. Contar participantes por institución
-            const conteoInstituciones = {};
-            participantes.forEach(participante => {
-                const institucion = todasLasInstituciones.find(i => i.id_institucion === participante.id_institucion);
-                if (institucion && institucion.nombre_institucion) {
-                    const nombreInstitucion = institucion.nombre_institucion;
-                    conteoInstituciones[nombreInstitucion] = (conteoInstituciones[nombreInstitucion] || 0) + 1;
+                console.log('=== CARGANDO DATOS DE INSTITUCIÓN ===');
+                
+                // 1. Cargar instituciones primero
+                if (!Array.isArray(todasLasInstituciones) || todasLasInstituciones.length === 0) {
+                    await cargarInstitucionesBase();
                 }
-            });
+                
+                // 2. Obtener todos los participantes
+                const { data: participantes, error: errorParticipantes } = await supabase
+                    .from('participantes_reserva')
+                    .select('id_institucion, fecha_visita')
+                    .not('id_institucion', 'is', null);
 
-            // 4. Agrupar instituciones principales
-            const { institucionesPrincipales, otrasInstituciones } = agruparInstituciones(conteoInstituciones);
+                if (errorParticipantes) throw errorParticipantes;
 
-            // 5. Procesar datos para la interfaz
-            procesarDatosInstitucion(institucionesPrincipales, otrasInstituciones);
+                if (!participantes || participantes.length === 0) {
+                    mostrarSinDatos();
+                    return;
+                }
 
-        } catch (error) {
-            console.error('Error en cargarDatosInstitucion:', error);
-            throw error;
+                // 3. Contar participantes por institución
+                const conteoInstituciones = {};
+                const institucionesEncontradas = new Set();
+                
+                participantes.forEach(participante => {
+                    const institucion = todasLasInstituciones.find(i => i.id_institucion === participante.id_institucion);
+                    if (institucion && institucion.nombre_institucion) {
+                        const nombreInstitucion = institucion.nombre_institucion.trim();
+                        conteoInstituciones[nombreInstitucion] = (conteoInstituciones[nombreInstitucion] || 0) + 1;
+                        institucionesEncontradas.add(nombreInstitucion);
+                    }
+                });
+
+                console.log(`📊 Encontradas ${Object.keys(conteoInstituciones).length} instituciones con visitantes`);
+
+                // 4. Agrupar instituciones
+                const resultado = agruparInstituciones(conteoInstituciones);
+                
+                // 5. Procesar datos para la interfaz
+                procesarDatosInstitucion(
+                    resultado.institucionesPrincipales,
+                    resultado.otrasInstituciones,
+                    resultado.todasLasInstituciones,
+                    resultado.institucionesArray
+                );
+
+                console.log('✅ Datos de institución cargados exitosamente');
+
+            } catch (error) {
+                console.error('Error en cargarDatosInstitucion:', error);
+                throw error;
+            }
         }
-    }
 
     //depronto quitar
     // Función para inicializar el sistema de manera segura
@@ -252,69 +260,137 @@
         }
     }
     //finnn
+    // Función para obtener el color de una institución específica - VERSIÓN MEJORADA
+    function obtenerColorInstitucion(nombreInstitucion) {
+        if (!nombreInstitucion) return '#3498db'; // Color por defecto
+        
+        // 1. Buscar en datosInstituciones actuales
+        if (datosInstituciones.colors && datosInstituciones.labels) {
+            const index = datosInstituciones.labels.indexOf(nombreInstitucion);
+            if (index !== -1 && datosInstituciones.colors[index]) {
+                return datosInstituciones.colors[index];
+            }
+        }
+        
+        // 2. Buscar en datosOriginales
+        if (datosOriginales.colors && datosOriginales.labels) {
+            const index = datosOriginales.labels.indexOf(nombreInstitucion);
+            if (index !== -1 && datosOriginales.colors[index]) {
+                return datosOriginales.colors[index];
+            }
+        }
+        
+        // 3. Si no se encuentra, generar color consistente basado en el nombre
+        const colors = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', 
+                        '#1abc9c', '#d35400', '#34495e', '#16a085', '#27ae60'];
+        
+        // Generar índice estable basado en el nombre (hash)
+        let hash = 0;
+        for (let i = 0; i < nombreInstitucion.length; i++) {
+            hash = nombreInstitucion.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const index = Math.abs(hash) % colors.length;
+        return colors[index];
+    }
 
-    // Agrupar instituciones en principales y otras
+    // Agrupar instituciones - OPCIÓN 4 RECOMENDADA
     function agruparInstituciones(conteoInstituciones) {
-        let univalleCount = 0;
-        let nacionalCount = 0;
-        let andesCount = 0;
-        let otrasInstituciones = {};
-
-        Object.keys(conteoInstituciones).forEach(nombreInstitucion => {
-            const cantidad = conteoInstituciones[nombreInstitucion];
-            const nombreLower = nombreInstitucion.toLowerCase();
-            
-            if (nombreLower.includes('universidad del valle') || nombreLower.includes('univalle')) {
-                univalleCount += cantidad;
-            } else if (nombreLower.includes('universidad nacional') || nombreLower.includes('nacional de colombia')) {
-                nacionalCount += cantidad;
-            } else if (nombreLower.includes('universidad de los andes') || nombreLower.includes('uniandes')) {
-                andesCount += cantidad;
+        console.log('🔄 Procesando', Object.keys(conteoInstituciones).length, 'instituciones...');
+        
+        // Convertir a array y ordenar por cantidad descendente
+        let institucionesArray = Object.entries(conteoInstituciones)
+            .map(([nombre, cantidad]) => ({ nombre, cantidad }))
+            .sort((a, b) => b.cantidad - a.cantidad);
+        
+        // Para el gráfico principal, mostrar máximo 25 instituciones
+        const maxParaGrafico = 25;
+        
+        // Separar las que van al gráfico y las que no
+        const institucionesParaGrafico = {};
+        const institucionesRestantes = {};
+        
+        institucionesArray.forEach((inst, index) => {
+            if (index < maxParaGrafico) {
+                institucionesParaGrafico[inst.nombre] = inst.cantidad;
             } else {
-                otrasInstituciones[nombreInstitucion] = cantidad;
+                institucionesRestantes[inst.nombre] = inst.cantidad;
             }
         });
-
-        // Sumar otras instituciones
-        const otrasCount = Object.values(otrasInstituciones).reduce((a, b) => a + b, 0);
-
+        
+        // Sumar las instituciones restantes para "Otras"
+        const otrasCount = Object.values(institucionesRestantes).reduce((a, b) => a + b, 0);
+        
+        // Solo agregar "Otras" si hay instituciones restantes
+        if (otrasCount > 0 && Object.keys(institucionesRestantes).length > 0) {
+            institucionesParaGrafico['Otras Instituciones'] = otrasCount;
+        }
+        
+        // Para los filtros, necesitamos TODAS las instituciones
+        const todasLasInstituciones = {};
+        institucionesArray.forEach(inst => {
+            todasLasInstituciones[inst.nombre] = inst.cantidad;
+        });
+        
+        console.log('✅ Gráfico:', Object.keys(institucionesParaGrafico).length, 'instituciones');
+        console.log('✅ Filtros:', Object.keys(todasLasInstituciones).length, 'instituciones disponibles');
+        
         return {
-            institucionesPrincipales: {
-                'Universidad del Valle': univalleCount,
-                'Universidad Nacional': nacionalCount,
-                'Universidad de los Andes': andesCount,
-                'Otras Instituciones': otrasCount
-            },
-            otrasInstituciones: otrasInstituciones
+            institucionesPrincipales: institucionesParaGrafico,
+            otrasInstituciones: institucionesRestantes,
+            todasLasInstituciones: todasLasInstituciones,
+            institucionesArray: institucionesArray
         };
     }
 
-    // Procesar datos para la interfaz
-    function procesarDatosInstitucion(institucionesPrincipales, otrasInstituciones) {
+    // Procesar datos para la interfaz - VERSIÓN CON 4 PARÁMETROS
+    function procesarDatosInstitucion(institucionesPrincipales, otrasInstituciones, todasLasInstituciones, institucionesArray) {
+    // Convertir a arrays para el gráfico
         const labels = Object.keys(institucionesPrincipales);
         const values = Object.values(institucionesPrincipales);
         const totalVisitantes = values.reduce((a, b) => a + b, 0);
 
-        // Actualizar estadísticas
-        actualizarEstadisticas(totalVisitantes, labels.length);
+        // Calcular estadísticas REALES
+        const totalInstitucionesUnicas = Object.keys(todasLasInstituciones).length;
+        
+        // Actualizar estadísticas en la UI
+        actualizarEstadisticas(totalVisitantes, totalInstitucionesUnicas);
 
-        // Guardar datos
+        // Generar colores únicos y guardarlos
+        const colors = generarColoresInstitucion(labels.length);
+        
+        // Guardar datos COMPLETOS con colores
         datosInstituciones = {
             labels: labels,
             values: values,
+            colors: colors, // ¡IMPORTANTE! Guardar los colores
             total: totalVisitantes,
-            datosCompletos: { ...institucionesPrincipales, ...otrasInstituciones }
+            datosCompletos: todasLasInstituciones,
+            todasLasInstitucionesArray: institucionesArray,
+            totalInstitucionesUnicas: totalInstitucionesUnicas,
+            institucionesEnGrafico: labels.length,
+            institucionesFueraDeGrafico: Object.keys(otrasInstituciones).length
         };
 
-        datosOriginales = JSON.parse(JSON.stringify(datosInstituciones));
+        // Guardar copia original CON COLORES
+        datosOriginales = {
+            labels: [...labels],
+            values: [...values],
+            colors: [...colors], // Guardar también en originales
+            total: totalVisitantes,
+            datosCompletos: {...todasLasInstituciones}
+        };
+
         institucionesFiltradas = [...labels];
 
         // Actualizar filtros
         actualizarFiltrosInstituciones();
 
+        // Mostrar interfaz si estamos en modo institución
         if (tipoActual === 'institucion') {
             mostrarInterfazInstitucion();
         }
+        
+        console.log(`✅ Procesadas ${totalInstitucionesUnicas} instituciones únicas`);
     }
 
     // Función para cargar datos por tiempo (fecha, mes, año)
@@ -447,9 +523,8 @@
     // =============================================
     // FUNCIONES AUXILIARES
     // =============================================
-
-    // Actualizar estadísticas
-    function actualizarEstadisticas(total, instituciones) {
+    // Actualizar estadísticas - VERSIÓN MEJORADA
+    function actualizarEstadisticas(total, institucionesUnicas) {
         if (document.getElementById('total-visitantes')) {
             document.getElementById('total-visitantes').textContent = total.toLocaleString();
         }
@@ -457,27 +532,84 @@
             document.getElementById('visitantes-con-institucion').textContent = total.toLocaleString();
         }
         if (document.getElementById('total-instituciones')) {
-            document.getElementById('total-instituciones').textContent = instituciones;
+            document.getElementById('total-instituciones').textContent = institucionesUnicas.toLocaleString();
         }
     }
 
-    // Actualizar filtros de instituciones
+    // Actualizar filtros de instituciones - VERSIÓN CORREGIDA
     function actualizarFiltrosInstituciones() {
         const select = document.getElementById('filtro-institucion-comb');
-        if (select) {
-            // Limpiar opciones excepto la primera
-            while (select.options.length > 1) {
-                select.remove(1);
+        const selectModal = document.getElementById('modalInstitucion');
+        
+        // Función para llenar un select
+        function llenarSelect(selectElement) {
+            if (!selectElement) return;
+            
+            // Guardar selección actual si existe
+            const seleccionActual = selectElement.value;
+            
+            // Limpiar todas las opciones
+            selectElement.innerHTML = '';
+            
+            // Crear opción "Todas las instituciones"
+            const opcionTodas = document.createElement('option');
+            opcionTodas.value = 'todas';
+            opcionTodas.textContent = 'Todas las instituciones';
+            opcionTodas.selected = true;
+            selectElement.appendChild(opcionTodas);
+            
+            // Crear un Set para evitar duplicados
+            const institucionesUnicas = new Set();
+            
+            // 1. Agregar TODAS las instituciones de la base de datos
+            if (Array.isArray(todasLasInstituciones)) {
+                todasLasInstituciones.forEach(inst => {
+                    if (inst.nombre_institucion && inst.nombre_institucion.trim()) {
+                        institucionesUnicas.add(inst.nombre_institucion.trim());
+                    }
+                });
             }
             
-            // Agregar todas las instituciones
-            Object.keys(datosInstituciones.datosCompletos).forEach(institucion => {
+            // 2. También agregar instituciones de datosCompletos (por si hay nuevas)
+            if (datosInstituciones.datosCompletos) {
+                Object.keys(datosInstituciones.datosCompletos).forEach(institucion => {
+                    if (institucion && institucion.trim()) {
+                        institucionesUnicas.add(institucion.trim());
+                    }
+                });
+            }
+            
+            // Convertir a array y ordenar alfabéticamente
+            const institucionesOrdenadas = Array.from(institucionesUnicas)
+                .filter(inst => inst && inst.trim() !== '')
+                .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+            
+            // Agregar opciones al select
+            institucionesOrdenadas.forEach(institucion => {
                 const option = document.createElement('option');
                 option.value = institucion;
                 option.textContent = institucion;
-                select.appendChild(option);
+                selectElement.appendChild(option);
             });
+            
+            // Restaurar selección anterior si existe
+            if (seleccionActual && (seleccionActual === 'todas' || institucionesOrdenadas.includes(seleccionActual))) {
+                selectElement.value = seleccionActual;
+            }
+            
+            console.log(`✅ Filtro actualizado: ${institucionesOrdenadas.length} instituciones disponibles`);
+            
+            // Hacer el select más usable si hay muchas opciones
+            if (institucionesOrdenadas.length > 10) {
+                selectElement.size = Math.min(8, institucionesOrdenadas.length);
+                selectElement.style.height = 'auto';
+                selectElement.style.minHeight = '120px';
+            }
         }
+        
+        // Llenar ambos selects
+        llenarSelect(select);
+        llenarSelect(selectModal);
     }
 
     // Funciones auxiliares para tiempo
@@ -845,10 +977,13 @@
     // FUNCIONES DE GRÁFICAS
     // =============================================
 
-    // Mostrar gráficas de instituciones
+    // Mostrar gráficas de instituciones - VERSIÓN QUE GUARDA COLORES
     function mostrarGraficasInstitucion() {
         const { labels, values } = datosInstituciones;
         const colors = generarColoresInstitucion(labels.length);
+        
+        // Guardar los colores en datosInstituciones para referencia futura
+        datosInstituciones.colors = colors;
         
         // Gráfica de barras
         const ctxBar = document.getElementById("chartBarInstitucion");
@@ -875,6 +1010,17 @@
                         display: true,
                         text: 'Distribución por Institución',
                         font: { size: 16, weight: 'bold' }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed.y;
+                                const total = values.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return `${label}: ${value} visitantes (${percentage}%)`;
+                            }
+                        }
                     }
                 },
                 scales: {
@@ -914,6 +1060,17 @@
                             usePointStyle: true, 
                             padding: 15,
                             font: { size: 11 }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed;
+                                const total = values.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return `${label}: ${value} visitantes (${percentage}%)`;
+                            }
                         }
                     }
                 },
@@ -1118,13 +1275,11 @@
             }))
         };
     }
-
     // =============================================
     // FUNCIONES DE FILTRADO COMBINADO
     // =============================================
 
-    // Aplicar filtros combinados
-    // Aplicar filtros combinados - VERSIÓN CORREGIDA
+    // Aplicar filtros combinados - VERSIÓN CORREGIDA (AGREGA ESTA LÍNEA)
     async function aplicarFiltrosCombinados() {
         try {
             const fechaInicial = document.getElementById('filtro-fecha-inicial').value;
@@ -1132,13 +1287,13 @@
             const institucion = document.getElementById('filtro-institucion-comb').value;
 
             // Validar fechas
-            if (!fechaInicial || !fechaFinal) {
-                mostrarError('Por favor selecciona ambas fechas');
-                return;
-            }
-
-            if (fechaInicial > fechaFinal) {
-                mostrarError('La fecha inicial no puede ser mayor que la fecha final');
+            if (fechaInicial && fechaFinal) {
+                if (fechaInicial > fechaFinal) {
+                    mostrarError('La fecha inicial no puede ser mayor que la fecha final');
+                    return;
+                }
+            } else if (fechaInicial || fechaFinal) {
+                mostrarError('Por favor selecciona ambas fechas o deja ambas vacías');
                 return;
             }
 
@@ -1149,19 +1304,26 @@
                 .from('participantes_reserva')
                 .select('id_institucion, fecha_visita');
 
-            // Filtrar por fecha
-            query = query.gte('fecha_visita', fechaInicial + 'T00:00:00');
-            query = query.lte('fecha_visita', fechaFinal + 'T23:59:59');
+            // Filtrar por fecha si se especificaron
+            if (fechaInicial && fechaFinal) {
+                query = query.gte('fecha_visita', fechaInicial + 'T00:00:00');
+                query = query.lte('fecha_visita', fechaFinal + 'T23:59:59');
+            }
 
-            // Filtrar por institución si no es "todas"
-            if (institucion !== 'todas') {
-                // Buscar el id_institucion correspondiente al nombre
-                const institucionObj = todasLasInstituciones.find(inst => inst.nombre_institucion === institucion);
-                if (institucionObj) {
-                    query = query.eq('id_institucion', institucionObj.id_institucion);
-                } else {
-                    console.warn(`No se encontró la institución: ${institucion}`);
+            // Filtrar por institución si NO es "todas"
+            if (institucion && institucion !== 'todas') {
+                const institucionObj = todasLasInstituciones.find(inst => 
+                    inst.nombre_institucion && 
+                    inst.nombre_institucion.trim() === institucion.trim()
+                );
+                
+                if (!institucionObj) {
+                    cerrarLoading();
+                    mostrarSinDatosFiltradosEspecifico(institucion);
+                    return;
                 }
+                
+                query = query.eq('id_institucion', institucionObj.id_institucion);
             }
 
             const { data: participantesFiltrados, error } = await query;
@@ -1170,31 +1332,91 @@
 
             console.log(`✅ Filtros aplicados: ${participantesFiltrados?.length || 0} registros encontrados`);
 
+            cerrarLoading();
+
             if (participantesFiltrados && participantesFiltrados.length > 0) {
-                // Determinar qué tipo de datos mostrar
-                let tipoAMostrar = tipoActual;
-                
-                // Si estamos en "institucion", procesar datos de institución
                 if (tipoActual === 'institucion') {
                     procesarDatosInstitucionFiltrados(participantesFiltrados);
-                    mostrarExito(`Filtros aplicados: ${participantesFiltrados.length} participantes encontrados`);
+                    mostrarExito(`Filtros aplicados: ${participantesFiltrados.length} visitantes encontrados`);
                 } else {
-                    // Para fecha, mes, año procesar datos de tiempo
                     procesarDatosTiempoFiltrados(participantesFiltrados, tipoActual);
-                    mostrarExito(`Filtros aplicados: ${participantesFiltrados.length} participantes encontrados`);
+                    mostrarExito(`Filtros aplicados: ${participantesFiltrados.length} visitantes encontrados`);
                 }
             } else {
-                mostrarSinDatosFiltrados();
+                cerrarLoading();
+                if (institucion && institucion !== 'todas') {
+                    mostrarSinDatosFiltradosEspecifico(institucion);
+                } else {
+                    mostrarSinDatosFiltrados();
+                }
             }
 
-            cerrarLoading();
-            
         } catch (error) {
             console.error('Error aplicando filtros combinados:', error);
             cerrarLoading();
             mostrarError('Error al aplicar los filtros: ' + error.message);
         }
     }
+
+    //BORRARRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+    function verificarDatosInstitucion() {
+        console.log('=== VERIFICACIÓN DE DATOS ===');
+        console.log('Total instituciones en base:', todasLasInstituciones.length);
+        console.log('Primeras 3:', todasLasInstituciones.slice(0, 3));
+        
+        console.log('DatosInstituciones:');
+        console.log('- Labels:', datosInstituciones.labels?.length || 0);
+        console.log('- Colors:', datosInstituciones.colors?.length || 0);
+        
+        console.log('DatosOriginales:');
+        console.log('- Labels:', datosOriginales.labels?.length || 0);
+        console.log('- Colors:', datosOriginales.colors?.length || 0);
+        
+        // Mostrar ejemplo de color para una institución específica
+        if (datosInstituciones.labels && datosInstituciones.labels.length > 0) {
+            const ejemploInst = datosInstituciones.labels[0];
+            const color = obtenerColorInstitucion(ejemploInst);
+            console.log(`Ejemplo: "${ejemploInst}" tiene color: ${color}`);
+        }
+    }
+
+    // BORRARRRRRRRRRRRRRRRRRRRRRRR
+    
+
+    // Mostrar mensaje cuando no hay datos para una institución específica - VERSIÓN MEJORADA
+    function mostrarSinDatosFiltradosEspecifico(institucion) {
+        const container = document.getElementById('data-container');
+        if (container) {
+            container.innerHTML = `
+                <div class="no-data">
+                    <i class="fas fa-search" style="font-size: 48px; color: #95a5a6; margin-bottom: 20px;"></i>
+                    <h3>No se encontraron visitantes</h3>
+                    <p style="margin: 10px 0 20px 0; font-size: 16px; color: #2c3e50;">
+                        La institución <strong style="color: #e74c3c;">"${institucion}"</strong> 
+                        no tiene visitantes registrados.
+                    </p>
+                    <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 25px;">
+                        ${
+                            document.getElementById('filtro-fecha-inicial').value ? 
+                            'En el rango de fechas seleccionado.' : 
+                            'Verifica si el nombre está escrito correctamente.'
+                        }
+                    </p>
+                    <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="window.InstitucionManager.limpiarFiltrosCombinados()" 
+                                style="padding: 10px 20px; font-size: 14px;">
+                            <i class="fas fa-times"></i> Limpiar Filtros
+                        </button>
+                        <button class="btn" onclick="window.InstitucionManager.cambiarTipoReporte('institucion')" 
+                                style="background: #3498db; color: white; padding: 10px 20px; font-size: 14px;">
+                            <i class="fas fa-school"></i> Ver Todas las Instituciones
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
 
     // Nueva función para procesar datos de institución filtrados
     function procesarDatosInstitucionFiltrados(participantes) {
@@ -1315,8 +1537,18 @@
     // FUNCIONES DE MODAL CON FILTROS INTEGRADOS
     // =============================================
 
-    // Función para crear HTML de filtros para el modal
+    // Función para crear HTML de filtros para el modal - VERSIÓN ACTUALIZADA
     function crearHTMLFiltrosModal(tipo) {
+        // Obtener todas las instituciones disponibles
+        const institucionesDisponibles = Array.from(
+            new Set([
+                ...(Array.isArray(todasLasInstituciones) ? 
+                    todasLasInstituciones.map(i => i.nombre_institucion) : []),
+                ...Object.keys(datosInstituciones.datosCompletos || {})
+            ])
+        ).filter(inst => inst && inst.trim() !== '')
+        .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+
         let html = `
         <div class="modal-filtros-container" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -1367,9 +1599,9 @@
                 <!-- Institución -->
                 <div class="filter-group">
                     <label><i class="fas fa-university"></i> Institución:</label>
-                    <select id="modalInstitucion" class="filter-select">
-                        <option value="todas">Todas las instituciones</option>
-                        ${Object.keys(datosInstituciones.datosCompletos || {}).map(inst => 
+                    <select id="modalInstitucion" class="filter-select" style="min-height: 120px;">
+                        <option value="todas" selected>Todas las instituciones</option>
+                        ${institucionesDisponibles.map(inst => 
                             `<option value="${inst}">${inst}</option>`
                         ).join('')}
                     </select>
@@ -1673,7 +1905,127 @@
         }
     }
 
-    // Función para crear gráfica con datos filtrados de institución - VERSIÓN COMPLETA
+    // Función para filtrar datos de institución en modal - VERSIÓN CON "TODAS"
+    async function filtrarDatosInstitucionModal(institucion, cantidad, orden) {
+        try {
+            // Si se selecciona "todas", devolver datos del gráfico principal
+            if (institucion === 'todas') {
+                let datos = { ...datosInstituciones };
+                
+                // Aplicar ordenamiento
+                datos = aplicarOrdenamientoInstituciones(datos, orden);
+                
+                // Aplicar límite de cantidad
+                datos = aplicarLimiteCantidadInstituciones(datos, cantidad);
+                
+                return datos;
+            }
+            
+            // Si se selecciona una institución específica
+            const institucionObj = todasLasInstituciones.find(inst => 
+                inst.nombre_institucion && 
+                inst.nombre_institucion.trim().toLowerCase() === institucion.toLowerCase().trim()
+            );
+            
+            if (!institucionObj) {
+                return {
+                    labels: [institucion],
+                    values: [0],
+                    total: 0,
+                    datosCompletos: {},
+                    mensaje: `Institución "${institucion}" no encontrada en la base de datos`
+                };
+            }
+            
+            // Consultar participantes de esta institución
+            const { data: participantes, error } = await supabase
+                .from('participantes_reserva')
+                .select('id, fecha_visita')
+                .eq('id_institucion', institucionObj.id_institucion);
+            
+            if (error) throw error;
+            
+            // Si no hay participantes
+            if (!participantes || participantes.length === 0) {
+                return {
+                    labels: [institucion],
+                    values: [0],
+                    total: 0,
+                    datosCompletos: {},
+                    mensaje: `No se encontraron visitantes para "${institucion}"`
+                };
+            }
+            
+            // Procesar datos
+            const cantidadEncontrada = participantes.length;
+            const datosFiltrados = {
+                labels: [institucion],
+                values: [cantidadEncontrada],
+                total: cantidadEncontrada,
+                datosCompletos: { [institucion]: cantidadEncontrada },
+                participantes: participantes // Guardar para referencia
+            };
+            
+            return datosFiltrados;
+            
+        } catch (error) {
+            console.error('Error filtrando datos de institución:', error);
+            return {
+                labels: ['Error'],
+                values: [0],
+                total: 0,
+                datosCompletos: {},
+                mensaje: 'Error al cargar los datos: ' + error.message
+            };
+        }
+    }
+
+    // Función auxiliar para aplicar ordenamiento
+    function aplicarOrdenamientoInstituciones(datos, orden) {
+        if (orden === 'desc') {
+            // Orden descendente (mayor a menor)
+            const indices = datos.labels
+                .map((label, i) => ({ label, value: datos.values[i] }))
+                .sort((a, b) => b.value - a.value)
+                .map(item => datos.labels.indexOf(item.label));
+            
+            datos.labels = indices.map(i => datos.labels[i]);
+            datos.values = indices.map(i => datos.values[i]);
+        } else if (orden === 'asc') {
+            // Orden ascendente (menor a mayor)
+            const indices = datos.labels
+                .map((label, i) => ({ label, value: datos.values[i] }))
+                .sort((a, b) => a.value - b.value)
+                .map(item => datos.labels.indexOf(item.label));
+            
+            datos.labels = indices.map(i => datos.labels[i]);
+            datos.values = indices.map(i => datos.values[i]);
+        } else if (orden === 'alpha') {
+            // Orden alfabético
+            const indices = datos.labels
+                .map((label, i) => ({ label, value: datos.values[i] }))
+                .sort((a, b) => a.label.localeCompare(b.label))
+                .map(item => datos.labels.indexOf(item.label));
+            
+            datos.labels = indices.map(i => datos.labels[i]);
+            datos.values = indices.map(i => datos.values[i]);
+        }
+        
+        return datos;
+    }
+
+    // Función auxiliar para aplicar límite de cantidad
+    function aplicarLimiteCantidadInstituciones(datos, cantidad) {
+        if (cantidad > 0 && cantidad < datos.labels.length) {
+            datos.labels = datos.labels.slice(0, cantidad);
+            datos.values = datos.values.slice(0, cantidad);
+            datos.total = datos.values.reduce((a, b) => a + b, 0);
+        }
+        
+        return datos;
+    }
+
+    // Función para crear gráfica con datos filtrados de institución - VERSIÓN CON COLORES CONSISTENTES
     function crearGraficaAmpliadaInstitucionConDatos(datosFiltrados, tipoGrafica) {
         const ctx = document.getElementById("chartAmpliadoInstitucion");
         if (!ctx) return;
@@ -1682,8 +2034,14 @@
             chartAmpliadoInstitucion.destroy();
         }
 
-        // Verificar datos
-        if (!datosFiltrados || !datosFiltrados.labels || datosFiltrados.labels.length === 0) {
+        // Verificar si realmente NO hay datos
+        const esCasoSinDatos = datosFiltrados.mensaje && 
+                            (datosFiltrados.mensaje.includes('No se encontraron') || 
+                            datosFiltrados.mensaje.includes('no encontrada'));
+        
+        if (esCasoSinDatos || datosFiltrados.total === 0) {
+            const mensaje = datosFiltrados?.mensaje || 'No hay datos disponibles';
+            
             chartAmpliadoInstitucion = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
@@ -1699,8 +2057,14 @@
                     plugins: {
                         title: {
                             display: true,
-                            text: 'No hay datos disponibles',
+                            text: mensaje,
                             font: { size: 16, weight: 'bold' }
+                        },
+                        subtitle: {
+                            display: true,
+                            text: 'Intenta con otra institución o criterios de búsqueda',
+                            font: { size: 12, style: 'italic' },
+                            color: '#7f8c8d'
                         }
                     }
                 }
@@ -1708,7 +2072,21 @@
             return;
         }
 
-        // GRÁFICOS CIRCULARES PARA INSTITUCIÓN
+        // Determinar si es una institución individual
+        const esInstitucionIndividual = datosFiltrados.labels.length === 1 && 
+                                    datosFiltrados.labels[0] !== 'Todas las instituciones';
+        
+        // Preparar colores
+        let colors;
+        if (esInstitucionIndividual) {
+            // Para una sola institución, usar el color que ya tenía
+            colors = [obtenerColorInstitucion(datosFiltrados.labels[0])];
+        } else {
+            // Para múltiples instituciones, generar colores normales
+            colors = generarColoresInstitucion(datosFiltrados.labels.length);
+        }
+
+        // GRÁFICOS CIRCULARES
         if (tipoGrafica === 'doughnut' || tipoGrafica === 'pie') {
             chartAmpliadoInstitucion = new Chart(ctx, {
                 type: tipoGrafica,
@@ -1716,7 +2094,7 @@
                     labels: datosFiltrados.labels,
                     datasets: [{
                         data: datosFiltrados.values,
-                        backgroundColor: generarColoresInstitucion(datosFiltrados.labels.length),
+                        backgroundColor: colors,
                         borderColor: '#fff',
                         borderWidth: 2,
                         hoverOffset: 15
@@ -1736,7 +2114,9 @@
                         },
                         title: {
                             display: true,
-                            text: 'Distribución por Institución' + 
+                            text: esInstitucionIndividual 
+                                ? `${datosFiltrados.labels[0]} - ${datosFiltrados.total} visitantes`
+                                : 'Distribución por Institución' + 
                                 (tipoGrafica === 'doughnut' ? ' (Dona)' : ' (Pastel)'),
                             font: { size: 18, weight: 'bold' },
                             padding: 20
@@ -1762,7 +2142,7 @@
                 }
             });
         } 
-        // GRÁFICO DE BARRAS PARA INSTITUCIÓN
+        // GRÁFICO DE BARRAS
         else if (tipoGrafica === 'bar') {
             chartAmpliadoInstitucion = new Chart(ctx, {
                 type: 'bar',
@@ -1771,22 +2151,25 @@
                     datasets: [{
                         label: "Cantidad de Visitantes",
                         data: datosFiltrados.values,
-                        backgroundColor: generarColoresInstitucion(datosFiltrados.labels.length),
-                        borderColor: datosFiltrados.values.map((_, i) => 
-                            darkenColor(coloresInstituciones[i % coloresInstituciones.length], 0.2)),
+                        backgroundColor: colors,
+                        borderColor: colors.map(color => darkenColor(color, 0.2)),
                         borderWidth: 1,
                         borderRadius: 8,
-                        barThickness: 35,
+                        barThickness: esInstitucionIndividual ? 50 : 35,
                     }],
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false },
+                        legend: { 
+                            display: !esInstitucionIndividual
+                        },
                         title: {
                             display: true,
-                            text: 'Distribución por Institución - Barras',
+                            text: esInstitucionIndividual 
+                                ? `${datosFiltrados.labels[0]} - ${datosFiltrados.total} visitantes`
+                                : 'Distribución por Institución - Barras',
                             font: { size: 18, weight: 'bold' },
                             padding: 20
                         },
@@ -1825,7 +2208,7 @@
                                 font: { weight: 'bold', size: 14 }
                             },
                             ticks: {
-                                maxRotation: 45,
+                                maxRotation: esInstitucionIndividual ? 0 : 45,
                                 minRotation: 0
                             }
                         }
@@ -2290,7 +2673,7 @@
         }
     }
 
-    // Crear gráfica ampliada de institución
+    // Crear gráfica ampliada de institución - VERSIÓN CORREGIDA
     function crearGraficaAmpliadaInstitucion(tipoGrafica) {
         const ctx = document.getElementById("chartAmpliadoInstitucion");
         if (!ctx) return;
@@ -2819,6 +3202,41 @@
 
         // En la API pública, agrega:
         window.InstitucionManager.recargarInstituciones = () => cargarInstitucionesBase();
+
+        window.InstitucionManager.depurarInstitucion = (nombre) => depurarInstitucionEspecifica(nombre);
+    
+        window.InstitucionManager.verificarDatos = () => verificarDatosInstitucion();
+
+
+        // Agrega esto a la API pública para depuración:
+         window.InstitucionManager.depurarFiltros = function() {
+            console.log('=== DEPURACIÓN DE FILTROS ===');
+            console.log('Total instituciones en base de datos:', todasLasInstituciones.length);
+            console.log('Primeras 5 instituciones:', todasLasInstituciones.slice(0, 5).map(i => i.nombre_institucion));
+            
+            console.log('DatosInstituciones.datosCompletos:');
+            if (datosInstituciones.datosCompletos) {
+                console.log('Número de instituciones:', Object.keys(datosInstituciones.datosCompletos).length);
+                console.log('Primeras 5:', Object.keys(datosInstituciones.datosCompletos).slice(0, 5));
+            } else {
+                console.log('datosCompletos NO está definido!');
+            }
+            
+            console.log('Select de filtros:');
+            const select = document.getElementById('filtro-institucion-comb');
+            if (select) {
+                console.log('Opciones en select:', select.options.length);
+                console.log('Primeras 5 opciones:', Array.from(select.options).slice(0, 5).map(o => o.value));
+            }
+            
+            // Mostrar en alert para fácil visualización
+            const institucionesSelect = Array.from(document.getElementById('filtro-institucion-comb')?.options || [])
+                .map(o => o.value)
+                .slice(0, 20)
+                .join('\n');
+            
+            alert(`Instituciones en filtro (primeras 20):\n${institucionesSelect}\n\nTotal: ${document.getElementById('filtro-institucion-comb')?.options.length || 0}`);
+        };
     }
 
     // Inicializar la API completa
@@ -2858,5 +3276,42 @@
             }
         }, 1500);
     });
+
+    async function depurarInstitucionEspecifica(nombreInstitucion) {
+        try {
+            console.log(`🔍 Depurando institución: ${nombreInstitucion}`);
+            
+            // Buscar en la base de datos
+            const institucionObj = todasLasInstituciones.find(inst => 
+                inst.nombre_institucion && 
+                inst.nombre_institucion.trim().toLowerCase() === nombreInstitucion.toLowerCase().trim()
+            );
+            
+            console.log('Encontrada en base de datos:', institucionObj);
+            
+            // Buscar en participantes
+            if (institucionObj) {
+                const { data: participantes, error } = await supabase
+                    .from('participantes_reserva')
+                    .select('id, fecha_visita')
+                    .eq('id_institucion', institucionObj.id_institucion);
+                
+                console.log('Participantes encontrados:', participantes?.length || 0);
+                console.log('Primeros 3 participantes:', participantes?.slice(0, 3));
+            }
+            
+            // Buscar en datosInstituciones
+            const enLabelsIndex = datosInstituciones.labels?.indexOf(nombreInstitucion);
+            console.log('En datosInstituciones.labels:', enLabelsIndex !== -1 ? `índice ${enLabelsIndex}` : 'NO encontrada');
+            
+            // Buscar en datosOriginales
+            const enOriginalesIndex = datosOriginales.labels?.indexOf(nombreInstitucion);
+            console.log('En datosOriginales.labels:', enOriginalesIndex !== -1 ? `índice ${enOriginalesIndex}` : 'NO encontrada');
+            
+        } catch (error) {
+            console.error('Error en depuración:', error);
+        }
+    }
+
 
 })();

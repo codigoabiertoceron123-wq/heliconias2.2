@@ -15,6 +15,7 @@
     let datosAnio = {};
     let nacionalidadesFiltradas = [];
     let todosLosPaises = [];
+    let datosFiltradosTiempoActual = null;
 
     // Paletas de colores para nacionalidades (verde para Colombia, otros colores para otros)
     const coloresNacionalidades = [
@@ -246,26 +247,20 @@
             console.log('Sin país:', sinPaisCount);
 
             // 5. Separar Colombia de otros países
-            let colombiaCount = 0;
-            let otrosPaisesCount = 0;
-            let detallesOtrosPaises = {};
+            const conteoFinal = { ...conteoPaises };
+            if (sinPaisCount > 0) {
+                conteoFinal['Sin país'] = sinPaisCount;
+            }
 
-            Object.keys(conteoPaises).forEach(nombrePais => {
-                if (nombrePais.toLowerCase().includes('colombia')) {
-                    colombiaCount += conteoPaises[nombrePais];
-                } else {
-                    otrosPaisesCount += conteoPaises[nombrePais];
-                    detallesOtrosPaises[nombrePais] = conteoPaises[nombrePais];
-                }
-            });
+            // Ordenar por cantidad (mayor a menor)
+            const paisesOrdenados = Object.entries(conteoFinal)
+                .sort((a, b) => b[1] - a[1])
+                .reduce((obj, [key, value]) => {
+                    obj[key] = value;
+                    return obj;
+                }, {});
 
-            // Agregar los que no tienen país a "Otros países"
-            otrosPaisesCount += sinPaisCount;
-
-            const conteoFinal = {
-                'Colombia': colombiaCount,
-                'Otros países': otrosPaisesCount
-            };
+            console.log('Paises ordenados:', paisesOrdenados);
 
             console.log('Conteo final:', conteoFinal);
             
@@ -273,7 +268,7 @@
             todosLosPaises = Object.keys(conteoPaises).map(pais => ({ nombre_pais: pais }));
             
             // Procesar datos para la interfaz
-            procesarDatosNacionalidad(conteoFinal, detallesOtrosPaises);
+            procesarDatosNacionalidad(conteoFinal, {});
 
         } catch (error) {
             console.error('Error en cargarDatosNacionalidad:', error);
@@ -283,7 +278,7 @@
     }
 
     // Procesar datos para la interfaz
-    function procesarDatosNacionalidad(conteoFinal, detallesOtrosPaises) {
+    function procesarDatosNacionalidad(conteoFinal, detallesOtrosPaises= {}) {
         const labels = Object.keys(conteoFinal);
         const values = Object.values(conteoFinal);
         const totalVisitantes = values.reduce((a, b) => a + b, 0);
@@ -327,7 +322,7 @@
                 // Obtener países para filtrar
                 const paisesParticipantes = await obtenerPaisesDeParticipantes(participantes);
                 procesarDatosTiempo(participantes, tipo, paisesParticipantes);
-                mostrarInterfazTiempo(tipo);
+                mostrarInterfazTiempo(tipo); // ← Esto debe estar aquí
             } else {
                 mostrarSinDatosTiempo(tipo);
             }
@@ -343,7 +338,13 @@
 
     // Obtener países de participantes
     async function obtenerPaisesDeParticipantes(participantes) {
-        const idsCiudadesUnicos = [...new Set(participantes.map(p => p.id_ciudad))];
+        // Filtrar participantes que tengan id_ciudad válido (no null)
+        const participantesConCiudad = participantes.filter(p => p.id_ciudad);
+        const idsCiudadesUnicos = [...new Set(participantesConCiudad.map(p => p.id_ciudad))];
+        
+        if (idsCiudadesUnicos.length === 0) {
+            return {};
+        }
         
         const { data: ciudades, error } = await supabase
             .from('ciudades')
@@ -369,76 +370,204 @@
         return mapaCiudadPais;
     }
 
+    // Función para obtener datos actuales según el contexto
+    function obtenerDatosActualesParaModal(tipo) {
+        // Si hay datos filtrados activos, usarlos
+        if (datosFiltradosTiempoActual && determinarTipoActual() === tipo) {
+            return datosFiltradosTiempoActual;
+        }
+        // SINO, datos originales
+        return getDatosTiempo(tipo);
+    }
+
     // Procesar datos por tiempo
     function procesarDatosTiempo(participantes, tipo, mapaCiudadPais) {
-        const conteo = {};
+        console.log(`🔄 Procesando datos de tiempo: ${tipo}`);
         
-        participantes.forEach(participante => {
-            if (participante.fecha_visita && participante.id_ciudad) {
-                const fecha = new Date(participante.fecha_visita);
-                const pais = mapaCiudadPais[participante.id_ciudad] || 'Sin país';
-                let clave = '';
-                
-                switch(tipo) {
-                    case 'fecha':
-                        clave = fecha.toISOString().split('T')[0];
-                        break;
-                    case 'mes':
-                        const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                                     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-                        clave = `${meses[fecha.getMonth()]} ${fecha.getFullYear()}`;
-                        break;
-                    case 'anio':
-                        clave = fecha.getFullYear().toString();
-                        break;
-                }
-                
-                if (!conteo[clave]) {
-                    conteo[clave] = { total: 0, colombia: 0, otros: 0 };
-                }
-                
-                conteo[clave].total++;
-                if (pais.toLowerCase().includes('colombia')) {
-                    conteo[clave].colombia++;
-                } else {
-                    conteo[clave].otros++;
-                }
+        const datosPorPais = {};
+        const paisesSet = new Set();
+        const fechasSet = new Set();
+        
+        // Filtrar participantes con fecha válida
+        const participantesFiltrados = participantes.filter(p => p.fecha_visita && p.id_ciudad);
+        
+        // Procesar cada participante
+        participantesFiltrados.forEach(participante => {
+            const fecha = new Date(participante.fecha_visita);
+            let claveFecha = '';
+            
+            switch(tipo) {
+                case 'fecha':
+                    claveFecha = fecha.toISOString().split('T')[0];
+                    break;
+                case 'mes':
+                    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                    claveFecha = `${meses[fecha.getMonth()]} ${fecha.getFullYear()}`;
+                    break;
+                case 'anio':
+                    claveFecha = fecha.getFullYear().toString();
+                    break;
             }
+            
+            // Obtener nombre del país
+            let nombrePais = mapaCiudadPais[participante.id_ciudad] || 'Sin país';
+            
+            // Normalizar nombre (Colombia siempre igual)
+            if (nombrePais.toLowerCase().includes('colombia')) {
+                nombrePais = 'Colombia';
+            }
+            
+            fechasSet.add(claveFecha);
+            paisesSet.add(nombrePais);
+            
+            // Inicializar estructura si no existe
+            if (!datosPorPais[nombrePais]) {
+                datosPorPais[nombrePais] = {};
+            }
+            
+            // Contar por fecha
+            datosPorPais[nombrePais][claveFecha] = 
+                (datosPorPais[nombrePais][claveFecha] || 0) + 1;
         });
-
-        // Ordenar datos
-        let labels, valuesColombia, valuesOtros;
         
-        switch(tipo) {
-            case 'fecha':
-                labels = Object.keys(conteo).sort((a, b) => new Date(a) - new Date(b)).slice(-15);
-                break;
-            case 'mes':
-                labels = Object.keys(conteo).sort((a, b) => ordenarMeses(a, b));
-                break;
-            case 'anio':
-                labels = Object.keys(conteo).sort((a, b) => parseInt(a) - parseInt(b));
-                break;
-        }
+        // Ordenar fechas
+        const fechasOrdenadas = Array.from(fechasSet).sort();
+        const paisesLista = Array.from(paisesSet).sort();
         
-        valuesColombia = labels.map(label => conteo[label].colombia);
-        valuesOtros = labels.map(label => conteo[label].otros);
-
-        // Guardar datos
+        // Preparar datasets para Chart.js (BARRAS AGRUPADAS)
+        const datasets = paisesLista.map((pais, index) => {
+            const datosPais = datosPorPais[pais] || {};
+            const data = fechasOrdenadas.map(fecha => datosPais[fecha] || 0);
+            
+            return {
+                label: pais,
+                data: data,
+                backgroundColor: coloresNacionalidades[index % coloresNacionalidades.length],
+                borderColor: darkenColor(coloresNacionalidades[index % coloresNacionalidades.length], 0.2),
+                borderWidth: 1,
+                borderRadius: 6,
+                barThickness: 20
+            };
+        });
+        
+        // Guardar datos en el formato CORRECTO para gráficas agrupadas
         const datosTiempo = {
-            labels: labels,
-            valuesColombia: valuesColombia,
-            valuesOtros: valuesOtros,
-            totalColombia: valuesColombia.reduce((a, b) => a + b, 0),
-            totalOtros: valuesOtros.reduce((a, b) => a + b, 0),
-            total: labels.reduce((sum, label) => sum + conteo[label].total, 0)
+            labels: fechasOrdenadas,
+            datasets: datasets,
+            paises: paisesLista,
+            fechas: fechasOrdenadas,
+            total: datasets.reduce((total, dataset) => 
+                total + dataset.data.reduce((sum, val) => sum + val, 0), 0)
         };
-
+        
+        console.log(`✅ Datos de ${tipo} procesados:`, datosTiempo);
+        
         switch(tipo) {
             case 'fecha': datosFecha = datosTiempo; break;
             case 'mes': datosMes = datosTiempo; break;
             case 'anio': datosAnio = datosTiempo; break;
         }
+        
+        return datosTiempo;
+    }
+
+
+    async function procesarDatosFiltradosTiempo(participantes, tipo, mapaCiudadPais) {
+        console.log(`🔄 Procesando datos Filtrados de: ${tipo}`);
+        
+        const datosPorPais = {};
+        const paisesSet = new Set();
+        const fechasSet = new Set();
+        
+        // Filtrar participantes con fecha válida
+        const participantesFiltrados = participantes.filter(p => p.fecha_visita && p.id_ciudad);
+        
+        // Procesar cada participante
+        participantesFiltrados.forEach(participante => {
+            const fecha = new Date(participante.fecha_visita);
+            let claveFecha = '';
+            
+            switch(tipo) {
+                case 'fecha':
+                    claveFecha = fecha.toISOString().split('T')[0];
+                    break;
+                case 'mes':
+                    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                    claveFecha = `${meses[fecha.getMonth()]} ${fecha.getFullYear()}`;
+                    break;
+                case 'anio':
+                    claveFecha = fecha.getFullYear().toString();
+                    break;
+            }
+            
+            // Obtener nombre del país
+            let nombrePais = mapaCiudadPais[participante.id_ciudad] || 'Sin país';
+            
+            // Normalizar nombre (Colombia siempre igual)
+            if (nombrePais.toLowerCase().includes('colombia')) {
+                nombrePais = 'Colombia';
+            }
+            
+            fechasSet.add(claveFecha);
+            paisesSet.add(nombrePais);
+            
+            // Inicializar estructura si no existe
+            if (!datosPorPais[nombrePais]) {
+                datosPorPais[nombrePais] = {};
+            }
+            
+            // Contar por fecha
+            datosPorPais[nombrePais][claveFecha] = 
+                (datosPorPais[nombrePais][claveFecha] || 0) + 1;
+        });
+        
+        // Ordenar fechas
+        const fechasOrdenadas = Array.from(fechasSet).sort();
+        const paisesLista = Array.from(paisesSet).sort();
+        
+        // Preparar datasets para Chart.js (BARRAS AGRUPADAS)
+        const datasets = paisesLista.map((pais, index) => {
+            const datosPais = datosPorPais[pais] || {};
+            const data = fechasOrdenadas.map(fecha => datosPais[fecha] || 0);
+            
+            return {
+                label: pais,
+                data: data,
+                backgroundColor: coloresNacionalidades[index % coloresNacionalidades.length],
+                borderColor: darkenColor(coloresNacionalidades[index % coloresNacionalidades.length], 0.2),
+                borderWidth: 1,
+                borderRadius: 6,
+                barThickness: 20
+            };
+        });
+        
+        // Guardar datos en el formato CORRECTO para gráficas agrupadas
+        const datosTiempo = {
+            labels: fechasOrdenadas,
+            datasets: datasets,
+            paises: paisesLista,
+            fechas: fechasOrdenadas,
+            total: datasets.reduce((total, dataset) => 
+                total + dataset.data.reduce((sum, val) => sum + val, 0), 0)
+        };
+        
+        console.log(`✅ Datos de ${tipo} procesados:`, datosTiempo);
+
+        console.log('🔍 Datos procesados para filtros:', {
+            labelsCount: fechasOrdenadas.length,
+            datasetsCount: datasets.length,
+            datasetsInfo: datasets.map(d => ({
+                label: d.label,
+                dataCount: d.data.length,
+                total: d.data.reduce((sum, val) => sum + val, 0)
+            })),
+            totalGeneral: datasets.reduce((total, dataset) => 
+                total + dataset.data.reduce((sum, val) => sum + val, 0), 0)
+        });
+        
+        return datosTiempo;
     }
 
     // =============================================
@@ -489,20 +618,58 @@
 
     // Funciones auxiliares para tiempo
     function getDatosTiempo(tipo) {
+        let datos;
         switch(tipo) {
-            case 'fecha': return datosFecha;
-            case 'mes': return datosMes;
-            case 'anio': return datosAnio;
-            default: return { 
-                labels: [], 
-                valuesColombia: [], 
-                valuesOtros: [], 
-                totalColombia: 0, 
-                totalOtros: 0, 
-                total: 0 
-            };
+            case 'fecha': datos = datosFecha; break;
+            case 'mes': datos = datosMes; break;
+            case 'anio': datos = datosAnio; break;
+            default: datos = { labels: [], datasets: [], paises: [], fechas: [], total: 0 };
         }
+        
+        // Asegurar que tenga la estructura correcta para gráficas agrupadas
+        if (datos && (!datos.datasets || datos.datasets.length === 0)) {
+            // Convertir datos antiguos a nuevo formato
+            return convertirDatosAntiguosATiempo(tipo, datos);
+        }
+        
+        return datos;
     }
+
+
+    // Función auxiliar para convertir datos antiguos
+    function convertirDatosAntiguosATiempo(tipo, datosAntiguos) {
+        if (!datosAntiguos.labels || datosAntiguos.labels.length === 0) {
+            return { labels: [], datasets: [], paises: [], fechas: [], total: 0 };
+        }
+        
+        // Crear datasets para "Colombia" y "Otros" si existen
+        const datasets = [];
+        
+        if (datosAntiguos.valuesColombia && datosAntiguos.valuesColombia.length > 0) {
+            datasets.push({
+                label: 'Colombia',
+                data: datosAntiguos.valuesColombia,
+                backgroundColor: '#27ae60'
+            });
+        }
+        
+        if (datosAntiguos.valuesOtros && datosAntiguos.valuesOtros.length > 0) {
+            datasets.push({
+                label: 'Otros Países',
+                data: datosAntiguos.valuesOtros,
+                backgroundColor: '#3498db'
+            });
+        }
+        
+        return {
+            labels: datosAntiguos.labels || [],
+            datasets: datasets,
+            paises: datasets.map(d => d.label),
+            fechas: datosAntiguos.labels || [],
+            total: datosAntiguos.total || 0
+        };
+    }
+
 
     function getTituloTiempo(tipo) {
         const titulos = {
@@ -729,13 +896,16 @@
         ` : '');
     }
 
-    // Mostrar interfaz para tiempo (fecha, mes, año)
-    function mostrarInterfazTiempo(tipo) {
+    // Función para mostrar interfaz de tiempo (fecha, mes, año)
+    function mostrarInterfazTiempo(tipo, datosFiltrados = null) {
         const container = document.getElementById('data-container');
-        const datos = getDatosTiempo(tipo);
         const titulo = getTituloTiempo(tipo);
         const icono = getIconoTiempo(tipo);
-
+        
+        // USAR: datos filtrados si existen, SINO datos originales
+        const datos = datosFiltrados || getDatosTiempo(tipo);
+        
+        // TODO el HTML IGUAL, pero asegúrate de usar ${tipo} donde corresponda
         container.innerHTML = `
             <div class="charts-grid">
                 <div class="chart-card" onclick="window.NacionalidadManager.abrirModalTiempo('${tipo}', 'bar')">
@@ -776,13 +946,11 @@
                     <table class="table" style="min-width: 600px;">
                         <thead>
                             <tr>
-                                <th style="width: 50px;">#</th>
+                                <th style="min-width: 150px;">País</th>
                                 <th style="min-width: 150px;">${titulo.split(' ')[1]}</th>
-                                <th style="width: 100px;">Colombia</th>
-                                <th style="width: 100px;">Otros Países</th>
-                                <th style="width: 100px;">Total</th>
-                                <th style="width: 100px;">% Colombia</th>
-                                <th style="min-width: 100px;">Tendencia</th>
+                                <th style="width: 120px;">Visitantes</th>
+                                <th style="width: 100px;">Porcentaje</th>
+                                <th colspan="3" style="min-width: 100px;">Detalles</th>
                             </tr>
                         </thead>
                         <tbody id="tabla-${tipo}-body">
@@ -793,56 +961,90 @@
             </div>
         `;
 
-        mostrarGraficasTiempo(tipo);
+        // Llamar a una función que muestre gráficas CON datos específicos
+        mostrarGraficasTiempoConDatos(tipo, datos);
     }
 
     // Generar filas de tabla para tiempo
     function generarFilasTablaTiempo(datos, tipo) {
-        return datos.labels.map((label, index) => {
-            const colombia = datos.valuesColombia[index];
-            const otros = datos.valuesOtros[index];
-            const total = colombia + otros;
-            const porcentajeColombia = total > 0 ? ((colombia / total) * 100).toFixed(1) : 0;
-            
-            // Calcular tendencia
-            let tendencia = '';
-            if (index > 0) {
-                const totalAnterior = datos.valuesColombia[index - 1] + datos.valuesOtros[index - 1];
-                const diferencia = total - totalAnterior;
-                const porcentajeCambio = totalAnterior > 0 ? ((diferencia / totalAnterior) * 100).toFixed(1) : 100;
-                
-                if (diferencia > 0) {
-                    tendencia = `<span style="color: #27ae60;"><i class="fas fa-arrow-up"></i> ${porcentajeCambio}%</span>`;
-                } else if (diferencia < 0) {
-                    tendencia = `<span style="color: #e74c3c;"><i class="fas fa-arrow-down"></i> ${Math.abs(porcentajeCambio)}%</span>`;
-                } else {
-                    tendencia = `<span style="color: #f39c12;"><i class="fas fa-minus"></i> 0%</span>`;
-                }
-            } else {
-                tendencia = '<span style="color: #95a5a6;">-</span>';
-            }
-            
+    // Verificar si tenemos datos en el nuevo formato (con datasets)
+        if (!datos || !datos.datasets || datos.datasets.length === 0) {
             return `
                 <tr>
-                    <td style="font-weight: bold; text-align: center;">${index + 1}</td>
-                    <td><strong>${label}</strong></td>
-                    <td style="text-align: center; font-weight: bold; color: #27ae60">${colombia.toLocaleString()}</td>
-                    <td style="text-align: center; font-weight: bold; color: #3498db">${otros.toLocaleString()}</td>
-                    <td style="text-align: center; font-weight: bold">${total.toLocaleString()}</td>
-                    <td style="text-align: center; color: #2e7d32; font-weight: bold">${porcentajeColombia}%</td>
-                    <td style="text-align: center;">${tendencia}</td>
+                    <td colspan="7" style="text-align: center; color: #7f8c8d; padding: 20px;">
+                        <i class="fas fa-exclamation-circle"></i> No hay datos disponibles
+                    </td>
                 </tr>
             `;
-        }).join('') + (datos.total > 0 ? `
-            <tr style="background: #f8f9fa; font-weight: bold;">
+        }
+        
+        let html = '';
+        const totalGeneral = datos.total || 0;
+        
+        // Para cada fecha
+        datos.labels.forEach((fecha, fechaIndex) => {
+            html += `
+                <tr style="background-color: #f8f9fa;">
+                    <td colspan="7" style="font-weight: bold; color: #2c3e50;">
+                        <i class="fas fa-calendar-day"></i> ${fecha}
+                    </td>
+                </tr>
+            `;
+            
+            // Para cada país en esa fecha
+            let totalFecha = 0;
+            datos.datasets.forEach((dataset, datasetIndex) => {
+                const valor = dataset.data[fechaIndex] || 0;
+                totalFecha += valor;
+                
+                if (valor > 0) {
+                    html += `
+                        <tr>
+                            <td style="padding-left: 30px;">
+                                <span class="nation-badge ${dataset.label === 'Colombia' ? 'colombia' : ''}">
+                                    <i class="fas ${dataset.label === 'Colombia' ? 'fa-flag' : 'fa-globe-americas'}"></i>
+                                    ${dataset.label}
+                                </span>
+                            </td>
+                            <td>${getDescripcionTiempo(tipo, fecha)}</td>
+                            <td style="text-align: center; font-weight: bold">${valor.toLocaleString()}</td>
+                            <td style="text-align: center; font-weight: bold; color: ${dataset.label === 'Colombia' ? '#27ae60' : '#3498db'}">
+                                ${totalGeneral > 0 ? ((valor / totalGeneral) * 100).toFixed(1) : 0}%
+                            </td>
+                            <td colspan="2" style="text-align: center;">
+                                <span style="color: #95a5a6;">-</span>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+            
+            // Total de la fecha
+            html += `
+                <tr style="background-color: #e8f5e8;">
+                    <td colspan="2" style="padding-left: 30px; font-weight: bold;">
+                        <i class="fas fa-plus-circle"></i> Total ${fecha}
+                    </td>
+                    <td style="text-align: center; font-weight: bold">${totalFecha.toLocaleString()}</td>
+                    <td style="text-align: center; font-weight: bold">
+                        ${totalGeneral > 0 ? ((totalFecha / totalGeneral) * 100).toFixed(1) : 0}%
+                    </td>
+                    <td colspan="3" style="text-align: center;">-</td>
+                </tr>
+            `;
+        });
+        
+        // Total general
+        html += `
+            <tr style="background: #2e7d32; color: white; font-weight: bold;">
                 <td colspan="2">TOTAL GENERAL</td>
-                <td style="text-align: center; color: #27ae60">${datos.totalColombia.toLocaleString()}</td>
-                <td style="text-align: center; color: #3498db">${datos.totalOtros.toLocaleString()}</td>
-                <td style="text-align: center">${datos.total.toLocaleString()}</td>
-                <td style="text-align: center">${datos.total > 0 ? ((datos.totalColombia / datos.total) * 100).toFixed(1) : 0}%</td>
-                <td style="text-align: center;">-</td>
+                <td style="text-align: center">${totalGeneral.toLocaleString()}</td>
+                <td style="text-align: center">100%</td>
+                <td colspan="3" style="text-align: center;">-</td>
             </tr>
-        ` : '');
+        `;
+        
+        return html;
     }
 
     // =============================================
@@ -937,37 +1139,40 @@
         });
     }
 
-    // Mostrar gráficas para tiempo
-    function mostrarGraficasTiempo(tipo) {
-        const datos = getDatosTiempo(tipo);
-        const colors = ['#27ae60', '#3498db']; // Verde para Colombia, Azul para otros
-        
-        // Gráfica de barras apiladas
+    // Mostrar gráficas para tiempo con datos específicos
+    function mostrarGraficasTiempoConDatos(tipo, datos) {
+        console.log('🔍 DEBUG mostrarGraficasTiempoConDatos:', {
+            tipo: tipo,
+            datosRecibidos: datos,
+            tieneLabels: datos?.labels?.length || 0,
+            tieneDatasets: datos?.datasets?.length || 0,
+            datasets: datos?.datasets?.map(d => ({
+                label: d.label,
+                dataLength: d.data?.length || 0,
+                firstValue: d.data?.[0] || 0
+            }))
+        });
+    
+        // Gráfica de barras apiladas|
         const ctxBar = document.getElementById(`chart${tipo.charAt(0).toUpperCase() + tipo.slice(1)}Bar`);
         if (chartFechaBar) chartFechaBar.destroy();
         if (chartMesBar) chartMesBar.destroy();
         if (chartAnioBar) chartAnioBar.destroy();
         
+        // Gráfica de barras AGRUPADAS
         const chartBar = new Chart(ctxBar, {
             type: "bar",
             data: {
-                labels: datos.labels,
-                datasets: [
-                    {
-                        label: "Colombia",
-                        data: datos.valuesColombia,
-                        backgroundColor: colors[0],
-                        borderRadius: 8,
-                        barThickness: 25,
-                    },
-                    {
-                        label: "Otros Países",
-                        data: datos.valuesOtros,
-                        backgroundColor: colors[1],
-                        borderRadius: 8,
-                        barThickness: 25,
-                    }
-                ],
+                labels: datos.labels || [],
+                datasets: (datos.datasets || []).map((dataset, index) => ({
+                    label: dataset.label,
+                    data: dataset.data.map(val => val || 0),
+                    backgroundColor: dataset.backgroundColor || coloresNacionalidades[index % coloresNacionalidades.length],
+                    borderColor: dataset.borderColor || darkenColor(dataset.backgroundColor || coloresNacionalidades[index % coloresNacionalidades.length], 0.2),
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    barThickness: 25
+                }))
             },
             options: {
                 responsive: true,
@@ -977,22 +1182,23 @@
                         position: 'top',
                         labels: {
                             padding: 15,
-                            usePointStyle: true
+                            usePointStyle: true,
+                            font: { size: 12 }
                         }
                     },
                     title: {
                         display: true,
-                        text: `${getTituloTiempo(tipo)} - Por Nacionalidad`,
+                        text: `${getTituloTiempo(tipo)} - Barras Agrupadas`,
                         font: { size: 16, weight: 'bold' }
                     },
                     tooltip: {
+                        mode: 'index',
+                        intersect: false,
                         callbacks: {
                             label: function(context) {
-                                const datasetLabel = context.dataset.label || '';
-                                const value = context.raw;
-                                const total = datos.valuesColombia[context.dataIndex] + datos.valuesOtros[context.dataIndex];
-                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                return `${datasetLabel}: ${value} visitantes (${percentage}%)`;
+                                const label = context.dataset.label || '';
+                                const value = context.raw || 0;
+                                return `${label}: ${value} visitantes`;
                             }
                         }
                     }
@@ -1000,15 +1206,15 @@
                 scales: {
                     y: {
                         beginAtZero: true,
-                        stacked: true,
-                        title: { display: true, text: 'Cantidad de Visitantes' }
+                        title: { display: true, text: 'Cantidad de Visitantes' },
+                        stacked: false
                     },
                     x: {
-                        stacked: true,
-                        title: { display: true, text: getTituloTiempo(tipo).split(' ')[1] }
+                        title: { display: true, text: getTituloTiempo(tipo).split(' ')[1] },
+                        stacked: false
                     }
                 }
-            },
+            }
         });
 
         // Gráfica circular por período (solo el más reciente)
@@ -1016,20 +1222,64 @@
         if (chartFechaPie) chartFechaPie.destroy();
         if (chartMesPie) chartMesPie.destroy();
         if (chartAnioPie) chartAnioPie.destroy();
-        
-        // Tomar el último período para mostrar en la gráfica circular
-        const lastIndex = datos.labels.length - 1;
-        const lastLabel = datos.labels[lastIndex] || 'Actual';
-        const lastColombia = datos.valuesColombia[lastIndex] || 0;
-        const lastOtros = datos.valuesOtros[lastIndex] || 0;
-        
+
+        // Calcular totales por país para el gráfico circular
+        const totalesPorPais = {};
+        if (datos.datasets && datos.datasets.length > 0) {
+            datos.datasets.forEach(dataset => {
+                const total = dataset.data.reduce((sum, val) => sum + (val || 0), 0);
+                if (total > 0) {
+                    totalesPorPais[dataset.label] = total;
+                }
+            });
+        }
+
+        // Si no hay datos, mostrar gráfico vacío
+        if (Object.keys(totalesPorPais).length === 0) {
+            const chartPie = new Chart(ctxPie, {
+                type: "doughnut",
+                data: {
+                    labels: ['Sin datos'],
+                    datasets: [{
+                        data: [100],
+                        backgroundColor: ['#95a5a6']
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'No hay datos disponibles',
+                            font: { size: 14, weight: 'bold' }
+                        }
+                    }
+                },
+            });
+            
+            // Guardar referencia según tipo
+            switch(tipo) {
+                case 'fecha': chartFechaPie = chartPie; break;
+                case 'mes': chartMesPie = chartPie; break;
+                case 'anio': chartAnioPie = chartPie; break;
+            }
+            return;
+        }
+
+        // Crear gráfico circular con los totales
+        const labels = Object.keys(totalesPorPais);
+        const data = Object.values(totalesPorPais);
+
         const chartPie = new Chart(ctxPie, {
             type: "doughnut",
             data: {
-                labels: ['Colombia', 'Otros Países'],
+                labels: labels,
                 datasets: [{
-                    data: [lastColombia, lastOtros],
-                    backgroundColor: colors,
+                    data: data,
+                    backgroundColor: labels.map((label, index) => 
+                        coloresNacionalidades[index % coloresNacionalidades.length]
+                    ),
                     borderWidth: 2,
                     borderColor: '#fff'
                 }],
@@ -1048,7 +1298,7 @@
                     },
                     title: {
                         display: true,
-                        text: `${lastLabel} - Distribución por Nacionalidad`,
+                        text: 'Distribución por Nacionalidad - Total',
                         font: { size: 16, weight: 'bold' }
                     },
                     tooltip: {
@@ -1056,7 +1306,7 @@
                             label: function(context) {
                                 const label = context.label || '';
                                 const value = context.raw;
-                                const total = lastColombia + lastOtros;
+                                const total = data.reduce((a, b) => a + b, 0);
                                 const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
                                 return `${label}: ${value} visitantes (${percentage}%)`;
                             }
@@ -1141,7 +1391,7 @@
             // Obtener países de los participantes filtrados
             const mapaCiudadPais = await obtenerPaisesDeParticipantes(participantes);
             
-            // Contar participantes por país
+            // Contar participantes por país (formato nuevo - TODOS los países individuales)
             const conteoPaises = {};
             let sinPaisCount = 0;
 
@@ -1149,40 +1399,32 @@
                 const pais = mapaCiudadPais[participante.id_ciudad];
                 
                 if (pais && pais !== 'Sin país') {
-                    conteoPaises[pais] = (conteoPaises[pais] || 0) + 1;
+                    // Normalizar nombre (Colombia siempre igual)
+                    const nombrePais = pais.toLowerCase().includes('colombia') ? 'Colombia' : pais;
+                    conteoPaises[nombrePais] = (conteoPaises[nombrePais] || 0) + 1;
                 } else {
                     sinPaisCount++;
                 }
             });
 
-            // Separar Colombia de otros países
-            let colombiaCount = 0;
-            let otrosPaisesCount = 0;
-            let detallesOtrosPaises = {};
+            // Agregar "Sin país" si hay
+            if (sinPaisCount > 0) {
+                conteoPaises['Sin país'] = sinPaisCount;
+            }
 
-            Object.keys(conteoPaises).forEach(nombrePais => {
-                if (nombrePais.toLowerCase().includes('colombia')) {
-                    colombiaCount += conteoPaises[nombrePais];
-                } else {
-                    otrosPaisesCount += conteoPaises[nombrePais];
-                    detallesOtrosPaises[nombrePais] = conteoPaises[nombrePais];
-                }
-            });
-
-            // Agregar los que no tienen país a "Otros países"
-            otrosPaisesCount += sinPaisCount;
-
-            const conteoFinal = {
-                'Colombia': colombiaCount,
-                'Otros países': otrosPaisesCount
-            };
-            
-            procesarDatosNacionalidad(conteoFinal, detallesOtrosPaises);
+            // Procesar como todos los países individuales
+            procesarDatosNacionalidad(conteoPaises, {});
             
         } else {
             const mapaCiudadPais = await obtenerPaisesDeParticipantes(participantes);
-            procesarDatosTiempo(participantes, tipo, mapaCiudadPais);
-            mostrarInterfazTiempo(tipo);
+            
+            // Crear función temporal para procesar filtros (NO usa procesarDatosTiempo)
+            const datosFiltrados = await procesarDatosFiltradosTiempo(participantes, tipo, mapaCiudadPais);
+            
+            // Mostrar INTERFAZ con datos filtrados
+            mostrarInterfazTiempo(tipo, datosFiltrados);
+            
+            mostrarExito(`Filtros aplicados: ${participantes.length} participantes encontrados`);
         }
     }
 
@@ -1192,8 +1434,8 @@
         document.getElementById('filtro-fecha-final').value = '';
         document.getElementById('filtro-nacionalidad-comb').value = 'todas';
         
-        // Recargar datos sin filtros
-        cargarDatosCompletos();
+        // Mostrar datos ORIGINALES (sin parámetro = usa getDatosTiempo)
+        mostrarInterfazTiempo(tipoActual); // ← Esto está bien
         mostrarExito('Filtros limpiados - Mostrando todos los datos');
     }
 
@@ -1232,6 +1474,9 @@
 
     // Función para crear HTML de filtros para el modal
     function crearHTMLFiltrosModal(tipo) {
+        // Obtener todas las nacionalidades de datosNacionalidades
+        const opcionesNacionalidad = datosNacionalidades.labels || [];
+
         let html = `
         <div class="modal-filtros-container" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -1284,12 +1529,9 @@
                     <label><i class="fas fa-flag"></i> Nacionalidad:</label>
                     <select id="modalNacionalidad" class="filter-select">
                         <option value="todas">Todas las nacionalidades</option>
-                        ${Object.keys(datosNacionalidades.datosCompletos || {}).map(nac => 
+                        ${opcionesNacionalidad.map(nac => 
                             `<option value="${nac}">${nac}</option>`
                         ).join('')}
-                        ${datosNacionalidades.detallesOtrosPaises ? Object.keys(datosNacionalidades.detallesOtrosPaises).map(pais => 
-                            `<option value="${pais}">Otros - ${pais}</option>`
-                        ).join('') : ''}
                     </select>
                 </div>
                 
@@ -1355,6 +1597,9 @@
             return;
         }
         
+        // DEBUG
+        console.log('🎯 Abriendo modal para tipo:', tipo, 'con gráfica:', tipoGrafica);
+        
         // Limpiar modal anterior
         const modalContent = document.querySelector('.modal-content');
         if (modalContent) {
@@ -1366,11 +1611,14 @@
         // Actualizar contenido del modal
         actualizarContenidoModal(tipo, tipoGrafica);
         
-        // Crear gráfica ampliada
+        // Crear gráfica ampliada - CON RETRASO para asegurar que el canvas existe
         setTimeout(() => {
-            crearGraficaAmpliadaTiempo(tipo, tipoGrafica);
+            console.log('⏰ Creando gráfica para modal...');
+            // ✅ Obtener datos actuales según el tipo
+            const datosActuales = getDatosTiempo(tipo);
+            crearGraficaAmpliadaTiempo(tipo, tipoGrafica, datosActuales);
             llenarTablaModalTiempo(tipo);
-        }, 100);
+        }, 200); // Aumenta el tiempo si es necesario
     }
 
     // Función para actualizar contenido del modal con filtros
@@ -1474,6 +1722,7 @@
             const tipo = determinarTipoActual();
             let datosFiltrados;
             
+            // En la función aplicarFiltrosModal, verifica que sea así:
             if (tipo === 'nacionalidad') {
                 // Filtrar datos de nacionalidades
                 datosFiltrados = await filtrarDatosNacionalidadModal(nacionalidad, cantidad, orden);
@@ -1482,7 +1731,9 @@
             } else {
                 // Filtrar datos de tiempo
                 datosFiltrados = await filtrarDatosTiempoModal(tipo, fechaInicio, fechaFin, nacionalidad, cantidad, orden);
-                crearGraficaAmpliadaTiempoConDatos(tipo, datosFiltrados, tipoGrafica);
+                
+                // ✅ Esto debe ser crearGraficaAmpliadaTiempo, NO crearGraficaAmpliadaTiempoConDatos
+                crearGraficaAmpliadaTiempo(tipo, tipoGrafica, datosFiltrados);
                 llenarTablaModalTiempoConDatos(tipo, datosFiltrados);
             }
             
@@ -1500,29 +1751,29 @@
     async function filtrarDatosNacionalidadModal(nacionalidad, cantidad, orden) {
         let datos = { ...datosNacionalidades };
         
+        console.log('🔍 Filtrando por nacionalidad:', nacionalidad);
+        
         // Filtrar por nacionalidad específica
         if (nacionalidad !== 'todas') {
-            // Verificar si es una nacionalidad principal
             const index = datos.labels.indexOf(nacionalidad);
+            
             if (index !== -1) {
+                // Es una nacionalidad válida
                 datos = {
                     labels: [nacionalidad],
                     values: [datos.values[index]],
                     total: datos.values[index],
                     datosCompletos: { [nacionalidad]: datos.values[index] },
-                    detallesOtrosPaises: {}
+                    detallesOtrosPaises: {} // Vacío porque ya no usamos "Otros países"
                 };
-            } else if (datos.detallesOtrosPaises && datos.detallesOtrosPaises[nacionalidad]) {
-                // Si es un país dentro de "Otros países"
+            } else {
+                // No encontrado, devolver datos vacíos
                 datos = {
-                    labels: ['Otros países', nacionalidad],
-                    values: [datos.values[1], datos.detallesOtrosPaises[nacionalidad]],
-                    total: datos.detallesOtrosPaises[nacionalidad] + datos.values[1] - datos.detallesOtrosPaises[nacionalidad],
-                    datosCompletos: { 
-                        'Otros países': datos.values[1] - datos.detallesOtrosPaises[nacionalidad],
-                        [nacionalidad]: datos.detallesOtrosPaises[nacionalidad]
-                    },
-                    detallesOtrosPaises: { [nacionalidad]: datos.detallesOtrosPaises[nacionalidad] }
+                    labels: [],
+                    values: [],
+                    total: 0,
+                    datosCompletos: {},
+                    detallesOtrosPaises: {}
                 };
             }
         }
@@ -1567,8 +1818,8 @@
         return datos;
     }
 
-    // Función para filtrar datos de tiempo en modal
-    async function filtrarDatosTiempoModal(tipo, fechaInicio, fechaFin, nacionalidad, cantidad, orden) {
+    // Función para filtrar datos de tiempo en modal CON FILTRO DE NACIONALIDAD
+    async function filtrarDatosTiempoModal(tipo, fechaInicio, fechaFin, nacionalidadSeleccionada, cantidad, orden) {
         let query = supabase
             .from('participantes_reserva')
             .select('fecha_visita, id_ciudad')
@@ -1589,94 +1840,103 @@
         // Obtener países de los participantes
         const mapaCiudadPais = await obtenerPaisesDeParticipantes(participantes);
         
-        // Procesar datos
-        const conteo = {};
-        participantes.forEach(participante => {
-            if (participante.fecha_visita) {
-                const fecha = new Date(participante.fecha_visita);
-                let clave = '';
+        // FILTRAR por nacionalidad si no es "todas"
+        let participantesFiltrados = participantes;
+        if (nacionalidadSeleccionada && nacionalidadSeleccionada !== 'todas') {
+            participantesFiltrados = participantes.filter(participante => {
+                const pais = mapaCiudadPais[participante.id_ciudad];
+                if (!pais) return false;
                 
-                switch(tipo) {
-                    case 'fecha':
-                        clave = fecha.toISOString().split('T')[0];
-                        break;
-                    case 'mes':
-                        const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                                     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-                        clave = `${meses[fecha.getMonth()]} ${fecha.getFullYear()}`;
-                        break;
-                    case 'anio':
-                        clave = fecha.getFullYear().toString();
-                        break;
-                }
-                
-                if (!conteo[clave]) {
-                    conteo[clave] = { total: 0, colombia: 0, otros: 0 };
-                }
-                
-                const pais = mapaCiudadPais[participante.id_ciudad] || 'Sin país';
-                conteo[clave].total++;
-                if (pais.toLowerCase().includes('colombia')) {
-                    conteo[clave].colombia++;
-                } else {
-                    conteo[clave].otros++;
-                }
+                // Normalizar nombre para comparar
+                const nombrePaisNormalizado = pais.toLowerCase().includes('colombia') ? 'Colombia' : pais;
+                return nombrePaisNormalizado === nacionalidadSeleccionada;
+            });
+        }
+        
+        // Procesar con la MISMA función que usa el formato nuevo
+        const datosProcesados = procesarDatosTiempo(participantesFiltrados, tipo, mapaCiudadPais);
+        
+        // FILTRAR datasets por nacionalidad específica
+        if (nacionalidadSeleccionada && nacionalidadSeleccionada !== 'todas') {
+            // Encontrar el dataset que corresponde a la nacionalidad seleccionada
+            const datasetFiltrado = datosProcesados.datasets.find(
+                dataset => dataset.label === nacionalidadSeleccionada
+            );
+            
+            if (datasetFiltrado) {
+                // Si encontramos la nacionalidad, mantener solo ese dataset
+                datosProcesados.datasets = [datasetFiltrado];
+                datosProcesados.paises = [nacionalidadSeleccionada];
+            } else {
+                // Si no encontramos datos para esa nacionalidad, devolver datos vacíos
+                datosProcesados.datasets = [];
+                datosProcesados.paises = [];
             }
-        });
+        }
         
-        // Convertir a arrays
-        let labels = Object.keys(conteo);
-        let valuesColombia = labels.map(label => conteo[label].colombia);
-        let valuesOtros = labels.map(label => conteo[label].otros);
-        
-        // Ordenar
+        // Aplicar ordenamiento
         if (orden === 'desc') {
-            const indices = labels
-                .map((label, i) => ({ label, value: conteo[label].total }))
-                .sort((a, b) => b.value - a.value)
-                .map(item => labels.indexOf(item.label));
+            // Ordenar por total de cada fecha (más visitas primero)
+            const indices = datosProcesados.labels
+                .map((label, i) => ({
+                    label,
+                    total: datosProcesados.datasets.reduce((sum, dataset) => sum + (dataset.data[i] || 0), 0)
+                }))
+                .sort((a, b) => b.total - a.total)
+                .map(item => datosProcesados.labels.indexOf(item.label));
             
-            labels = indices.map(i => labels[i]);
-            valuesColombia = indices.map(i => valuesColombia[i]);
-            valuesOtros = indices.map(i => valuesOtros[i]);
+            datosProcesados.labels = indices.map(i => datosProcesados.labels[i]);
+            datosProcesados.datasets.forEach(dataset => {
+                dataset.data = indices.map(i => dataset.data[i]);
+            });
         } else if (orden === 'asc') {
-            const indices = labels
-                .map((label, i) => ({ label, value: conteo[label].total }))
-                .sort((a, b) => a.value - b.value)
-                .map(item => labels.indexOf(item.label));
+            // Ordenar por total de cada fecha (menos visitas primero)
+            const indices = datosProcesados.labels
+                .map((label, i) => ({
+                    label,
+                    total: datosProcesados.datasets.reduce((sum, dataset) => sum + (dataset.data[i] || 0), 0)
+                }))
+                .sort((a, b) => a.total - b.total)
+                .map(item => datosProcesados.labels.indexOf(item.label));
             
-            labels = indices.map(i => labels[i]);
-            valuesColombia = indices.map(i => valuesColombia[i]);
-            valuesOtros = indices.map(i => valuesOtros[i]);
+            datosProcesados.labels = indices.map(i => datosProcesados.labels[i]);
+            datosProcesados.datasets.forEach(dataset => {
+                dataset.data = indices.map(i => dataset.data[i]);
+            });
         } else if (orden === 'alpha') {
-            const indices = labels
-                .map((label, i) => ({ label, value: conteo[label].total }))
+            // Ordenar alfabéticamente
+            const indices = datosProcesados.labels
+                .map((label, i) => ({ label, index: i }))
                 .sort((a, b) => a.label.localeCompare(b.label))
-                .map(item => labels.indexOf(item.label));
+                .map(item => item.index);
             
-            labels = indices.map(i => labels[i]);
-            valuesColombia = indices.map(i => valuesColombia[i]);
-            valuesOtros = indices.map(i => valuesOtros[i]);
+            datosProcesados.labels = indices.map(i => datosProcesados.labels[i]);
+            datosProcesados.datasets.forEach(dataset => {
+                dataset.data = indices.map(i => dataset.data[i]);
+            });
         }
         
         // Limitar cantidad
-        if (cantidad > 0 && cantidad < labels.length) {
-            labels = labels.slice(0, cantidad);
-            valuesColombia = valuesColombia.slice(0, cantidad);
-            valuesOtros = valuesOtros.slice(0, cantidad);
+        if (cantidad > 0 && cantidad < datosProcesados.labels.length) {
+            datosProcesados.labels = datosProcesados.labels.slice(0, cantidad);
+            datosProcesados.datasets.forEach(dataset => {
+                dataset.data = dataset.data.slice(0, cantidad);
+            });
+        }
+
+        // Asegurar que tenga la propiedad paises si no la tiene
+        if (!datosProcesados.paises && datosProcesados.datasets) {
+            datosProcesados.paises = datosProcesados.datasets.map(d => d.label);
         }
         
-        return {
-            labels: labels,
-            valuesColombia: valuesColombia,
-            valuesOtros: valuesOtros,
-            totalColombia: valuesColombia.reduce((a, b) => a + b, 0),
-            totalOtros: valuesOtros.reduce((a, b) => a + b, 0),
-            total: labels.reduce((sum, label) => sum + conteo[label].total, 0)
-        };
+        // Recalcular total
+        datosProcesados.total = datosProcesados.datasets.reduce((total, dataset) => 
+            total + dataset.data.reduce((sum, val) => sum + (val || 0), 0), 0);
+        
+        return datosProcesados;
     }
 
-    // Función para crear gráfica con datos filtrados de nacionalidad
+    // Función para crear gráfica con datos filtrados de nacionalidad (VERSIÓN SIMPLIFICADA)
     function crearGraficaAmpliadaNacionalidadConDatos(datosFiltrados, tipoGrafica) {
         const ctx = document.getElementById("chartAmpliadoNacionalidad");
         if (!ctx) return;
@@ -1716,7 +1976,9 @@
                     },
                     title: {
                         display: true,
-                        text: 'Distribución por Nacionalidad (Filtrado)',
+                        text: datosFiltrados.labels.length === 1 ? 
+                            `Visitantes de ${datosFiltrados.labels[0]}` : 
+                            'Distribución por Nacionalidad (Filtrado)',
                         font: { size: 18, weight: 'bold' },
                         padding: 20
                     },
@@ -1764,165 +2026,6 @@
         });
     }
 
-    // Función para crear gráfica con datos filtrados de tiempo
-    function crearGraficaAmpliadaTiempoConDatos(tipo, datosFiltrados, tipoGrafica) {
-        const ctx = document.getElementById("chartAmpliadoNacionalidad");
-        if (!ctx) return;
-
-        if (chartAmpliadoNacionalidad) {
-            chartAmpliadoNacionalidad.destroy();
-        }
-
-        const colors = ['#27ae60', '#3498db']; // Verde para Colombia, Azul para otros
-        const tipoChart = tipoGrafica;
-
-        // Para gráficos de tiempo, manejamos dos datasets
-        if (tipoChart === 'bar') {
-            chartAmpliadoNacionalidad = new Chart(ctx, {
-                type: tipoChart,
-                data: {
-                    labels: datosFiltrados.labels,
-                    datasets: [
-                        {
-                            label: "Colombia",
-                            data: datosFiltrados.valuesColombia,
-                            backgroundColor: colors[0],
-                            borderColor: colors[0],
-                            borderWidth: 0,
-                            borderRadius: 8,
-                            barThickness: 25,
-                        },
-                        {
-                            label: "Otros Países",
-                            data: datosFiltrados.valuesOtros,
-                            backgroundColor: colors[1],
-                            borderColor: colors[1],
-                            borderWidth: 0,
-                            borderRadius: 8,
-                            barThickness: 25,
-                        }
-                    ],
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                padding: 15,
-                                usePointStyle: true,
-                                font: { size: 12 }
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: `${getTituloTiempo(tipo)} (Filtrado)`,
-                            font: { size: 18, weight: 'bold' },
-                            padding: 20
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0,0,0,0.8)',
-                            titleFont: { size: 14 },
-                            bodyFont: { size: 14 },
-                            padding: 12,
-                            cornerRadius: 8,
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.dataset.label || '';
-                                    const value = context.raw;
-                                    const total = context.datasetIndex === 0 ? 
-                                        datosFiltrados.valuesColombia[context.dataIndex] + datosFiltrados.valuesOtros[context.dataIndex] : 0;
-                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                    return `${label}: ${value} visitantes (${percentage}%)`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            stacked: true,
-                            grid: { color: 'rgba(0,0,0,0.1)' },
-                            title: {
-                                display: true,
-                                text: 'Cantidad de Visitantes',
-                                font: { weight: 'bold', size: 14 }
-                            }
-                        },
-                        x: {
-                            stacked: true,
-                            grid: { display: false },
-                            title: {
-                                display: true,
-                                text: getTituloTiempo(tipo).split(' ')[2] || 'Período',
-                                font: { weight: 'bold', size: 14 }
-                            },
-                            ticks: {
-                                maxRotation: tipo === 'fecha' ? 45 : 0,
-                                minRotation: 0
-                            }
-                        }
-                    }
-                }
-            });
-        } else {
-            // Para gráficos circulares, solo mostrar el total
-            const totalColombia = datosFiltrados.totalColombia;
-            const totalOtros = datosFiltrados.totalOtros;
-            
-            chartAmpliadoNacionalidad = new Chart(ctx, {
-                type: tipoChart,
-                data: {
-                    labels: ['Colombia', 'Otros Países'],
-                    datasets: [{
-                        data: [totalColombia, totalOtros],
-                        backgroundColor: colors,
-                        borderColor: colors.map(color => darkenColor(color, 0.2)),
-                        borderWidth: 2,
-                    }],
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                padding: 15,
-                                usePointStyle: true,
-                                font: { size: 12 }
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: `${getTituloTiempo(tipo)} - Total (Filtrado)`,
-                            font: { size: 18, weight: 'bold' },
-                            padding: 20
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0,0,0,0.8)',
-                            titleFont: { size: 14 },
-                            bodyFont: { size: 14 },
-                            padding: 12,
-                            cornerRadius: 8,
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label || '';
-                                    const value = context.raw;
-                                    const total = totalColombia + totalOtros;
-                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                    return `${label}: ${value} visitantes (${percentage}%)`;
-                                }
-                            }
-                        }
-                    },
-                    cutout: tipoChart === 'doughnut' ? '40%' : '0%'
-                }
-            });
-        }
-    }
-
     // Función para llenar tabla con datos filtrados de nacionalidad
     function llenarTablaModalNacionalidadConDatos(datosFiltrados) {
         const tbody = document.getElementById("tbodyDatosNacionalidad");
@@ -1956,47 +2059,67 @@
         const tbody = document.getElementById("tbodyDatosNacionalidad");
         if (!tbody) return;
 
-        tbody.innerHTML = datosFiltrados.labels.map((label, index) => {
-            const colombia = datosFiltrados.valuesColombia[index];
-            const otros = datosFiltrados.valuesOtros[index];
-            const total = colombia + otros;
-            const porcentajeColombia = total > 0 ? ((colombia / total) * 100).toFixed(1) : 0;
-            
-            // Calcular tendencia
-            let tendencia = '';
-            if (index > 0) {
-                const totalAnterior = datosFiltrados.valuesColombia[index - 1] + datosFiltrados.valuesOtros[index - 1];
-                const diferencia = total - totalAnterior;
-                const porcentajeCambio = totalAnterior > 0 ? ((diferencia / totalAnterior) * 100).toFixed(1) : 100;
-                
-                if (diferencia > 0) {
-                    tendencia = `<span style="color: #27ae60;"><i class="fas fa-arrow-up"></i> ${porcentajeCambio}%</span>`;
-                } else if (diferencia < 0) {
-                    tendencia = `<span style="color: #e74c3c;"><i class="fas fa-arrow-down"></i> ${Math.abs(porcentajeCambio)}%</span>`;
-                } else {
-                    tendencia = `<span style="color: #f39c12;"><i class="fas fa-minus"></i> 0%</span>`;
-                }
-            } else {
-                tendencia = '<span style="color: #95a5a6;">-</span>';
-            }
-            
-            return `
+        // Verificar si tenemos datos en el nuevo formato
+        if (!datosFiltrados || !datosFiltrados.datasets || datosFiltrados.datasets.length === 0) {
+            tbody.innerHTML = `
                 <tr>
-                    <td><strong>${label}</strong></td>
-                    <td>${getDescripcionTiempo(tipo, label)}</td>
-                    <td style="text-align: center; font-weight: bold">${total.toLocaleString()}</td>
-                    <td style="text-align: center; color: #2e7d32; font-weight: bold">${porcentajeColombia}%</td>
-                    <td style="text-align: center;">${tendencia}</td>
+                    <td colspan="5" style="text-align: center; padding: 20px; color: #7f8c8d;">
+                        <i class="fas fa-exclamation-circle"></i> No hay datos disponibles con los filtros
+                    </td>
                 </tr>
             `;
-        }).join('') + (datosFiltrados.total > 0 ? `
+            return;
+        }
+
+        let html = '';
+        const totalGeneral = datosFiltrados.total || 0;
+        
+        // Encabezado para formato de barras agrupadas
+        html += `
             <tr style="background: #f8f9fa; font-weight: bold;">
-                <td colspan="2">TOTAL GENERAL</td>
-                <td style="text-align: center">${datosFiltrados.total.toLocaleString()}</td>
-                <td style="text-align: center">${datosFiltrados.total > 0 ? ((datosFiltrados.totalColombia / datosFiltrados.total) * 100).toFixed(1) : 0}%</td>
-                <td style="text-align: center;">-</td>
+                <th>Fecha/Período</th>
+                ${datosFiltrados.paises.map(pais => `<th>${pais}</th>`).join('')}
+                <th>Total por Fecha</th>
             </tr>
-        ` : '');
+        `;
+        
+        // Filas de datos para cada fecha
+        datosFiltrados.labels.forEach((fecha, fechaIndex) => {
+            const totalPorFecha = datosFiltrados.datasets.reduce((sum, dataset) => 
+                sum + (dataset.data[fechaIndex] || 0), 0);
+            
+            html += `
+                <tr>
+                    <td><strong>${fecha}</strong></td>
+                    ${datosFiltrados.datasets.map(dataset => 
+                        `<td style="text-align: center; font-weight: ${dataset.data[fechaIndex] > 0 ? 'bold' : 'normal'}">
+                            ${(dataset.data[fechaIndex] || 0).toLocaleString()}
+                        </td>`
+                    ).join('')}
+                    <td style="text-align: center; background: #e8f5e9; font-weight: bold;">
+                        ${totalPorFecha.toLocaleString()}
+                    </td>
+                </tr>
+            `;
+        });
+        
+        // Fila de totales por país
+        html += `
+            <tr style="background: #f0f7ff; font-weight: bold;">
+                <td><strong>Total por País</strong></td>
+                ${datosFiltrados.datasets.map(dataset => {
+                    const totalPais = dataset.data.reduce((sum, val) => sum + (val || 0), 0);
+                    return `<td style="text-align: center; color: #2e7d32;">${totalPais.toLocaleString()}</td>`;
+                }).join('')}
+                <td style="text-align: center; background: #2e7d32; color: white;">
+                    ${datosFiltrados.datasets.reduce((total, dataset) => 
+                        total + dataset.data.reduce((sum, val) => sum + (val || 0), 0), 0
+                    ).toLocaleString()}
+                </td>
+            </tr>
+        `;
+        
+        tbody.innerHTML = html;
     }
 
     // Función para limpiar filtros del modal
@@ -2022,16 +2145,20 @@
         const tipo = determinarTipoActual();
         const tipoGrafica = document.getElementById('modalTipoGrafica')?.value || 'bar';
         
+        // En la función limpiarFiltrosModal, cambiar:
         if (tipo === 'nacionalidad') {
             crearGraficaAmpliadaNacionalidad(tipoGrafica);
             llenarTablaModalNacionalidad();
         } else {
-            crearGraficaAmpliadaTiempo(tipo, tipoGrafica);
+            // ✅ Usar datos originales
+            const datosOriginales = getDatosTiempo(tipo);
+            crearGraficaAmpliadaTiempo(tipo, tipoGrafica, datosOriginales);
             llenarTablaModalTiempo(tipo);
         }
         
         mostrarExito('Filtros limpiados - Mostrando todos los datos');
     }
+    
 
     // Función para cerrar modal
     function cerrarModalNacionalidad() {
@@ -2161,47 +2288,90 @@
         ` : '');
     }
 
-    // Crear gráfica ampliada de tiempo
-    function crearGraficaAmpliadaTiempo(tipo, tipoGrafica) {
-        const ctx = document.getElementById("chartAmpliadoNacionalidad");
-        if (!ctx) return;
+    // Crear gráfica ampliada de tiempo - VERSIÓN CORREGIDA
+    function crearGraficaAmpliadaTiempo(tipo, tipoGrafica, datosFiltrados = null) {
+        const canvas = document.getElementById("chartAmpliadoNacionalidad");
+        if (!canvas) {
+            console.error('❌ Canvas no encontrado!');
+            return;
+        }
+        
+        const ctx = canvas.getContext('2d');
 
         // Destruir gráfica anterior si existe
         if (chartAmpliadoNacionalidad) {
             chartAmpliadoNacionalidad.destroy();
         }
 
-        const datos = getDatosTiempo(tipo);
-        const colors = ['#27ae60', '#3498db']; // Verde para Colombia, Azul para otros
-        const totalColombia = datos.valuesColombia.reduce((a, b) => a + b, 0);
-        const totalOtros = datos.valuesOtros.reduce((a, b) => a + b, 0);
+        // ✅ CORRECCIÓN: Usar datos filtrados si se proporcionan, SINO datos originales
+        let datos;
+        if (datosFiltrados) {
+            datos = datosFiltrados;
+            console.log('✅ Usando datos filtrados en modal');
+        } else {
+            datos = getDatosTiempo(tipo);
+            console.log('✅ Usando datos originales en modal');
+        }
+
+        // DEBUG: Ver qué datos estamos recibiendo
+        console.log('🔍 Datos para modal de', tipo, ':', datos);
+        console.log('¿Usando datos filtrados?', !!datosFiltrados);
+        console.log('¿Tenemos datasets?', datos?.datasets?.length || 0);
+        console.log('¿Tenemos labels?', datos?.labels?.length || 0);
+
+        // Verificar si tenemos datos en el nuevo formato
+        if (!datos || !datos.datasets || datos.datasets.length === 0) {
+            console.log('⚠️ No hay datos para el modal');
+            // Mostrar gráfica vacía con mensaje
+            chartAmpliadoNacionalidad = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Sin datos'],
+                    datasets: [{
+                        data: [100],
+                        backgroundColor: ['#95a5a6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'No hay datos disponibles',
+                            font: { size: 16, weight: 'bold' }
+                        }
+                    }
+                }
+            });
+            return;
+        }
+
         const tipoChart = tipoGrafica;
 
         if (tipoChart === 'bar') {
+            // Verificar que tenemos datos
+            if (!datos.datasets || datos.datasets.length === 0) {
+                console.log('⚠️ No hay datasets para el gráfico de barras');
+                return;
+            }
+            
+            console.log('📊 Creando gráfico de barras con', datos.datasets.length, 'datasets');
+            console.log('📅 Labels:', datos.labels);
+            
             chartAmpliadoNacionalidad = new Chart(ctx, {
                 type: tipoChart,
                 data: {
                     labels: datos.labels,
-                    datasets: [
-                        {
-                            label: "Colombia",
-                            data: datos.valuesColombia,
-                            backgroundColor: colors[0],
-                            borderColor: colors[0],
-                            borderWidth: 0,
-                            borderRadius: 8,
-                            barThickness: 25,
-                        },
-                        {
-                            label: "Otros Países",
-                            data: datos.valuesOtros,
-                            backgroundColor: colors[1],
-                            borderColor: colors[1],
-                            borderWidth: 0,
-                            borderRadius: 8,
-                            barThickness: 25,
-                        }
-                    ],
+                    datasets: datos.datasets.map((dataset, index) => ({
+                        label: dataset.label,
+                        data: dataset.data.map(val => val || 0),
+                        backgroundColor: dataset.backgroundColor || coloresNacionalidades[index % coloresNacionalidades.length],
+                        borderColor: darkenColor(dataset.backgroundColor || coloresNacionalidades[index % coloresNacionalidades.length], 0.2),
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        barThickness: 25
+                    }))
                 },
                 options: {
                     responsive: true,
@@ -2217,11 +2387,13 @@
                         },
                         title: {
                             display: true,
-                            text: `${getTituloTiempo(tipo)} - Vista Ampliada`,
+                            text: `${getTituloTiempo(tipo)} - Vista Ampliada ${datosFiltrados ? '(Filtrado)' : ''}`,
                             font: { size: 18, weight: 'bold' },
                             padding: 20
                         },
                         tooltip: {
+                            mode: 'index',
+                            intersect: false,
                             backgroundColor: 'rgba(0,0,0,0.8)',
                             titleFont: { size: 14 },
                             bodyFont: { size: 14 },
@@ -2230,11 +2402,8 @@
                             callbacks: {
                                 label: function(context) {
                                     const label = context.dataset.label || '';
-                                    const value = context.raw;
-                                    const total = context.datasetIndex === 0 ? 
-                                        datos.valuesColombia[context.dataIndex] + datos.valuesOtros[context.dataIndex] : 0;
-                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                    return `${label}: ${value} visitantes (${percentage}%)`;
+                                    const value = context.raw || 0;
+                                    return `${label}: ${value} visitantes`;
                                 }
                             }
                         }
@@ -2242,7 +2411,7 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            stacked: true,
+                            stacked: false,
                             grid: { color: 'rgba(0,0,0,0.1)' },
                             title: {
                                 display: true,
@@ -2251,7 +2420,7 @@
                             }
                         },
                         x: {
-                            stacked: true,
+                            stacked: false,
                             grid: { display: false },
                             title: {
                                 display: true,
@@ -2266,15 +2435,29 @@
                     }
                 }
             });
-        } else {
+        } else if (tipoChart === 'doughnut' || tipoChart === 'pie') {
+            // Calcular totales por país
+            const totalesPorPais = {};
+            datos.datasets.forEach(dataset => {
+                const total = dataset.data.reduce((sum, val) => sum + (val || 0), 0);
+                if (total > 0) {
+                    totalesPorPais[dataset.label] = total;
+                }
+            });
+            
+            const labels = Object.keys(totalesPorPais);
+            const data = Object.values(totalesPorPais);
+
             chartAmpliadoNacionalidad = new Chart(ctx, {
                 type: tipoChart,
                 data: {
-                    labels: ['Colombia', 'Otros Países'],
+                    labels: labels,
                     datasets: [{
-                        data: [totalColombia, totalOtros],
-                        backgroundColor: colors,
-                        borderColor: colors.map(color => darkenColor(color, 0.2)),
+                        data: data,
+                        backgroundColor: labels.map((label, index) => 
+                            coloresNacionalidades[index % coloresNacionalidades.length]
+                        ),
+                        borderColor: '#fff',
                         borderWidth: 2,
                     }],
                 },
@@ -2292,7 +2475,7 @@
                         },
                         title: {
                             display: true,
-                            text: `${getTituloTiempo(tipo)} - Distribución Total`,
+                            text: `${getTituloTiempo(tipo)} - Distribución por Nacionalidad ${datosFiltrados ? '(Filtrado)' : ''}`,
                             font: { size: 18, weight: 'bold' },
                             padding: 20
                         },
@@ -2305,69 +2488,87 @@
                             callbacks: {
                                 label: function(context) {
                                     const label = context.label || '';
-                                    const value = context.raw;
-                                    const total = totalColombia + totalOtros;
+                                    const value = context.raw || 0;
+                                    const total = data.reduce((a, b) => a + b, 0);
                                     const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
                                     return `${label}: ${value} visitantes (${percentage}%)`;
                                 }
                             }
                         }
                     },
-                    cutout: tipoChart === 'doughnut' ? '40%' : '0%'
+                    cutout: tipoChart === 'doughnut' ? '50%' : '0%'
                 }
             });
         }
     }
-
     // Llenar tabla del modal de tiempo
     function llenarTablaModalTiempo(tipo) {
         const tbody = document.getElementById("tbodyDatosNacionalidad");
         if (!tbody) return;
 
         const datos = getDatosTiempo(tipo);
-        const total = datos.valuesColombia.reduce((a, b) => a + b, 0) + datos.valuesOtros.reduce((a, b) => a + b, 0);
-
-        tbody.innerHTML = datos.labels.map((label, index) => {
-            const colombia = datos.valuesColombia[index];
-            const otros = datos.valuesOtros[index];
-            const totalPeríodo = colombia + otros;
-            const porcentajeColombia = totalPeríodo > 0 ? ((colombia / totalPeríodo) * 100).toFixed(1) : 0;
-            
-            // Calcular tendencia
-            let tendencia = '';
-            if (index > 0) {
-                const totalAnterior = datos.valuesColombia[index - 1] + datos.valuesOtros[index - 1];
-                const diferencia = totalPeríodo - totalAnterior;
-                const porcentajeCambio = totalAnterior > 0 ? ((diferencia / totalAnterior) * 100).toFixed(1) : 100;
-                
-                if (diferencia > 0) {
-                    tendencia = `<span style="color: #27ae60;"><i class="fas fa-arrow-up"></i> ${porcentajeCambio}%</span>`;
-                } else if (diferencia < 0) {
-                    tendencia = `<span style="color: #e74c3c;"><i class="fas fa-arrow-down"></i> ${Math.abs(porcentajeCambio)}%</span>`;
-                } else {
-                    tendencia = `<span style="color: #f39c12;"><i class="fas fa-minus"></i> 0%</span>`;
-                }
-            } else {
-                tendencia = '<span style="color: #95a5a6;">-</span>';
-            }
-            
-            return `
+        
+        // Verificar si tenemos datos en el nuevo formato
+        if (!datos || !datos.datasets || datos.datasets.length === 0) {
+            tbody.innerHTML = `
                 <tr>
-                    <td><strong>${label}</strong></td>
-                    <td>${getDescripcionTiempo(tipo, label)}</td>
-                    <td style="text-align: center; font-weight: bold">${totalPeríodo.toLocaleString()}</td>
-                    <td style="text-align: center; color: #2e7d32; font-weight: bold">${porcentajeColombia}%</td>
-                    <td style="text-align: center;">${tendencia}</td>
+                    <td colspan="5" style="text-align: center; padding: 20px; color: #7f8c8d;">
+                        <i class="fas fa-exclamation-circle"></i> No hay datos disponibles
+                    </td>
                 </tr>
             `;
-        }).join('') + (total > 0 ? `
+            return;
+        }
+
+        let html = '';
+        const totalGeneral = datos.total || 0;
+        
+        // Encabezado para formato de barras agrupadas
+        html += `
             <tr style="background: #f8f9fa; font-weight: bold;">
-                <td colspan="2">TOTAL GENERAL</td>
-                <td style="text-align: center">${total.toLocaleString()}</td>
-                <td style="text-align: center">${total > 0 ? ((datos.valuesColombia.reduce((a, b) => a + b, 0) / total) * 100).toFixed(1) : 0}%</td>
-                <td style="text-align: center;">-</td>
+                <th>Fecha/Período</th>
+                ${datos.paises.map(pais => `<th>${pais}</th>`).join('')}
+                <th>Total por Fecha</th>
             </tr>
-        ` : '');
+        `;
+        
+        // Filas de datos para cada fecha
+        datos.labels.forEach((fecha, fechaIndex) => {
+            const totalPorFecha = datos.datasets.reduce((sum, dataset) => 
+                sum + (dataset.data[fechaIndex] || 0), 0);
+            
+            html += `
+                <tr>
+                    <td><strong>${fecha}</strong></td>
+                    ${datos.datasets.map(dataset => 
+                        `<td style="text-align: center; font-weight: ${dataset.data[fechaIndex] > 0 ? 'bold' : 'normal'}">
+                            ${(dataset.data[fechaIndex] || 0).toLocaleString()}
+                        </td>`
+                    ).join('')}
+                    <td style="text-align: center; background: #e8f5e9; font-weight: bold;">
+                        ${totalPorFecha.toLocaleString()}
+                    </td>
+                </tr>
+            `;
+        });
+        
+        // Fila de totales por país
+        html += `
+            <tr style="background: #f0f7ff; font-weight: bold;">
+                <td><strong>Total por País</strong></td>
+                ${datos.datasets.map(dataset => {
+                    const totalPais = dataset.data.reduce((sum, val) => sum + (val || 0), 0);
+                    return `<td style="text-align: center; color: #2e7d32;">${totalPais.toLocaleString()}</td>`;
+                }).join('')}
+                <td style="text-align: center; background: #2e7d32; color: white;">
+                    ${datos.datasets.reduce((total, dataset) => 
+                        total + dataset.data.reduce((sum, val) => sum + (val || 0), 0), 0
+                    ).toLocaleString()}
+                </td>
+            </tr>
+        `;
+        
+        tbody.innerHTML = html;
     }
 
     // =============================================
@@ -2433,19 +2634,36 @@
     function descargarExcelTiempo(tipo) {
         const datos = getDatosTiempo(tipo);
         
+        // Nuevo formato compatible con datasets
         const datosExcel = [
-            [getTituloTiempo(tipo).split(' ')[1], 'Colombia', 'Otros Países', 'Total', '% Colombia'],
-            ...datos.labels.map((label, i) => {
-                const colombia = datos.valuesColombia[i];
-                const otros = datos.valuesOtros[i];
-                const total = colombia + otros;
-                const porcentajeColombia = total > 0 ? ((colombia / total) * 100).toFixed(1) : 0;
-                return [label, colombia, otros, total, `${porcentajeColombia}%`];
-            }),
-            ['TOTAL', datos.totalColombia, datos.totalOtros, datos.total, 
-             datos.total > 0 ? `${((datos.totalColombia / datos.total) * 100).toFixed(1)}%` : '0%']
+            ['Fecha', ...datos.paises, 'Total']
         ];
-
+        
+        // Para cada fecha
+        datos.labels.forEach((fecha, i) => {
+            const fila = [fecha];
+            let totalFecha = 0;
+            
+            // Para cada país
+            datos.datasets.forEach(dataset => {
+                const valor = dataset.data[i] || 0;
+                fila.push(valor);
+                totalFecha += valor;
+            });
+            
+            fila.push(totalFecha);
+            datosExcel.push(fila);
+        });
+        
+        // Totales por país
+        const totales = ['TOTAL'];
+        datos.datasets.forEach(dataset => {
+            const total = dataset.data.reduce((sum, val) => sum + (val || 0), 0);
+            totales.push(total);
+        });
+        totales.push(datos.total || 0);
+        datosExcel.push(totales);
+        
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet(datosExcel);
         XLSX.utils.book_append_sheet(wb, ws, `Datos por ${tipo}`);

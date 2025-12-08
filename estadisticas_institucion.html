@@ -610,6 +610,61 @@
             margin: 0;
         }
 
+
+        /* Agregar al CSS existente */
+        .filter-select[multiple], 
+        .filter-select[size] {
+            min-height: 120px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .filter-select option {
+            padding: 6px 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .filter-select option:hover {
+            background-color: #f0f7ff;
+        }
+
+        .filter-select option:checked {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 500px;
+            margin: 40px auto;
+        }
+
+        .no-data i {
+            font-size: 48px;
+            color: #95a5a6;
+            margin-bottom: 20px;
+        }
+
+        .no-data h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .no-data p {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+
+        .no-data strong {
+            color: #e74c3c;
+        }
+                
+        
+
         /* Responsive */
         @media (max-width: 768px) {
             .header {
