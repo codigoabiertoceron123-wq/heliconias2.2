@@ -1158,6 +1158,7 @@ async function aplicarFiltroPorGeneroYFecha() {
 }
 
 // Función SIMPLIFICADA para aplicar filtro por mes
+// Función SIMPLIFICADA para aplicar filtro por mes
 async function aplicarFiltroRangoMeses() {
     const fechaInicial = document.getElementById('filtroFechaInicialMes').value;
     const fechaFinal = document.getElementById('filtroFechaFinalMes').value;
@@ -1216,7 +1217,7 @@ async function aplicarFiltroRangoMeses() {
             }
             
             const tipoGraficaActual = document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica');
-            actualizarGraficaModal(tipoGraficaActual, titulo);
+            actualizarGraficaModalConDatosAgrupados(tipoGraficaActual, datosProcesados, titulo);
         }
         
         mostrarExito(`Se encontraron ${datosProcesados.totalGeneral} visitantes en ${datosProcesados.labels.length} meses`);
@@ -1227,7 +1228,6 @@ async function aplicarFiltroRangoMeses() {
         mostrarMensajeSinDatos('Error al cargar los datos: ' + error.message);
     }
 }
-
 // Función SIMPLIFICADA para aplicar filtro por año
 async function aplicarFiltroRangoAnios() {
     const fechaInicial = document.getElementById('filtroFechaInicialAnio').value;
@@ -1285,7 +1285,7 @@ async function aplicarFiltroRangoAnios() {
             }
             
             const tipoGraficaActual = document.querySelector('.modal-chart-container').getAttribute('data-tipo-grafica');
-            actualizarGraficaModal(tipoGraficaActual, titulo);
+            actualizarGraficaModalConDatosAgrupados(tipoGraficaActual, datosProcesados, titulo);
         }
         
         mostrarExito(`Se encontraron ${datosProcesados.totalGeneral} visitantes en ${datosProcesados.labels.length} años`);
@@ -2059,103 +2059,136 @@ function actualizarGraficaModalConDatosAgrupados(tipoGrafica, datosProcesados, t
     
     if (chartAmpliado) chartAmpliado.destroy();
 
-    // Determinar el tipo de gráfica según los datos
-    const esGraficaAgrupada = datosProcesados.type === 'grouped';
-    
-    if (esGraficaAgrupada) {
-        // GRÁFICA AGRUPADA (todos los géneros)
-        chartAmpliado = new Chart(ctx, {
-            type: tipoGrafica === "bar" ? "bar" : "doughnut",
-            data: {
-                labels: datosProcesados.labels,
-                datasets: datosProcesados.datasets
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            padding: 15,
-                            usePointStyle: true,
-                            pointStyle: 'circle',
-                            font: { size: 13 }
-                        }
-                    },
-                    title: {
-                        display: true,
-                        text: titulo,
-                        font: { size: 18, weight: 'bold' },
-                        padding: 25
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        titleFont: { size: 14 },
-                        bodyFont: { size: 14 },
-                        padding: 12,
-                        cornerRadius: 8,
-                        callbacks: {
-                            title: function(tooltipItems) {
-                                return `Fecha: ${tooltipItems[0].label}`;
-                            },
-                            label: function(context) {
-                                const totalFecha = datosProcesados.labels.reduce((sum, fecha, index) => {
-                                    return sum + datosProcesados.datasets.reduce((datasetSum, dataset) => 
-                                        datasetSum + (dataset.data[index] || 0), 0);
-                                }, 0);
-                                const percentage = totalFecha > 0 ? 
-                                    Math.round((context.parsed.y / totalFecha) * 100) : 0;
-                                return `${context.dataset.label}: ${context.parsed.y} visitantes (${percentage}%)`;
+    // DETECTAR QUÉ TIPO DE DATOS TENEMOS
+    if (datosProcesados.type === 'grouped') {
+        // DATOS AGRUPADOS (con datasets múltiples)
+        
+        if (tipoActual === 'anio') {
+            // CASO ESPECIAL: GRÁFICA DE AÑOS AGRUPADOS
+            actualizarGraficaAniosAgrupados(tipoGrafica, datosProcesados, titulo);
+        } else if (tipoActual === 'mes') {
+            // CASO ESPECIAL: GRÁFICA DE MESES AGRUPADOS
+            actualizarGraficaMesesAgrupados(tipoGrafica, datosProcesados, titulo);
+        } else {
+            // CASO GENERAL: GRÁFICA AGRUPADA (fechas, días, etc.)
+            chartAmpliado = new Chart(ctx, {
+                type: tipoGrafica === "bar" ? "bar" : "doughnut",
+                data: {
+                    labels: datosProcesados.labels,
+                    datasets: datosProcesados.datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                font: { size: 13 }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: titulo,
+                            font: { size: 18, weight: 'bold' },
+                            padding: 25
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 14 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    let labelText = '';
+                                    if (tipoActual === 'fecha') {
+                                        labelText = `Fecha: ${tooltipItems[0].label}`;
+                                    } else if (tipoActual === 'mes') {
+                                        labelText = `Mes: ${tooltipItems[0].label}`;
+                                    } else if (tipoActual === 'anio') {
+                                        labelText = `Año: ${tooltipItems[0].label}`;
+                                    } else {
+                                        labelText = tooltipItems[0].label;
+                                    }
+                                    return labelText;
+                                },
+                                label: function(context) {
+                                    let totalPeriodo = 0;
+                                    
+                                    if (tipoActual === 'fecha' && datosProcesados.totalPorFecha) {
+                                        totalPeriodo = datosProcesados.totalPorFecha[context.dataIndex] || 0;
+                                    } else if (tipoActual === 'mes' && datosProcesados.totalPorMes) {
+                                        totalPeriodo = datosProcesados.totalPorMes[context.dataIndex] || 0;
+                                    } else if (tipoActual === 'anio' && datosProcesados.totalPorAño) {
+                                        totalPeriodo = datosProcesados.totalPorAño[context.dataIndex] || 0;
+                                    }
+                                    
+                                    const valor = context.parsed.y;
+                                    const porcentaje = totalPeriodo > 0 ? 
+                                        Math.round((valor / totalPeriodo) * 100) : 0;
+                                    return `${context.dataset.label}: ${valor} visitantes (${porcentaje}%)`;
+                                }
                             }
                         }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        stacked: false, // NO apiladas, sino agrupadas
-                        grid: { 
-                            color: 'rgba(0,0,0,0.1)',
-                            drawBorder: false
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            stacked: false, // BARRAS JUNTAS, NO APILADAS
+                            grid: { 
+                                color: 'rgba(0,0,0,0.1)',
+                                drawBorder: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Cantidad de Visitantes',
+                                font: { weight: 'bold', size: 14 }
+                            },
+                            ticks: {
+                                precision: 0
+                            }
                         },
-                        title: {
-                            display: true,
-                            text: 'Cantidad de Visitantes',
-                            font: { weight: 'bold', size: 14 }
-                        },
-                        ticks: {
-                            precision: 0
+                        x: {
+                            stacked: false, // BARRAS JUNTAS
+                            grid: { display: false },
+                            title: {
+                                display: true,
+                                text: obtenerEtiquetaDescriptiva(tipoActual),
+                                font: { weight: 'bold', size: 14 }
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 0,
+                                font: { size: 12 }
+                            }
                         }
                     },
-                    x: {
-                        stacked: false, // NO apiladas
-                        grid: { display: false },
-                        title: {
-                            display: true,
-                            text: 'Fechas de Visita',
-                            font: { weight: 'bold', size: 14 }
-                        },
-                        ticks: {
-                            maxRotation: 45,
-                            minRotation: 0,
-                            font: { size: 12 }
-                        }
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
                     }
-                },
-                animation: {
-                    duration: 1000,
-                    easing: 'easeOutQuart'
                 }
+            });
+            
+            // Actualizar tabla según el tipo
+            if (tipoActual === 'fecha') {
+                actualizarTablaFechasAgrupadas(datosProcesados);
+            } else if (tipoActual === 'mes') {
+                actualizarTablaMesesAgrupados(datosProcesados);
+            } else if (tipoActual === 'anio') {
+                actualizarTablaAñosAgrupados(datosProcesados);
+            } else {
+                actualizarTablaDatosAgrupados(datosProcesados);
             }
-        });
+        }
         
-        // Actualizar tabla con datos agrupados
-        actualizarTablaDatosAgrupados(datosProcesados);
-        
-    } else {
+    } else if (datosProcesados.type === 'genero_especifico') {
         // GRÁFICA SIMPLE (género específico)
-        const colors = generarColores('fecha', datosProcesados.labels);
+        const colors = generarColores(tipoActual, datosProcesados.labels);
         
         chartAmpliado = new Chart(ctx, {
             type: tipoGrafica === "bar" ? "bar" : "doughnut", 
@@ -2220,7 +2253,7 @@ function actualizarGraficaModalConDatosAgrupados(tipoGrafica, datosProcesados, t
                         grid: { display: false },
                         title: {
                             display: true,
-                            text: 'Fechas de Visita',
+                            text: obtenerEtiquetaDescriptiva(tipoActual),
                             font: { weight: 'bold', size: 14 }
                         },
                         ticks: {
@@ -2236,11 +2269,67 @@ function actualizarGraficaModalConDatosAgrupados(tipoGrafica, datosProcesados, t
             }
         });
         
-        // Actualizar tabla con datos simples
         actualizarTablaDatosSimples(datosProcesados);
     }
 }
-
+function actualizarTablaMesesAgrupados(datosProcesados) {
+    const tbody = document.querySelector("#tablaDatos tbody");
+    if (!tbody) return;
+    
+    let tablaHTML = '';
+    
+    // Para cada mes
+    datosProcesados.labels.forEach((mes, mesIndex) => {
+        const totalMes = datosProcesados.totalPorPeriodo[mesIndex] || 0;
+        
+        if (totalMes > 0) {
+            // Encabezado de mes
+            tablaHTML += `
+                <tr style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+                    <td colspan="3" style="font-weight: bold; color: #2c3e50; padding: 12px; border-bottom: 2px solid #dee2e6;">
+                        <i class="fas fa-calendar-week"></i> ${mes} - Total: ${totalMes} visitantes
+                    </td>
+                </tr>
+            `;
+            
+            // Detalle por género para este mes
+            datosProcesados.datasets.forEach(dataset => {
+                const valor = dataset.data[mesIndex] || 0;
+                if (valor > 0) {
+                    const porcentaje = totalMes > 0 ? ((valor / totalMes) * 100).toFixed(1) : 0;
+                    const claseGenero = obtenerClaseGenero(dataset.label.toLowerCase());
+                    
+                    tablaHTML += `
+                        <tr>
+                            <td style="padding-left: 30px;">
+                                <span class="gender-badge ${claseGenero}">
+                                    <i class="fas ${dataset.label === 'Masculino' ? 'fa-mars' : dataset.label === 'Femenino' ? 'fa-venus' : 'fa-genderless'}"></i>
+                                    ${formatearGenero(dataset.label)}
+                                </span>
+                            </td>
+                            <td style="text-align: center; font-weight: bold">${valor.toLocaleString()}</td>
+                            <td style="text-align: center; color: #2c3e50; font-weight: bold">${porcentaje}%</td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+    });
+    
+    // Fila de total general
+    if (datosProcesados.totalGeneral > 0) {
+        tablaHTML += `
+            <tr style="background: linear-gradient(135deg, #a8e6cf, #dcedc1); font-weight: bold;">
+                <td colspan="2" style="padding: 12px; border-top: 2px solid #2ecc71;">
+                    <i class="fas fa-chart-bar"></i> TOTAL GENERAL
+                </td>
+                <td style="text-align: center; border-top: 2px solid #2ecc71;">${datosProcesados.totalGeneral.toLocaleString()}</td>
+            </tr>
+        `;
+    }
+    
+    tbody.innerHTML = tablaHTML;
+}
 // Función para actualizar tabla comparativa
 function actualizarTablaComparativa(datosComparativa) {
     const tbody = document.querySelector("#tablaDatos tbody");
@@ -3635,6 +3724,272 @@ async function aplicarFiltroPorGeneroYFecha() {
         mostrarMensajeSinDatos('Error al cargar los datos: ' + error.message);
     }
 }
+// ====================================================================
+// FUNCIONES NUEVAS QUE FALTAN - AÑADIR ANTES DE actualizarGraficaModalConDatosAgrupados
+// ====================================================================
+
+// Función para actualizar gráfica de meses agrupados (BARRAS JUNTAS)
+function actualizarGraficaMesesAgrupados(tipoGrafica, datosProcesados, titulo) {
+    const ctx = document.getElementById("chartAmpliado").getContext("2d");
+    
+    if (chartAmpliado) chartAmpliado.destroy();
+
+    // Configurar gráfica de barras agrupadas (BARRAS JUNTAS)
+    chartAmpliado = new Chart(ctx, {
+        type: 'bar', // SIEMPRE barras para esta vista
+        data: {
+            labels: datosProcesados.labels,
+            datasets: datosProcesados.datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: { size: 13 }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: titulo,
+                    font: { size: 18, weight: 'bold' },
+                    padding: 25
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    titleFont: { size: 14 },
+                    bodyFont: { size: 14 },
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            return `Mes: ${tooltipItems[0].label}`;
+                        },
+                        label: function(context) {
+                            const mesIndex = context.dataIndex;
+                            const totalMes = datosProcesados.totalPorPeriodo[mesIndex] || 0;
+                            const valor = context.parsed.y;
+                            const porcentaje = totalMes > 0 ? Math.round((valor / totalMes) * 100) : 0;
+                            return `${context.dataset.label}: ${valor} visitantes (${porcentaje}%)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    stacked: false, // IMPORTANTE: BARRAS JUNTAS, NO APILADAS
+                    grid: { 
+                        color: 'rgba(0,0,0,0.1)',
+                        drawBorder: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cantidad de Visitantes',
+                        font: { weight: 'bold', size: 14 }
+                    },
+                    ticks: {
+                        precision: 0
+                    }
+                },
+                x: {
+                    stacked: false, // IMPORTANTE: BARRAS JUNTAS
+                    grid: { display: false },
+                    title: {
+                        display: true,
+                        text: 'Meses',
+                        font: { weight: 'bold', size: 14 }
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 0,
+                        font: { size: 12 }
+                    }
+                }
+            },
+            // Configuración para barras juntas
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeOutQuart'
+            }
+        }
+    });
+
+    // Actualizar tabla
+    actualizarTablaMesesAgrupados(datosProcesados);
+}
+
+// Función para actualizar gráfica de años agrupados (BARRAS JUNTAS)
+function actualizarGraficaAniosAgrupados(tipoGrafica, datosProcesados, titulo) {
+    const ctx = document.getElementById("chartAmpliado").getContext("2d");
+    
+    if (chartAmpliado) chartAmpliado.destroy();
+
+    // Configurar gráfica de barras agrupadas (BARRAS JUNTAS)
+    chartAmpliado = new Chart(ctx, {
+        type: 'bar', // SIEMPRE barras para esta vista
+        data: {
+            labels: datosProcesados.labels,
+            datasets: datosProcesados.datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: { size: 13 }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: titulo,
+                    font: { size: 18, weight: 'bold' },
+                    padding: 25
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    titleFont: { size: 14 },
+                    bodyFont: { size: 14 },
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            return `Año: ${tooltipItems[0].label}`;
+                        },
+                        label: function(context) {
+                            const añoIndex = context.dataIndex;
+                            const totalAño = datosProcesados.totalPorAño[añoIndex] || 0;
+                            const valor = context.parsed.y;
+                            const porcentaje = totalAño > 0 ? Math.round((valor / totalAño) * 100) : 0;
+                            return `${context.dataset.label}: ${valor} visitantes (${porcentaje}%)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    stacked: false, // IMPORTANTE: BARRAS JUNTAS, NO APILADAS
+                    grid: { 
+                        color: 'rgba(0,0,0,0.1)',
+                        drawBorder: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cantidad de Visitantes',
+                        font: { weight: 'bold', size: 14 }
+                    },
+                    ticks: {
+                        precision: 0
+                    }
+                },
+                x: {
+                    stacked: false, // IMPORTANTE: BARRAS JUNTAS
+                    grid: { display: false },
+                    title: {
+                        display: true,
+                        text: 'Años',
+                        font: { weight: 'bold', size: 14 }
+                    },
+                    ticks: {
+                        font: { size: 12 }
+                    }
+                }
+            },
+            // Configuración para barras juntas
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeOutQuart'
+            }
+        }
+    });
+
+    // Actualizar tabla
+    actualizarTablaAñosAgrupados(datosProcesados);
+}
+
+// Función para actualizar tabla de meses agrupados - VERSIÓN COMPLETA
+function actualizarTablaMesesAgrupados(datosProcesados) {
+    const tbody = document.querySelector("#tablaDatos tbody");
+    if (!tbody) return;
+    
+    let tablaHTML = '';
+    
+    // Para cada mes
+    datosProcesados.labels.forEach((mes, mesIndex) => {
+        const totalMes = datosProcesados.totalPorPeriodo[mesIndex] || 0;
+        
+        if (totalMes > 0) {
+            // Encabezado de mes
+            tablaHTML += `
+                <tr style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+                    <td colspan="3" style="font-weight: bold; color: #2c3e50; padding: 12px; border-bottom: 2px solid #dee2e6;">
+                        <i class="fas fa-calendar-week"></i> ${mes} - Total: ${totalMes} visitantes
+                    </td>
+                </tr>
+            `;
+            
+            // Detalle por género para este mes
+            datosProcesados.datasets.forEach(dataset => {
+                const valor = dataset.data[mesIndex] || 0;
+                if (valor > 0) {
+                    const porcentaje = totalMes > 0 ? ((valor / totalMes) * 100).toFixed(1) : 0;
+                    const claseGenero = obtenerClaseGenero(dataset.label.toLowerCase());
+                    
+                    tablaHTML += `
+                        <tr>
+                            <td style="padding-left: 30px;">
+                                <span class="gender-badge ${claseGenero}">
+                                    <i class="fas ${dataset.label === 'Masculino' ? 'fa-mars' : dataset.label === 'Femenino' ? 'fa-venus' : 'fa-genderless'}"></i>
+                                    ${formatearGenero(dataset.label)}
+                                </span>
+                            </td>
+                            <td style="text-align: center; font-weight: bold">${valor.toLocaleString()}</td>
+                            <td style="text-align: center; color: #2c3e50; font-weight: bold">${porcentaje}%</td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+    });
+    
+    // Fila de total general
+    if (datosProcesados.totalGeneral > 0) {
+        tablaHTML += `
+            <tr style="background: linear-gradient(135deg, #a8e6cf, #dcedc1); font-weight: bold;">
+                <td colspan="2" style="padding: 12px; border-top: 2px solid #2ecc71;">
+                    <i class="fas fa-chart-bar"></i> TOTAL GENERAL
+                </td>
+                <td style="text-align: center; border-top: 2px solid #2ecc71;">${datosProcesados.totalGeneral.toLocaleString()}</td>
+            </tr>
+        `;
+    }
+    
+    tbody.innerHTML = tablaHTML;
+}
+
+// ====================================================================
+// FIN DE FUNCIONES NUEVAS
+// ====================================================================
+
 
 // Función para actualizar gráfica con datos filtrados
 function actualizarGraficaConFiltro(datosFiltrados, tituloPersonalizado) {

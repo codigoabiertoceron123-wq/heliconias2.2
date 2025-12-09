@@ -49,21 +49,6 @@ class UIManager {
                     <button class="chart-btn active" data-type="tipo_reserva">
                         <i class="fas fa-ticket-alt"></i> Tipo Reserva
                     </button>
-                    <button class="chart-btn" data-type="actividad">
-                        <i class="fas fa-hiking"></i> Actividad
-                    </button>
-                    <button class="chart-btn" data-type="institucion">
-                        <i class="fas fa-university"></i> Institución
-                    </button>
-                    <button class="chart-btn" data-type="intereses">
-                        <i class="fas fa-heart"></i> Intereses
-                    </button>
-                    <button class="chart-btn" data-type="genero">
-                        <i class="fas fa-venus-mars"></i> Género
-                    </button>
-                    <button class="chart-btn" data-type="temporada">
-                        <i class="fas fa-calendar"></i> Temporada
-                    </button>
                     <button class="chart-btn" data-type="fecha">
                         <i class="fas fa-calendar-day"></i> Fecha
                     </button>
@@ -316,91 +301,40 @@ class UIManager {
                     </div>
                 </div>
             `;
-        }  else if (tipoActual === 'actividad') {
-        // FILTROS SIMPLIFICADOS PARA ACTIVIDADES
-        filtrosHTML = `
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 12px;">
-                <div class="filter-group">
-                    <label class="filter-label">Fecha Inicial</label>
-                    <input type="date" class="filter-select" id="modal-filtro-fecha-inicio">
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Fecha Final</label>
-                    <input type="date" class="filter-select" id="modal-filtro-fecha-fin">
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Estado de Reserva</label>
-                    <select class="filter-select" id="modal-filtro-estado">
-                        <option value="">No seleccionado</option>
-                        <option value="todas">Todos los estados</option>
-                        <option value="confirmada">Confirmadas</option>
-                        <option value="pendiente">Pendientes</option>
-                        <option value="cancelada">Canceladas</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Actividad Específica</label>
-                    <select class="filter-select" id="modal-filtro-actividad">
-                        <option value="">No seleccionado</option>
-                        <option value="todas">Todas las actividades</option>
-                        <!-- Las actividades se cargarán dinámicamente -->
-                    </select>
-                </div>
-            </div>
-        `;
-    }   // En la función crearFiltrosModal, agregar el caso para 'institucion':
-        else if (tipoActual === 'institucion') {
-            // Fecha por defecto: últimos 30 días
-            const hoy = new Date();
-            const hace30Dias = new Date();
-            hace30Dias.setDate(hoy.getDate() - 30);
-            
+        
+       } else if (['fecha', 'mes', 'anio'].includes(tipoActual)) {
             filtrosHTML = `
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 12px;">
-                    <!-- Filtros de Fecha -->
                     <div class="filter-group">
-                        <label class="filter-label"><i class="fas fa-calendar-alt"></i> Fecha Inicial</label>
-                        <input type="date" class="filter-select" id="modal-filtro-fecha-inicio" value="${hace30Dias.toISOString().split('T')[0]}">
+                        <label class="filter-label">Fecha Inicial</label>
+                        <input type="date" class="filter-select" id="modal-filtro-fecha-inicio">
                     </div>
                     <div class="filter-group">
-                        <label class="filter-label"><i class="fas fa-calendar-alt"></i> Fecha Final</label>
-                        <input type="date" class="filter-select" id="modal-filtro-fecha-fin" value="${hoy.toISOString().split('T')[0]}">
+                        <label class="filter-label">Fecha Final</label>
+                        <input type="date" class="filter-select" id="modal-filtro-fecha-fin">
                     </div>
-                    
-                    <!-- Filtro de Institución -->
                     <div class="filter-group">
-                        <label class="filter-label"><i class="fas fa-university"></i> Institución</label>
-                        <select class="filter-select" id="modal-filtro-institucion">
-                            <option value="todas">Todas las instituciones</option>
-                            <!-- Las instituciones se cargarán dinámicamente -->
+                        <label class="filter-label">Tipo de Reserva</label>
+                        <select class="filter-select" id="modal-filtro-tipo-reserva">
+                            <option value="">No seleccionado</option>
+                            <option value="todas">Todas las reservas</option>
+                            <option value="individual">Individual</option>
+                            <option value="grupal">Grupal</option>
                         </select>
                     </div>
-            
-                    
-                    <!-- Mostrar y Ordenar -->
                     <div class="filter-group">
-                        <label class="filter-label"><i class="fas fa-list-ol"></i> Mostrar</label>
-                        <select class="filter-select" id="modal-filtro-cantidad">
-                            <option value="10">Top 10</option>
-                            <option value="5">Top 5</option>
-                            <option value="15">Top 15</option>
-                            <option value="20">Top 20</option>
-                            <option value="0">Todos</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label class="filter-label"><i class="fas fa-sort-amount-down"></i> Ordenar por</label>
-                        <select class="filter-select" id="modal-filtro-orden">
-                            <option value="desc">Mayor a menor</option>
-                            <option value="asc">Menor a mayor</option>
-                            <option value="alpha">Alfabético</option>
+                        <label class="filter-label">Estado de Reserva</label>
+                        <select class="filter-select" id="modal-filtro-estado">
+                            <option value="">No seleccionado</option>
+                            <option value="todas">Todos los estados</option>
+                            <option value="confirmada">Confirmadas</option>
+                            <option value="pendiente">Pendientes</option>
+                            <option value="cancelada">Canceladas</option>
                         </select>
                     </div>
                 </div>
             `;
         }
-         
         else {
             // Filtros básicos para otras categorías
             filtrosHTML = `
@@ -562,21 +496,14 @@ class UIManager {
     aplicarFiltrosModal() {
         const tipoActual = this.chartManager ? this.chartManager.tipoActual : 'tipo_reserva';
         
-        if (tipoActual === 'institucion') {
-            // Llamar a la función específica para institución
-            this.aplicarFiltrosInstitucion();
-            return;
-        }
-        
-        // Para otros tipos, usar la lógica original
-        const fechaInicio = document.getElementById('modal-filtro-fecha-inicio');
-        const fechaFin = document.getElementById('modal-filtro-fecha-fin');
-        const tipoReserva = document.getElementById('modal-filtro-tipo-reserva');
-        const estado = document.getElementById('modal-filtro-estado');
-        const actividad = document.getElementById('modal-filtro-actividad');
+        // Obtener valores de filtros
+        const fechaInicio = document.getElementById('modal-filtro-fecha-inicio')?.value;
+        const fechaFin = document.getElementById('modal-filtro-fecha-fin')?.value;
+        const tipoReserva = document.getElementById('modal-filtro-tipo-reserva')?.value;
+        const estado = document.getElementById('modal-filtro-estado')?.value;
         
         // Validaciones básicas
-        if (fechaInicio.value && fechaFin.value && fechaInicio.value > fechaFin.value) {
+        if (fechaInicio && fechaFin && fechaInicio > fechaFin) {
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     icon: 'error',
@@ -588,23 +515,21 @@ class UIManager {
             return;
         }
         
-        // Obtener valores de filtros
         const filtros = {
-            fechaInicio: fechaInicio.value,
-            fechaFin: fechaFin.value
+            fechaInicio: fechaInicio,
+            fechaFin: fechaFin,
+            tipoReserva: tipoReserva || '',
+            estado: estado || ''
         };
         
-        if (tipoReserva) filtros.tipoReserva = tipoReserva.value;
-        if (estado && estado.value) filtros.estado = estado.value;
-        if (actividad && actividad.value) filtros.actividad = actividad.value;
-
-        console.log('🎯 Aplicando filtros:', filtros);
-
-        // Aplicar filtros según el tipo de categoría
+        // Redirigir según el tipo
         if (tipoActual === 'tipo_reserva') {
             this.aplicarFiltrosTipoReserva(filtros);
         } else if (tipoActual === 'actividad') {
             this.aplicarFiltrosActividad(filtros);
+        } else if (['fecha', 'mes', 'anio'].includes(tipoActual)) {
+            // NUEVO: Usar el método para tiempo
+            this.aplicarFiltrosTiempo(tipoActual, filtros);
         } else {
             // Para otras categorías, usar filtros básicos de fecha
             if (this.dataLoader) {
@@ -721,6 +646,121 @@ class UIManager {
 
         } catch (error) {
             console.error('Error aplicando filtros:', error);
+            if (typeof Swal !== 'undefined') {
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudieron aplicar los filtros: ' + error.message,
+                    confirmButtonColor: '#e74c3c'
+                });
+            }
+        }
+    }
+
+    // AGREGAR después del método aplicarFiltrosActividad
+    async aplicarFiltrosTiempo(tipo, filtros) {
+        try {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Aplicando filtros...',
+                    text: `Filtrando datos por ${tipo}`,
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            }
+
+            console.log(`🎯 Aplicando filtros para ${tipo}:`, filtros);
+
+            let query = supabase
+                .from('participantes_reserva')
+                .select(`
+                    *,
+                    reservas(
+                        *,
+                        actividades(*),
+                        instituciones(*)
+                    ),
+                    intereses(*)
+                `);
+
+            // Aplicar filtros de fecha
+            if (filtros.fechaInicio && filtros.fechaFin) {
+                query = query.gte('reservas.fecha_reserva', filtros.fechaInicio + 'T00:00:00')
+                            .lte('reservas.fecha_reserva', filtros.fechaFin + 'T23:59:59');
+            }
+
+            // Aplicar filtro de tipo de reserva
+            if (filtros.tipoReserva && filtros.tipoReserva !== '') {
+                if (filtros.tipoReserva !== 'todas') {
+                    query = query.eq('reservas.tipo_reserva', filtros.tipoReserva);
+                }
+            }
+
+            // Aplicar filtro de estado
+            if (filtros.estado && filtros.estado !== '') {
+                if (filtros.estado !== 'todas') {
+                    query = query.eq('reservas.estado', filtros.estado);
+                }
+            }
+
+            const { data: participantesFiltrados, error } = await query;
+
+            if (error) throw error;
+
+            if (typeof Swal !== 'undefined') {
+                Swal.close();
+            }
+
+            if (participantesFiltrados && participantesFiltrados.length > 0) {
+                // Procesar datos con el timeProcessor
+                let datosProcesados;
+                
+                switch(tipo) {
+                    case 'fecha':
+                        datosProcesados = window.timeProcessor.procesarPorFecha(participantesFiltrados);
+                        break;
+                    case 'mes':
+                        datosProcesados = window.timeProcessor.procesarPorMes(participantesFiltrados);
+                        break;
+                    case 'anio':
+                        datosProcesados = window.timeProcessor.procesarPorAnio(participantesFiltrados);
+                        break;
+                }
+
+                // Actualizar datos en el dataProcessor
+                if (this.dataProcessor && datosProcesados) {
+                    this.dataProcessor.datosSimulados[tipo] = datosProcesados;
+                    
+                    // Actualizar gráfica en el modal
+                    const tipoGrafica = document.querySelector('.modal-chart-container')?.getAttribute('data-tipo-grafica') || 'bar';
+                    this.actualizarGraficaModalTiempo(tipo, tipoGrafica, datosProcesados);
+
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Filtros aplicados',
+                            text: `Se encontraron ${participantesFiltrados.length} participantes para el ${tipo} seleccionado`,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    }
+                }
+            } else {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Sin resultados',
+                        text: 'No se encontraron datos para los filtros aplicados',
+                        confirmButtonColor: '#3498db'
+                    });
+                }
+            }
+
+        } catch (error) {
+            console.error(`Error aplicando filtros de ${tipo}:`, error);
             if (typeof Swal !== 'undefined') {
                 Swal.close();
                 Swal.fire({
@@ -1125,6 +1165,22 @@ class UIManager {
             // Recargar datos sin filtros para institución
             this.recargarDatosInstitucionSinFiltros();
             
+        } if (['fecha', 'mes', 'anio'].includes(tipoActual)) {
+            // Limpiar filtros específicos de tiempo
+            const fechaInicio = document.getElementById('modal-filtro-fecha-inicio');
+            const fechaFin = document.getElementById('modal-filtro-fecha-fin');
+            const tipoReserva = document.getElementById('modal-filtro-tipo-reserva');
+            const estado = document.getElementById('modal-filtro-estado');
+            
+            if (fechaInicio) fechaInicio.value = '';
+            if (fechaFin) fechaFin.value = '';
+            if (tipoReserva) tipoReserva.value = '';
+            if (estado) estado.value = '';
+            
+            // Recargar datos originales
+            if (this.dataLoader) {
+                this.dataLoader.cargarDatosVisitantes();
+            }
         } else {
             // Limpiar filtros para otros tipos (mantener lógica original)
             const fechaInicio = document.getElementById('modal-filtro-fecha-inicio');
@@ -1196,6 +1252,110 @@ class UIManager {
             
             this.actualizarGraficaModalConFiltros(tipoGrafica, filtros);
         }
+    }
+
+    // AGREGAR este método también para actualizar gráficas de tiempo
+    actualizarGraficaModalTiempo(tipo, tipoGrafica, datosProcesados) {
+        const canvas = document.getElementById("chartAmpliado");
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext("2d");
+        
+        if (this.chartManager && this.chartManager.chartAmpliado) {
+            this.chartManager.chartAmpliado.destroy();
+        }
+
+        // Preparar datos para el gráfico
+        const colors = this.chartManager.generarColores(tipo, datosProcesados.labels);
+        
+        const chartData = {
+            labels: datosProcesados.labels,
+            datasets: [
+                {
+                    label: `Visitantes por ${tipo}`,
+                    data: datosProcesados.values,
+                    backgroundColor: colors,
+                    borderRadius: tipoGrafica === "bar" ? 6 : 0,
+                    borderWidth: tipoGrafica === "bar" ? 0 : 2,
+                    borderColor: tipoGrafica === "bar" ? 'transparent' : '#fff',
+                    barThickness: tipoGrafica === "bar" ? 18 : undefined,
+                    maxBarThickness: tipoGrafica === "bar" ? 30 : undefined,
+                    barPercentage: tipoGrafica === "bar" ? 0.6 : undefined
+                },
+            ],
+        };
+
+        // Crear nueva gráfica
+        if (this.chartManager) {
+            this.chartManager.chartAmpliado = new Chart(ctx, {
+                type: tipoGrafica === "bar" ? "bar" : "doughnut",
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: tipoGrafica === "bar" ? 'top' : 'right',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                font: { size: 13 }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: `Visitantes por ${tipo.toUpperCase()} (Filtrado)`,
+                            font: { size: 18, weight: 'bold' },
+                            padding: 25
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.7)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 14 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed.y || context.parsed;
+                                    const total = datosProcesados.total;
+                                    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                    return `${label}: ${value.toLocaleString()} visitantes (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: tipoGrafica === "bar" ? {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            title: {
+                                display: true,
+                                text: 'Cantidad de Visitantes',
+                                font: { weight: 'bold', size: 14 }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            title: {
+                                display: true,
+                                text: tipo === 'fecha' ? 'Fecha' : 
+                                    tipo === 'mes' ? 'Mes' : 'Año',
+                                font: { weight: 'bold', size: 14 }
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 0
+                            }
+                        }
+                    } : {},
+                    cutout: tipoGrafica === "bar" ? '0%' : '40%'
+                }
+            });
+        }
+
+        // Actualizar tabla
+        this.actualizarTablaTiempo(tipo, datosProcesados);
     }
 
     actualizarGraficaModalConFiltros(tipoGrafica, filtros) {
@@ -1719,6 +1879,33 @@ class UIManager {
         }
 
         tbody.innerHTML = tablaHTML;
+    }
+
+    // AGREGAR método para actualizar tabla de tiempo
+    actualizarTablaTiempo(tipo, datosProcesados) {
+        const tbody = document.querySelector("#tablaDatos tbody");
+        if (!tbody) return;
+
+        const total = datosProcesados.values.reduce((a, b) => a + b, 0);
+        
+        tbody.innerHTML = datosProcesados.labels.map((label, i) => {
+            const valor = datosProcesados.values[i];
+            const porcentaje = total > 0 ? ((valor / total) * 100).toFixed(1) : 0;
+            
+            return `
+                <tr>
+                    <td><strong>${label}</strong></td>
+                    <td style="text-align: center; font-weight: bold">${valor.toLocaleString()}</td>
+                    <td style="text-align: center; color: #2c3e50; font-weight: bold">${porcentaje}%</td>
+                </tr>
+            `;
+        }).join("") + (total > 0 ? `
+            <tr style="background: #f8f9fa; font-weight: bold;">
+                <td>TOTAL GENERAL</td>
+                <td style="text-align: center">${total.toLocaleString()}</td>
+                <td style="text-align: center">100%</td>
+            </tr>
+        ` : '');
     }
 
     generarTituloConFiltros(tipo, filtros) {

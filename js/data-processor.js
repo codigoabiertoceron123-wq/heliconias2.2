@@ -33,8 +33,16 @@ class DataProcessor {
 
         // Procesar datos por categorías (NUEVO: con todas las categorías de la versión antigua)
         this.procesarDatosPorCategorias(participantes);
-        
 
+        // Procesar Fecha
+        this.datosSimulados.fecha = timeProcessor.procesarPorFecha(participantes);
+        
+        // Procesar Mes
+        this.datosSimulados.mes = timeProcessor.procesarPorMes(participantes);
+        
+        // Procesar Año
+        this.datosSimulados.anio = timeProcessor.procesarPorAnio(participantes);
+        
         console.log('✅ Datos procesados COMPLETOS:', this.datosSimulados);
 
         // Notificar a la App
