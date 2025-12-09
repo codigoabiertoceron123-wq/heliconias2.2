@@ -41,7 +41,17 @@ class App {
     }
     async initializeModules() {
         try {
-            // 1. DataProcessor (sin dependencias)
+            // 0. ✅ AGREGAR: Inicializar TimeProcessor primero
+            if (typeof TimeProcessor !== 'undefined') {
+                this.modules.timeProcessor = new TimeProcessor();
+                window.timeProcessor = this.modules.timeProcessor; // Hacerlo global
+                console.log('✅ TimeProcessor inicializado y hecho global');
+            } else {
+                console.warn('⚠ TimeProcessor no disponible, intentando cargar...');
+                // Intentar cargar dinámicamente
+                await this.cargarTimeProcessor();
+            }
+            // 1. DataProcessor (ahora depende de timeProcessor)
             this.modules.dataProcessor = new DataProcessor();
             console.log('✅ DataProcessor inicializado');
             
@@ -191,6 +201,35 @@ class App {
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => this.logout());
         }
+    }
+
+    // ✅ AGREGAR: Método para cargar TimeProcessor dinámicamente
+    async cargarTimeProcessor() {
+        return new Promise((resolve, reject) => {
+            if (typeof TimeProcessor !== 'undefined') {
+                this.modules.timeProcessor = new TimeProcessor();
+                window.timeProcessor = this.modules.timeProcessor;
+                resolve();
+                return;
+            }
+            
+            // Intentar cargar desde el archivo
+            const script = document.createElement('script');
+            script.src = 'js/time-processor.js';
+            script.onload = () => {
+                if (typeof TimeProcessor !== 'undefined') {
+                    this.modules.timeProcessor = new TimeProcessor();
+                    window.timeProcessor = this.modules.timeProcessor;
+                    console.log('✅ TimeProcessor cargado dinámicamente');
+                    resolve();
+                } else {
+                    console.error('❌ TimeProcessor no definido después de cargar');
+                    reject(new Error('TimeProcessor no disponible'));
+                }
+            };
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
     }
 
     async loadInitialData() {

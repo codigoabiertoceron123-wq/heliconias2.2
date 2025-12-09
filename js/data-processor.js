@@ -12,6 +12,16 @@ class DataProcessor {
 
     procesarDatosCompletos(participantes) {
         console.log('🔄 Procesando datos completos de participantes...');
+        
+        // ✅ AGREGAR VERIFICACIÓN AL INICIO
+        if (!window.timeProcessor) {
+            console.error('❌ timeProcessor no está disponible en procesarDatosCompletos');
+            console.log('window.timeProcessor:', window.timeProcessor);
+            // Puedes crear una instancia temporal
+            window.timeProcessor = new TimeProcessor();
+            console.log('✅ timeProcessor creado manualmente');
+        }
+        
         this.datosVisitantes = participantes;
 
         const totalParticipantes = participantes.length;
@@ -31,19 +41,34 @@ class DataProcessor {
         // Actualizar estadísticas
         this.actualizarEstadisticas(totalParticipantes, reservasUnicas, participantesPromedio, reservasConfirmadas);
 
-        // Procesar datos por categorías (NUEVO: con todas las categorías de la versión antigua)
+        // Procesar datos por categorías (tipo_reserva, etc.)
         this.procesarDatosPorCategorias(participantes);
 
-        // Procesar Fecha
-        this.datosSimulados.fecha = timeProcessor.procesarPorFecha(participantes);
-        
-        // Procesar Mes
-        this.datosSimulados.mes = timeProcessor.procesarPorMes(participantes);
-        
-        // Procesar Año
-        this.datosSimulados.anio = timeProcessor.procesarPorAnio(participantes);
-        
-        console.log('✅ Datos procesados COMPLETOS:', this.datosSimulados);
+        // ✅ AGREGAR VERIFICACIÓN ANTES DE USAR
+        console.log('🔍 Verificando timeProcessor para métodos agrupados...');
+        console.log('Tiene procesarPorFechaAgrupado:', typeof window.timeProcessor.procesarPorFechaAgrupado);
+        console.log('Tiene procesarPorMesAgrupado:', typeof window.timeProcessor.procesarPorMesAgrupado);
+        console.log('Tiene procesarPorAnioAgrupado:', typeof window.timeProcessor.procesarPorAnioAgrupado);
+
+        try {
+            // SOLO PROCESAR CON MÉTODOS AGRUPADOS
+            this.datosSimulados.fecha = window.timeProcessor.procesarPorFechaAgrupado(participantes);
+            this.datosSimulados.mes = window.timeProcessor.procesarPorMesAgrupado(participantes);
+            this.datosSimulados.anio = window.timeProcessor.procesarPorAnioAgrupado(participantes);
+            
+            console.log('✅ Datos procesados con gráficas agrupadas:', {
+                fecha: this.datosSimulados.fecha,
+                mes: this.datosSimulados.mes,
+                anio: this.datosSimulados.anio
+            });
+        } catch (error) {
+            console.error('❌ Error procesando datos agrupados:', error);
+            // Fallback a métodos simples
+            this.datosSimulados.fecha = window.timeProcessor.procesarPorFecha(participantes);
+            this.datosSimulados.mes = window.timeProcessor.procesarPorMes(participantes);
+            this.datosSimulados.anio = window.timeProcessor.procesarPorAnio(participantes);
+            console.log('✅ Usando métodos simples como fallback');
+        }
 
         // Notificar a la App
         if (this.app) {

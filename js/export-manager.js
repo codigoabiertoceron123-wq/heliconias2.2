@@ -1,95 +1,138 @@
-// export-manager.js - VERSIÓN CORREGIDA
+// export-manager.js - Compatible con el modal moderno
 class ExportManager {
     constructor() {
-        this.app = null;
-        this.chartManager = null;
-        this.dataProcessor = null;
-    }
-
-    setApp(app) {
-        this.app = app;
-        // Obtener referencias desde la app
-        if (app && app.modules) {
-            this.chartManager = app.modules.chartManager;
-            this.dataProcessor = app.modules.dataProcessor;
-        }
+        console.log('📤 ExportManager inicializado');
     }
 
     descargarPNG() {
-        const canvas = document.getElementById("chartAmpliado");
-        if (!canvas) {
-            console.warn('No se encontró el canvas chartAmpliado');
-            return;
+        try {
+            const modal = document.getElementById("chartModal");
+            if (!modal || !modal.classList.contains('show')) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No hay gráfica activa',
+                    text: 'Por favor, abre una gráfica en el modal primero',
+                    confirmButtonColor: '#10b981'
+                });
+                return;
+            }
+
+            const canvas = document.getElementById("chartAmpliado");
+            if (!canvas) {
+                throw new Error('No se encontró el canvas de la gráfica');
+            }
+
+            const link = document.createElement('a');
+            link.download = `grafica_${new Date().toISOString().split('T')[0]}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Gráfica descargada',
+                text: 'La imagen PNG se ha descargado correctamente',
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+        } catch (error) {
+            console.error('Error descargando PNG:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo descargar la gráfica: ' + error.message,
+                confirmButtonColor: '#e74c3c'
+            });
         }
-        
-        const tipoActual = this.chartManager ? this.chartManager.tipoActual : 
-                          (this.app ? this.app.getTipoActual() : 'grafica');
-        
-        const link = document.createElement("a");
-        link.download = `grafica_${tipoActual}.png`;
-        link.href = canvas.toDataURL("image/png");
-        link.click();
     }
 
     descargarExcel() {
-        const tipoActual = this.chartManager ? this.chartManager.tipoActual : 
-                          (this.app ? this.app.getTipoActual() : 'grafica');
-        
-        const datosSimulados = this.dataProcessor ? this.dataProcessor.datosSimulados :
-                              (this.app ? this.app.getDatosSimulados() : null);
-        
-        if (!datosSimulados || !datosSimulados[tipoActual]) {
-            console.warn('No hay datos para exportar:', tipoActual);
-            return;
+        try {
+            const modal = document.getElementById("chartModal");
+            if (!modal || !modal.classList.contains('show')) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No hay datos activos',
+                    text: 'Por favor, abre una gráfica en el modal primero',
+                    confirmButtonColor: '#10b981'
+                });
+                return;
+            }
+
+            const tbody = document.querySelector("#tablaDatos tbody");
+            if (!tbody || tbody.children.length === 0) {
+                throw new Error('No hay datos en la tabla para exportar');
+            }
+
+            // Obtener datos de la tabla
+            const rows = [];
+            const headers = [];
+            
+            // Obtener encabezados
+            const thead = document.querySelector("#tablaDatos thead tr");
+            if (thead) {
+                const thElements = thead.querySelectorAll('th');
+                thElements.forEach(th => headers.push(th.textContent));
+            } else {
+                headers.push('Categoría', 'Cantidad', 'Porcentaje');
+            }
+
+            rows.push(headers);
+
+            // Obtener filas de datos
+            const trElements = tbody.querySelectorAll('tr');
+            trElements.forEach(tr => {
+                const row = [];
+                const tdElements = tr.querySelectorAll('td');
+                tdElements.forEach(td => {
+                    // Limpiar el texto (remover HTML interno si existe)
+                    let text = td.textContent || td.innerText;
+                    // Remover caracteres especiales y espacios extra
+                    text = text.replace(/\s+/g, ' ').trim();
+                    row.push(text);
+                });
+                if (row.length > 0) {
+                    rows.push(row);
+                }
+            });
+
+            // Crear libro de Excel
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Datos");
+
+            // Descargar archivo
+            const fecha = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `datos_grafica_${fecha}.xlsx`);
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Excel descargado',
+                text: 'Los datos se han exportado correctamente a Excel',
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+        } catch (error) {
+            console.error('Error descargando Excel:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo exportar a Excel: ' + error.message,
+                confirmButtonColor: '#e74c3c'
+            });
         }
-        
-        const datos = datosSimulados[tipoActual];
-        const { labels, values } = datos;
-        
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.aoa_to_sheet([
-            [this.obtenerEtiquetaDescriptiva(tipoActual), "Total de Visitantes"],
-            ...labels.map((l, i) => [l, values[i]]),
-        ]);
-        XLSX.utils.book_append_sheet(wb, ws, "Datos");
-        XLSX.writeFile(wb, `datos_${tipoActual}.xlsx`);
     }
-
-    descargarGraficoPrincipal() {
-        const canvas = document.getElementById("chartBar");
-        if (!canvas) {
-            console.warn('No se encontró el canvas chartBar');
-            return;
-        }
-        
-        const link = document.createElement("a");
-        link.download = "grafica_principal.png";
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-    }
-
-    obtenerEtiquetaDescriptiva(tipo) {
-        const etiquetas = {
-            tipo_reserva: 'Tipo de Reserva',
-            estado: 'Estado',
-            actividad: 'Actividad',
-            institucion: 'Institución',
-            intereses: 'Intereses',
-            satisfaccion: 'Satisfacción',
-            temporada: 'Temporada',
-            fecha: 'Fecha',
-            mes: 'Mes',
-            anio: 'Año',
-            genero: 'Género'
-        };
-        return etiquetas[tipo] || 'Categoría';
-    }
-}
-
-// Asegurar que esté disponible globalmente
-if (typeof ExportManager === 'undefined') {
-    window.ExportManager = ExportManager;
 }
 
 // Crear instancia global
 const exportManager = new ExportManager();
+
+// Funciones globales para los botones del modal
+function descargarPNG() {
+    exportManager.descargarPNG();
+}
+
+function descargarExcel() {
+    exportManager.descargarExcel();
+}

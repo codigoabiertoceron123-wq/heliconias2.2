@@ -29,6 +29,125 @@ class ChartManager {
         this.crearGraficas(tipo);
     }
 
+    getTituloGrafica(tipo) {
+        // Usa el método existente obtenerTituloDescriptivo
+        if (this.obtenerTituloDescriptivo) {
+            return this.obtenerTituloDescriptivo(tipo);
+        }
+        
+        // Fallback simple si no existe obtenerTituloDescriptivo
+        const titulos = {
+            'tipo_reserva': 'Reservas por Tipo',
+            'fecha': 'Visitantes por Fecha',
+            'mes': 'Visitantes por Mes',
+            'anio': 'Visitantes por Año',
+            'estado': 'Reservas por Estado',
+            'actividad': 'Reservas por Actividad',
+            'institucion': 'Reservas por Institución',
+            'intereses': 'Intereses de los Visitantes',
+            'genero': 'Visitantes por Género',
+            'temporada': 'Reservas por Temporada'
+        };
+        return titulos[tipo] || tipo;
+    }
+
+    mostrarGraficasAgrupadas(tipo, datos) {
+        console.log('📊 Mostrando gráficas AGRUPADAS:', tipo);
+        
+        // Gráfica de barras agrupada
+        const ctxBar = document.getElementById("chartBar");
+        if (this.chartBar) this.chartBar.destroy();
+        
+        this.chartBar = new Chart(ctxBar, {
+            type: "bar",
+            data: {
+                labels: datos.labels || [],
+                datasets: (datos.datasets || []).map((dataset, index) => ({
+                    label: dataset.label,
+                    data: dataset.data.map(val => val || 0),
+                    backgroundColor: dataset.backgroundColor || this.generarColores(tipo, datos.labels)[index],
+                    borderColor: dataset.borderColor || '#fff',
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    barThickness: 30
+                }))
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true,
+                            font: { size: 12 }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: this.getTituloGrafica(tipo) + ' (Agrupado)',
+                        font: { size: 16, weight: 'bold' }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Cantidad de Visitantes' }
+                    }
+                }
+            }
+        });
+
+        // Gráfica circular (totales por tipo)
+        const ctxPie = document.getElementById("chartPie");
+        if (this.chartPie) this.chartPie.destroy();
+        
+        // Calcular totales por tipo para el gráfico circular
+        const totalesPorTipo = {};
+        if (datos.datasets && datos.datasets.length > 0) {
+            datos.datasets.forEach(dataset => {
+                const total = dataset.data.reduce((sum, val) => sum + (val || 0), 0);
+                if (total > 0) {
+                    totalesPorTipo[dataset.label] = total;
+                }
+            });
+        }
+        
+        const labelsCircular = Object.keys(totalesPorTipo);
+        const dataCircular = Object.values(totalesPorTipo);
+        
+        this.chartPie = new Chart(ctxPie, {
+            type: "doughnut",
+            data: {
+                labels: labelsCircular,
+                datasets: [{
+                    data: dataCircular,
+                    backgroundColor: labelsCircular.map((label, index) => 
+                        datos.datasets[index]?.backgroundColor || this.generarColores(tipo, labelsCircular)[index]
+                    ),
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { 
+                            usePointStyle: true, 
+                            padding: 15,
+                            font: { size: 12 }
+                        }
+                    }
+                },
+                cutout: '60%'
+            },
+        });
+    }
+
     crearGraficas(tipo) {
         console.log('🔍 Buscando datos para:', tipo);
         
@@ -57,40 +176,201 @@ class ChartManager {
             console.log('✅ Datos desde global datosSimulados:', datos);
         }
 
-        // ✅ CORREGIDO: Datos de emergencia si todo falla
+        // Datos de emergencia si todo falla
         if (!datos) {
             console.warn('⚠ No hay datos en fuentes normales, usando datos de emergencia');
             datos = this.generarDatosEmergencia(tipo);
         }
 
-        if (!datos || !datos.labels || !datos.values || datos.labels.length === 0 || datos.values.length === 0) {
-            console.error('❌ No hay datos válidos para:', tipo);
-            console.log('🔍 Datos recibidos:', datos);
-            
-            // ✅ CORREGIDO: Usar datos de emergencia como último recurso
-            datos = this.generarDatosEmergencia(tipo);
-            console.log('🆘 Usando datos de emergencia:', datos);
-        }
-
         console.log('🎯 Datos encontrados para', tipo, ':', datos);
 
-        const etiquetaDescriptiva = this.obtenerEtiquetaDescriptiva(tipo);
-        const tituloDescriptivo = this.obtenerTituloDescriptivo(tipo);
-
-        // ✅ CORREGIDO: Destruir gráficas anteriores ANTES de procesar
-        this.destruirGraficasAnteriores();
-
-        this.crearGraficaBarras(tipo, datos, etiquetaDescriptiva, tituloDescriptivo);
-        this.crearGraficaCircular(tipo, datos, tituloDescriptivo);
-
-        console.log('✅ Gráficas creadas exitosamente');
+        // DETECTAR SI ES GRÁFICA AGRUPADA
+        const esGraficaAgrupada = datos.datasets && datos.datasets.length > 0;
+        
+        if (esGraficaAgrupada) {
+            console.log('📊 Mostrando gráfica AGRUPADA para:', tipo);
+            this.crearGraficasAgrupadas(tipo, datos);
+        } else {
+            // Verificar si hay datos simples válidos
+            if (!datos || !datos.labels || !datos.values || datos.labels.length === 0 || datos.values.length === 0) {
+                console.error('❌ No hay datos válidos para:', tipo);
+                console.log('🔍 Datos recibidos:', datos);
+                
+                datos = this.generarDatosEmergencia(tipo);
+                console.log('🆘 Usando datos de emergencia:', datos);
+            }
+            
+            console.log('📊 Mostrando gráfica SIMPLE para:', tipo);
+            this.crearGraficasSimples(tipo, datos);
+        }
     }
 
-    // ✅ CORREGIDO: Método para destruir gráficas anteriores
+    crearGraficasAgrupadas(tipo, datos) {
+        const etiquetaDescriptiva = this.obtenerEtiquetaDescriptiva(tipo);
+        const tituloDescriptivo = this.obtenerTituloDescriptivo(tipo);
+        
+        // Destruir gráficas anteriores
+        this.destruirGraficasAnteriores();
+        
+        // 1. Gráfica de barras AGRUPADA
+        const ctxBar = document.getElementById("chartBar");
+        
+        this.chartBar = new Chart(ctxBar, {
+            type: "bar",
+            data: {
+                labels: datos.labels || [],
+                datasets: (datos.datasets || []).map((dataset, index) => ({
+                    label: dataset.label,
+                    data: dataset.data.map(val => val || 0),
+                    backgroundColor: dataset.backgroundColor || this.generarColores(tipo, datos.labels)[index],
+                    borderColor: dataset.borderColor || '#fff',
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    barThickness: 25
+                }))
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true,
+                            font: { size: 12 }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: tituloDescriptivo + ' (Agrupado)',
+                        font: { size: 16, weight: 'bold' }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.dataset.label || '';
+                                const value = context.raw || 0;
+                                return `${label}: ${value} visitantes`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { 
+                            display: true, 
+                            text: 'Cantidad de Visitantes',
+                            font: { weight: 'bold' }
+                        }
+                    },
+                    x: {
+                        title: { 
+                            display: true, 
+                            text: etiquetaDescriptiva,
+                            font: { weight: 'bold' }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. Gráfica circular (totales por categoría)
+        const ctxPie = document.getElementById("chartPie");
+        
+        // Calcular totales por categoría para el gráfico circular
+        const totalesPorCategoria = {};
+        if (datos.datasets && datos.datasets.length > 0) {
+            datos.datasets.forEach(dataset => {
+                const total = dataset.data.reduce((sum, val) => sum + (val || 0), 0);
+                if (total > 0) {
+                    totalesPorCategoria[dataset.label] = total;
+                }
+            });
+        }
+        
+        const labelsCircular = Object.keys(totalesPorCategoria);
+        const dataCircular = Object.values(totalesPorCategoria);
+        const totalGeneral = dataCircular.reduce((a, b) => a + b, 0);
+        
+        if (labelsCircular.length > 0) {
+            this.chartPie = new Chart(ctxPie, {
+                type: "doughnut",
+                data: {
+                    labels: labelsCircular,
+                    datasets: [{
+                        data: dataCircular,
+                        backgroundColor: labelsCircular.map((label, index) => 
+                            datos.datasets[index]?.backgroundColor || this.generarColores(tipo, labelsCircular)[index]
+                        ),
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { 
+                                usePointStyle: true, 
+                                padding: 15,
+                                font: { size: 12 }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Distribución por Categoría',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw;
+                                    const percentage = totalGeneral > 0 ? Math.round((value / totalGeneral) * 100) : 0;
+                                    return `${label}: ${value} visitantes (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '60%'
+                },
+            });
+        } else {
+            // Mostrar gráfico vacío si no hay datos
+            this.chartPie = new Chart(ctxPie, {
+                type: "doughnut",
+                data: {
+                    labels: ['Sin datos'],
+                    datasets: [{
+                        data: [100],
+                        backgroundColor: ['#95a5a6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'No hay datos disponibles',
+                            font: { size: 14 }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
     destruirGraficasAnteriores() {
         console.log('🗑 Destruyendo gráficas anteriores...');
         
-        // ✅ NUEVO: También destruir instancias globales de Chart.js
+        // También destruir instancias globales de Chart.js
         if (window.Chart && window.Chart.instances) {
             Object.keys(window.Chart.instances).forEach(key => {
                 const chart = window.Chart.instances[key];
@@ -125,7 +405,6 @@ class ChartManager {
         }
     }
 
-    // ✅ NUEVO: Método para generar datos de emergencia
     generarDatosEmergencia(tipo) {
         console.log('🆘 Generando datos de emergencia para:', tipo);
         
@@ -178,6 +457,20 @@ class ChartManager {
         };
     }
 
+    crearGraficasSimples(tipo, datos) {
+        console.log('📊 Creando gráficas simples para:', tipo);
+        
+        const etiquetaDescriptiva = this.obtenerEtiquetaDescriptiva(tipo);
+        const tituloDescriptivo = this.obtenerTituloDescriptivo(tipo);
+        
+        // Destruir gráficas anteriores
+        this.destruirGraficasAnteriores();
+        
+        // Usar tus métodos existentes
+        this.crearGraficaBarras(tipo, datos, etiquetaDescriptiva, tituloDescriptivo);
+        this.crearGraficaCircular(tipo, datos, tituloDescriptivo);
+    }
+
     crearGraficaBarras(tipo, datos, etiquetaDescriptiva, tituloDescriptivo) {
         const ctxBar = document.getElementById("chartBar");
         if (!ctxBar) {
@@ -185,13 +478,13 @@ class ChartManager {
             return;
         }
 
-        // ✅ CORREGIDO: Verificar que el canvas esté limpio
+        // Verificar que el canvas esté limpio
         if (ctxBar._chart) {
             console.log('⚠ Canvas chartBar ya tiene una gráfica, destruyendo...');
             ctxBar._chart.destroy();
         }
 
-        // ✅ CORREGIDO: Verificar dimensiones mínimas
+        // Verificar dimensiones mínimas
         if (ctxBar.offsetWidth < 100 || ctxBar.offsetHeight < 100) {
             console.warn('⚠ Canvas chartBar tiene dimensiones pequeñas:', {
                 width: ctxBar.offsetWidth,
@@ -204,7 +497,7 @@ class ChartManager {
 
         const colors = this.generarColores(tipo, datos.labels);
         
-        // ✅ CORREGIDO: Formatear labels para género
+        // Formatear labels para género
         const labelsParaGrafica = tipo === 'genero' ? datos.labels.map(label => this.formatearGenero(label)) : datos.labels;
         
         try {
@@ -251,19 +544,19 @@ class ChartManager {
                             }
                         }
                     },
-                    // ✅ NUEVO: Callback para redimensionamiento
+                    // Callback para redimensionamiento
                     onResize: (chart, size) => {
                         console.log('📏 Chart Bar redimensionado:', size);
                     }
                 },
             });
             
-            // ✅ NUEVO: Guardar referencia en el canvas
+            // Guardar referencia en el canvas
             ctxBar._chart = this.chartBar;
             
         } catch (error) {
             console.error('❌ Error creando gráfica de barras:', error);
-            // ✅ NUEVO: Intentar recrear el canvas si falla
+            // Intentar recrear el canvas si falla
             this.recrearCanvasYReintentar('chartBar', 'bar', tipo, datos, etiquetaDescriptiva, tituloDescriptivo);
         }
     }
@@ -275,13 +568,13 @@ class ChartManager {
             return;
         }
 
-        // ✅ CORREGIDO: Verificar que el canvas esté limpio
+        // Verificar que el canvas esté limpio
         if (ctxPie._chart) {
             console.log('⚠ Canvas chartPie ya tiene una gráfica, destruyendo...');
             ctxPie._chart.destroy();
         }
 
-        // ✅ CORREGIDO: Verificar dimensiones mínimas
+        // Verificar dimensiones mínimas
         if (ctxPie.offsetWidth < 100 || ctxPie.offsetHeight < 100) {
             console.warn('⚠ Canvas chartPie tiene dimensiones pequeñas:', {
                 width: ctxPie.offsetWidth,
@@ -294,7 +587,7 @@ class ChartManager {
 
         const colors = this.generarColores(tipo, datos.labels);
 
-        // ✅ CORREGIDO: Formatear labels para género
+        // Formatear labels para género
         const labelsParaGrafica = tipo === 'genero' ? datos.labels.map(label => this.formatearGenero(label)) : datos.labels;
         
         try {
@@ -332,24 +625,23 @@ class ChartManager {
                     },
                     cutout: '70%',
                     spacing: 2,
-                    // ✅ NUEVO: Callback para redimensionamiento
+                    // Callback para redimensionamiento
                     onResize: (chart, size) => {
                         console.log('📏 Chart Pie redimensionado:', size);
                     }
                 },
             });
             
-            // ✅ NUEVO: Guardar referencia en el canvas
+            // Guardar referencia en el canvas
             ctxPie._chart = this.chartPie;
             
         } catch (error) {
             console.error('❌ Error creando gráfica circular:', error);
-            // ✅ NUEVO: Intentar recrear el canvas si falla
+            // Intentar recrear el canvas si falla
             this.recrearCanvasYReintentar('chartPie', 'doughnut', tipo, datos, '', tituloDescriptivo);
         }
     }
 
-    // ✅ NUEVO: Método para recrear canvas y reintentar
     recrearCanvasYReintentar(canvasId, chartType, tipo, datos, etiquetaDescriptiva, tituloDescriptivo) {
         console.log(`🔄 Recreando canvas ${canvasId}...`);
         
@@ -380,7 +672,6 @@ class ChartManager {
         }, 100);
     }
 
-    // Métodos auxiliares para gráficas temporales (se mantienen igual)
     crearGraficaBarrasTemporal(tipo, datos, etiquetaDescriptiva, tituloDescriptivo, ctx) {
         const tipoReservaSeleccionado = document.getElementById('modal-filtro-tipo-reserva') ? 
                                     document.getElementById('modal-filtro-tipo-reserva').value : 'todas';
@@ -597,7 +888,7 @@ class ChartManager {
     }
 }
 
-// ✅ CORREGIDO: Verificación mejorada
+// Verificación mejorada
 setTimeout(() => {
     console.log('🔍 VERIFICACIÓN FINAL CHART-MANAGER:');
     console.log('- Instancia chartManager:', !!window.chartManager);
@@ -608,4 +899,27 @@ setTimeout(() => {
 
 // Crear instancia global y asignarla a window
 const chartManager = new ChartManager();
-window.chartManager = chartManager; // ✅ ESTA ES LA LÍNEA CRUCIAL QUE FALTABA
+window.chartManager = chartManager;
+
+// Agregar también un método de inicialización para mayor control
+ChartManager.prototype.inicializar = function(app, dataProcessor) {
+    this.app = app;
+    this.dataProcessor = dataProcessor;
+    console.log('✅ ChartManager inicializado con app y dataProcessor');
+};
+
+// Método adicional para limpiar todas las gráficas
+ChartManager.prototype.limpiarTodasLasGraficas = function() {
+    this.destruirGraficasAnteriores();
+    console.log('🧹 Todas las gráficas han sido limpiadas');
+};
+
+// Método para obtener el estado actual
+ChartManager.prototype.obtenerEstado = function() {
+    return {
+        tipoActual: this.tipoActual,
+        chartBarActiva: !!this.chartBar,
+        chartPieActiva: !!this.chartPie,
+        chartAmpliadoActiva: !!this.chartAmpliado
+    };
+};

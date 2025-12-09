@@ -117,110 +117,86 @@
                 <!-- Los datos se cargan dinámicamente aquí -->
             </div>
 
-            <!-- Modal ampliado -->
-            <div id="chartModal" class="modal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <div class="modal-title" id="modalTitle">
-                            <i class="fas fa-expand"></i> Vista Ampliada
-                        </div>
-                        <div class="modal-actions">
-                            <button class="download-btn-small secondary" onclick="descargarPNG()">
-                                <i class="fas fa-image"></i> PNG
-                            </button>
-                            <button class="download-btn-small" onclick="descargarExcel()">
-                                <i class="fas fa-file-excel"></i> Excel
-                            </button>
-                            <span class="close" onclick="cerrarModal()">&times;</span>
-                        </div>
-                    </div>
-
-                    <!-- Filtros dentro del modal -->
-                    <div class="filter-section" style="margin-bottom: 20px;">
-                        <h4 style="margin: 0 0 12px 0; display: flex; align-items: center; gap: 6px">
-                            <i class="fas fa-filter"></i> Filtros para esta Vista
-                        </h4>
-                        <div class="filter-grid">
-                            <div class="filter-group">
-                                <label class="filter-label">Fecha Inicial</label>
-                                <input type="date" class="filter-select" id="modal-filtro-fecha-inicio">
-                            </div>
-                            <div class="filter-group">
-                                <label class="filter-label">Fecha Final</label>
-                                <input type="date" class="filter-select" id="modal-filtro-fecha-fin">
-                            </div>
-                            <div class="filter-group">
-                                <label class="filter-label">Tipo de Reserva</label>
-                                <select class="filter-select" id="modal-filtro-tipo-reserva">
-                                    <option value="todas">Todas las reservas</option>
-                                    <option value="Individual">Individual</option>
-                                    <option value="Grupal">Grupal</option>
-                                </select>
-                            </div>
-                            <div class="filter-group">
-                                <label class="filter-label">Estado de Reserva</label>
-                                <select class="filter-select" id="modal-filtro-estado">
-                                    <option value="todas">Todos los estados</option>
-                                    <option value="Confirmada">Confirmada</option>
-                                    <option value="Pendiente">Pendiente</option>
-                                    <option value="Cancelada">Cancelada</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div style="margin-top: 15px; display: flex; gap: 10px;">
-                            <button class="btn btn-primary" onclick="aplicarFiltrosModal()">
-                                <i class="fas fa-check"></i> Aplicar Filtros
-                            </button>
-                            <button class="btn" onclick="limpiarFiltrosModal()" style="background: #e74c3c; color: white;">
-                                <i class="fas fa-times"></i> Limpiar Filtros
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="modal-chart-container">
-                        <canvas id="chartAmpliado"></canvas>
-                    </div>
-
-                    <div class="data-table">
-                        <h4 style="margin: 0 0 12px 0; display: flex; align-items: center; gap: 6px;">
-                            <i class="fas fa-table"></i> Datos de la Gráfica
-                        </h4>
-                        <table class="table" id="tablaDatos">
-                            <thead>
-                                <tr>
-                                    <th>Categoría</th>
-                                    <th>Total Visitantes</th>
-                                    <th>Porcentaje</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>        
+            <!-- EL MODAL SE CREARÁ DINÁMICAMENTE POR EL CÓDIGO QUE TE PASÉ -->
+            <!-- NO DEBES TENER NINGÚN MODAL EN EL HTML -->
         </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <!-- Módulos base -->
-    
-    <script src="js/chart-manager.js"></script>
-    <script src="js/ui-manager.js"></script>
+    <!-- ORDEN CORRECTO DE MÓDULOS -->
     <script src="js/time-processor.js"></script>
+    <script src="js/data-processor.js"></script>
+    <script src="js/data-loader.js"></script>
+    <script src="js/chart-manager.js"></script>
+    
+    <!-- EL UIManager MODERNO QUE TE PASÉ -->
+    <script src="js/ui-manager.js"></script>
 
-    <!-- HOTFIX para errores críticos -->
-    <!-- <script src="js/hotfix.js"></script> -->
-
-    <!-- Módulos adicionales -->
+    <!-- Export Manager actualizado para trabajar con el nuevo modal -->
     <script src="js/export-manager.js"></script>
-    <script src="js/modal-manager.js"></script>
-    <script src="js/filter-manager.js"></script>
 
-    <!-- ORDEN CORRECTO -->
-<script src="js/data-processor.js"></script>
-<script src="js/data-loader.js"></script>
-<script src="js/app.js"></script>
+    <!-- App.js - DEBE IR AL FINAL -->
+    <script src="js/app.js"></script>
+
+    <!-- Script para actualizar fecha y hora -->
+    <script>
+        function actualizarFechaHora() {
+            const ahora = new Date();
+            const opciones = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            const fechaHora = ahora.toLocaleDateString('es-ES', opciones);
+            document.getElementById('current-date-time').textContent = fechaHora;
+        }
+
+        // Actualizar cada segundo
+        setInterval(actualizarFechaHora, 1000);
+        actualizarFechaHora();
+
+        // Botones de ayuda y logout
+        document.getElementById('help-btn').addEventListener('click', function() {
+            Swal.fire({
+                title: 'Ayuda del Sistema',
+                html: `
+                    <div style="text-align: left; padding: 10px;">
+                        <h4>📊 Análisis de Visitantes</h4>
+                        <p>• <strong>Haz clic en cualquier gráfica</strong> para verla en tamaño ampliado.</p>
+                        <p>• <strong>Usa los botones de categoría</strong> para cambiar el tipo de análisis.</p>
+                        <p>• <strong>Aplica filtros</strong> en la vista ampliada para datos específicos.</p>
+                        <p>• <strong>Descarga gráficas</strong> en PNG o Excel.</p>
+                    </div>
+                `,
+                icon: 'info',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#10b981'
+            });
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            Swal.fire({
+                title: '¿Cerrar sesión?',
+                text: '¿Estás seguro de que quieres salir del sistema?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, salir',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Redirigir al login
+                    window.location.href = 'index.html';
+                }
+            });
+        });
+    </script>
 
 </body>
 </html>
