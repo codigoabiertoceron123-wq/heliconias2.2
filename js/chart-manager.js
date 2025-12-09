@@ -1,6 +1,8 @@
 // Módulo para gestión de gráficos - VERSIÓN COMPLETA CORREGIDA
 class ChartManager {
     constructor() {
+        let chartAmpliado; // ← Añade esta línea si no existe
+        let tipoActual = 'tipo_reserva';
         this.tipoActual = "tipo_reserva";
         this.app = null;
         this.dataProcessor = null;
@@ -268,6 +270,63 @@ class ChartManager {
         }
     }
 
+    // Función para crear filtros en el modal
+    crearFiltrosEnModal(tipo) {
+        const modalHeader = document.querySelector('.modal-header');
+        if (!modalHeader) return;
+        
+        // Eliminar filtros anteriores si existen
+        const filtrosAnteriores = modalHeader.querySelector('.filtros-modal');
+        if (filtrosAnteriores) filtrosAnteriores.remove();
+        
+        // Crear HTML de filtros
+        const filtrosHTML = `
+            <div class="filtros-modal" style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                <h4 style="margin: 0 0 10px 0; color: #2c3e50;">
+                    <i class="fas fa-filter"></i> Filtros
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 600;">Fecha Inicial</label>
+                        <input type="date" id="modalFechaInicio" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 600;">Fecha Final</label>
+                        <input type="date" id="modalFechaFin" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 600;">Tipo Reserva</label>
+                        <select id="modalTipoReserva" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="todas">Todas</option>
+                            <option value="Individual">Individual</option>
+                            <option value="Grupal">Grupal</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 600;">Estado</label>
+                        <select id="modalEstado" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="todas">Todos</option>
+                            <option value="Confirmada">Confirmada</option>
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Cancelada">Cancelada</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="aplicarFiltrosModal()" style="padding: 8px 15px;">
+                        <i class="fas fa-check"></i> Aplicar
+                    </button>
+                    <button class="btn" onclick="limpiarFiltrosModal()" style="padding: 8px 15px; background: #95a5a6; color: white;">
+                        <i class="fas fa-times"></i> Limpiar
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Insertar después del modal-header
+        modalHeader.insertAdjacentHTML('afterend', filtrosHTML);
+    }
+
     crearGraficaCircular(tipo, datos, tituloDescriptivo) {
         const ctxPie = document.getElementById("chartPie");
         if (!ctxPie) {
@@ -348,6 +407,7 @@ class ChartManager {
             this.recrearCanvasYReintentar('chartPie', 'doughnut', tipo, datos, '', tituloDescriptivo);
         }
     }
+    
 
     // ✅ NUEVO: Método para recrear canvas y reintentar
     recrearCanvasYReintentar(canvasId, chartType, tipo, datos, etiquetaDescriptiva, tituloDescriptivo) {
@@ -516,6 +576,8 @@ class ChartManager {
             }
         };
     }
+
+    
 
     obtenerOpcionesCircular(tituloDescriptivo, tipoReservaSeleccionado = 'todas') {
         return {
