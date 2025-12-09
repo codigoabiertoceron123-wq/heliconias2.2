@@ -419,6 +419,7 @@
 
         .download-btn {
             background: linear-gradient(135deg, #2c3e50, #34495e);
+            margin-left: -100px;
             color: #fff;
             border: none;
             padding: 8px 14px;
@@ -913,41 +914,7 @@
                     </button>
                 </div>
 
-                <!-- FILTROS COMBINADOS EN PÁGINA PRINCIPAL -->
-                <div id="filtros-combinados" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 15px;">
-                        <!-- Filtro de Rango de Fechas -->
-                        <div class="filtro-grupo">
-                            <label for="filtro-fecha-inicial"><i class="fas fa-calendar-alt"></i> Fecha Inicial:</label>
-                            <input type="date" id="filtro-fecha-inicial" class="filtro-input">
-                        </div>
-                        <div class="filtro-grupo">
-                            <label for="filtro-fecha-final"><i class="fas fa-calendar-alt"></i> Fecha Final:</label>
-                            <input type="date" id="filtro-fecha-final" class="filtro-input">
-                        </div>
-                        
-                        <!-- Filtro de Ciudad -->
-                        <div class="filtro-grupo">
-                            <label for="filtro-ciudad-comb"><i class="fas fa-city"></i> Ciudad:</label>
-                            <select id="filtro-ciudad-comb" class="filtro-select">
-                                <option value="todas">Todas las ciudades</option>
-                                <!-- Las opciones se llenarán dinámicamente -->
-                            </select>
-                        </div>
-                    </div>
-
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button class="btn btn-primary" onclick="window.CiudadSystem.aplicarFiltrosCombinados()">
-                            <i class="fas fa-check"></i> Aplicar Filtros
-                        </button>
-                        <button class="btn" onclick="window.CiudadSystem.limpiarFiltrosCombinados()" style="background: #95a5a6; color: white;">
-                            <i class="fas fa-times"></i> Limpiar
-                        </button>
-                        <button class="btn" onclick="window.CiudadSystem.exportarDatosFiltrados()" style="background: #e74c3c; color: white;">
-                            <i class="fas fa-file-export"></i> Exportar Datos
-                        </button>
-                    </div>
-                </div>
+                
             </div>
 
             <div id="data-container">
