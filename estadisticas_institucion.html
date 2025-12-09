@@ -826,41 +826,7 @@
                     </button>
                 </div>
 
-                <!-- 🆕 FILTROS COMBINADOS EN PÁGINA PRINCIPAL -->
-                <div id="filtros-combinados" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 15px;">
-                        <!-- Filtro de Rango de Fechas -->
-                        <div class="filtro-grupo">
-                            <label for="filtro-fecha-inicial"><i class="fas fa-calendar-alt"></i> Fecha Inicial:</label>
-                            <input type="date" id="filtro-fecha-inicial" class="filtro-input">
-                        </div>
-                        <div class="filtro-grupo">
-                            <label for="filtro-fecha-final"><i class="fas fa-calendar-alt"></i> Fecha Final:</label>
-                            <input type="date" id="filtro-fecha-final" class="filtro-input">
-                        </div>
-                        
-                        <!-- Filtro de Institución -->
-                        <div class="filtro-grupo">
-                            <label for="filtro-institucion-comb"><i class="fas fa-university"></i> Institución:</label>
-                            <select id="filtro-institucion-comb" class="filtro-select">
-                                <option value="todas">Todas las instituciones</option>
-                                <!-- Las opciones se llenarán dinámicamente -->
-                            </select>
-                        </div>
-                    </div>
-
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button class="btn btn-primary" onclick="window.InstitucionManager.aplicarFiltrosCombinados()">
-                            <i class="fas fa-check"></i> Aplicar Filtros
-                        </button>
-                        <button class="btn" onclick="window.InstitucionManager.limpiarFiltrosCombinados()" style="background: #95a5a6; color: white;">
-                            <i class="fas fa-times"></i> Limpiar
-                        </button>
-                        <button class="btn" onclick="window.InstitucionManager.exportarDatosFiltrados()" style="background: #27ae60; color: white;">
-                            <i class="fas fa-file-export"></i> Exportar Datos
-                        </button>
-                    </div>
-                </div>
+                
             </div>
 
             <div id="data-container">
