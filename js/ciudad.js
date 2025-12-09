@@ -9,6 +9,7 @@
     let datosMesCiudad = {};
     let datosAnioCiudad = {};
     let todasLasCiudades = [];
+    let tipoActual = "ciudad";
     
     // Objetos para almacenar instancias de gráficos por tipo
     const chartInstances = {
@@ -486,6 +487,336 @@
         }
     }
 
+    // Función para actualizar contenido del modal con filtros
+    function actualizarContenidoModal(tipo, tipoGrafica) {
+        const modal = document.getElementById("chartModalCiudad");
+        if (!modal) return;
+        
+        // Crear contenido completo del modal
+        const titulo = tipo === 'ciudad' ? 'Distribución por Ciudad' : getTituloTiempo(tipo);
+        const iconoTitulo = tipo === 'ciudad' ? 'fa-city' : 
+                           tipo === 'fecha' ? 'fa-calendar-day' : 
+                           tipo === 'mes' ? 'fa-calendar-week' : 'fa-calendar-alt';
+        
+        const html = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title" id="modalTitleCiudad">
+                        <i class="fas ${iconoTitulo}"></i> ${titulo} - Vista Ampliada
+                    </div>
+                    <div class="modal-actions">
+                        <button class="download-btn-small secondary" onclick="window.CiudadSystem.descargarPNGModal()">
+                            <i class="fas fa-image"></i> PNG
+                        </button>
+                        <button class="download-btn-small" onclick="window.CiudadSystem.descargarExcelModal()">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </button>
+                        <span class="close" onclick="window.CiudadSystem.cerrarModal()">&times;</span>
+                    </div>
+                </div>
+
+                <!-- FILTROS DENTRO DEL MODAL -->
+                ${crearHTMLFiltrosModal(tipo)}
+
+                <div class="modal-chart-container">
+                    <canvas id="chartAmpliadoCiudad"></canvas>
+                </div>
+
+                <div class="data-table">
+                    <h4 style="margin: 0 0 12px 0; display: flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-table"></i> Datos Detallados
+                    </h4>
+                    <table class="table" id="tablaDatosCiudad">
+                        <thead>
+                            <tr>
+                                <th>${tipo === 'ciudad' ? 'Ciudad' : 'Período'}</th>
+                                <th>${tipo === 'ciudad' ? 'Descripción' : 'Fecha'}</th>
+                                <th>Total Visitantes</th>
+                                <th>Porcentaje</th>
+                                ${tipo !== 'ciudad' ? '<th>Ciudades</th>' : ''}
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyDatosCiudad">
+                            <!-- Los datos se llenarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        
+        modal.innerHTML = html;
+        
+        // Establecer valor inicial del tipo de gráfica
+        const selectTipoGrafica = document.getElementById('modalTipoGrafica');
+        if (selectTipoGrafica && selectTipoGrafica.tagName === 'SELECT') {
+            selectTipoGrafica.value = tipoGrafica || 'bar';
+        }
+        
+        // Establecer fechas por defecto si es tipo tiempo
+        if (tipo !== 'ciudad') {
+            const ahora = new Date();
+            const haceUnMes = new Date();
+            haceUnMes.setMonth(ahora.getMonth() - 1);
+            
+            const fechaInicio = document.getElementById('modalFechaInicio');
+            const fechaFin = document.getElementById('modalFechaFin');
+            
+            if (fechaInicio && fechaFin) {
+                fechaInicio.value = haceUnMes.toISOString().split('T')[0];
+                fechaFin.value = ahora.toISOString().split('T')[0];
+            }
+        }
+    }
+
+    // Función para determinar el tipo actual del modal
+    function determinarTipoActualModal() {
+        const titulo = document.getElementById('modalTitleCiudad')?.textContent || '';
+        if (titulo.includes('Ciudad') && !titulo.includes('Fecha') && !titulo.includes('Mes') && !titulo.includes('Año')) {
+            return 'ciudad';
+        }
+        if (titulo.includes('Fecha')) return 'fecha';
+        if (titulo.includes('Mes')) return 'mes';
+        if (titulo.includes('Año')) return 'anio';
+        return 'ciudad';
+    }
+
+    // Función para aplicar filtros del modal
+    async function aplicarFiltrosModal() {
+        try {
+            mostrarLoading('Aplicando filtros...');
+            
+            const tipoGrafica = document.getElementById('modalTipoGrafica')?.value || 'bar';
+            const fechaInicio = document.getElementById('modalFechaInicio')?.value;
+            const fechaFin = document.getElementById('modalFechaFin')?.value;
+            const ciudadFiltro = document.getElementById('modalCiudad')?.value || 'todas';
+            const cantidad = parseInt(document.getElementById('modalCantidad')?.value || '10');
+            const orden = document.getElementById('modalOrden')?.value || 'desc';
+            
+            const tipo = determinarTipoActualModal();
+            let datosFiltrados;
+            
+            if (tipo === 'ciudad') {
+                // Filtrar datos de ciudad general
+                datosFiltrados = await filtrarDatosCiudadModal(ciudadFiltro, cantidad, orden);
+                crearGraficaAmpliadaCiudadConDatos(datosFiltrados, tipoGrafica);
+                llenarTablaModalCiudadConDatos(datosFiltrados);
+            } else {
+                // Filtrar datos de tiempo
+                datosFiltrados = await filtrarDatosCiudadTiempoModal(tipo, fechaInicio, fechaFin, ciudadFiltro, cantidad, orden);
+                crearGraficaAmpliadaCiudadTiempo(tipo, tipoGrafica, datosFiltrados);
+                llenarTablaModalCiudadTiempoConDatos(tipo, datosFiltrados);
+            }
+            
+            mostrarExito(`Filtros aplicados: ${datosFiltrados.total || 0} registros encontrados`);
+            cerrarLoading();
+            
+        } catch (error) {
+            console.error('Error aplicando filtros:', error);
+            cerrarLoading();
+            mostrarErrorCiudad('Error al aplicar los filtros: ' + error.message);
+        }
+    }
+
+    // Función para filtrar datos de ciudad en modal
+    async function filtrarDatosCiudadModal(ciudadFiltro, cantidad, orden) {
+    let datos = { ...datosCiudades.general };
+    
+    // Filtrar por ciudad específica
+    if (ciudadFiltro !== 'todas') {
+        const index = datos.labels.indexOf(ciudadFiltro);
+        
+        if (index !== -1) {
+            // Es una ciudad válida
+            datos = {
+                labels: [ciudadFiltro],
+                values: [datos.values[index]],
+                colors: [datos.colors[index]],
+                total: datos.values[index]
+            };
+        } else {
+            // No encontrado, devolver datos vacíos
+            datos = {
+                labels: [],
+                values: [],
+                colors: [],
+                total: 0
+            };
+        }
+    }
+    
+    // Ordenar datos
+    if (orden === 'desc') {
+        // Orden descendente (mayor a menor)
+        const indices = datos.labels
+            .map((label, i) => ({ label, value: datos.values[i], color: datos.colors[i] }))
+            .sort((a, b) => b.value - a.value)
+            .map(item => datos.labels.indexOf(item.label));
+        
+        datos.labels = indices.map(i => datos.labels[i]);
+        datos.values = indices.map(i => datos.values[i]);
+        datos.colors = indices.map(i => datos.colors[i]);
+    } else if (orden === 'asc') {
+        // Orden ascendente (menor a mayor)
+        const indices = datos.labels
+            .map((label, i) => ({ label, value: datos.values[i], color: datos.colors[i] }))
+            .sort((a, b) => a.value - b.value)
+            .map(item => datos.labels.indexOf(item.label));
+        
+        datos.labels = indices.map(i => datos.labels[i]);
+        datos.values = indices.map(i => datos.values[i]);
+        datos.colors = indices.map(i => datos.colors[i]);
+    } else if (orden === 'alpha') {
+        // Orden alfabético
+        const indices = datos.labels
+            .map((label, i) => ({ label, value: datos.values[i], color: datos.colors[i] }))
+            .sort((a, b) => a.label.localeCompare(b.label))
+            .map(item => datos.labels.indexOf(item.label));
+        
+        datos.labels = indices.map(i => datos.labels[i]);
+        datos.values = indices.map(i => datos.values[i]);
+        datos.colors = indices.map(i => datos.colors[i]);
+    }
+    
+    // Limitar cantidad
+    if (cantidad > 0 && cantidad < datos.labels.length) {
+        datos.labels = datos.labels.slice(0, cantidad);
+        datos.values = datos.values.slice(0, cantidad);
+        datos.colors = datos.colors.slice(0, cantidad);
+        datos.total = datos.values.reduce((a, b) => a + b, 0);
+    }
+    
+    return datos;
+}
+
+
+    // Función para filtrar datos de tiempo en modal CON FILTRO DE CIUDAD
+    async function filtrarDatosCiudadTiempoModal(tipo, fechaInicio, fechaFin, ciudadFiltro, cantidad, orden) {
+        let query = supabase
+            .from('participantes_reserva')
+            .select('fecha_visita, id_ciudad')
+            .not('fecha_visita', 'is', null)
+            .not('id_ciudad', 'is', null);
+        
+        // Aplicar filtros de fecha si existen
+        if (fechaInicio) {
+            query = query.gte('fecha_visita', fechaInicio + 'T00:00:00');
+        }
+        if (fechaFin) {
+            query = query.lte('fecha_visita', fechaFin + 'T23:59:59');
+        }
+        
+        const { data: participantes, error } = await query;
+        if (error) throw error;
+        
+        // Obtener ciudades de los participantes
+        const idsCiudadesUnicos = [...new Set(participantes.map(p => p.id_ciudad))];
+        const { data: ciudades, error: errorCiudades } = await supabase
+            .from('ciudades')
+            .select('id, nombre')
+            .in('id', idsCiudadesUnicos);
+        
+        if (errorCiudades) throw errorCiudades;
+        
+        const mapaCiudades = {};
+        ciudades.forEach(ciudad => {
+            mapaCiudades[ciudad.id] = ciudad.nombre;
+        });
+        
+        // FILTRAR por ciudad si no es "todas"
+        let participantesFiltrados = participantes;
+        if (ciudadFiltro && ciudadFiltro !== 'todas') {
+            participantesFiltrados = participantes.filter(participante => {
+                const ciudad = mapaCiudades[participante.id_ciudad];
+                return ciudad === ciudadFiltro;
+            });
+        }
+        
+        // Procesar datos con la función existente
+        const datosProcesados = await procesarDatosCiudadTiempo(participantesFiltrados, tipo);
+        
+        // FILTRAR datasets por ciudad específica
+        if (ciudadFiltro && ciudadFiltro !== 'todas') {
+            // Encontrar el dataset que corresponde a la ciudad seleccionada
+            const datasetFiltrado = datosProcesados.datasets.find(
+                dataset => dataset.label === ciudadFiltro
+            );
+            
+            if (datasetFiltrado) {
+                // Si encontramos la ciudad, mantener solo ese dataset
+                datosProcesados.datasets = [datasetFiltrado];
+                datosProcesados.ciudades = [ciudadFiltro];
+            } else {
+                // Si no encontramos datos para esa ciudad, devolver datos vacíos
+                datosProcesados.datasets = [];
+                datosProcesados.ciudades = [];
+            }
+        }
+        
+        // Aplicar ordenamiento
+        if (orden === 'desc') {
+            // Ordenar por total de cada fecha (más visitas primero)
+            const indices = datosProcesados.labels
+                .map((label, i) => ({
+                    label,
+                    total: datosProcesados.datasets.reduce((sum, dataset) => sum + (dataset.data[i] || 0), 0)
+                }))
+                .sort((a, b) => b.total - a.total)
+                .map(item => datosProcesados.labels.indexOf(item.label));
+            
+            datosProcesados.labels = indices.map(i => datosProcesados.labels[i]);
+            datosProcesados.datasets.forEach(dataset => {
+                dataset.data = indices.map(i => dataset.data[i]);
+            });
+        } else if (orden === 'asc') {
+            // Ordenar por total de cada fecha (menos visitas primero)
+            const indices = datosProcesados.labels
+                .map((label, i) => ({
+                    label,
+                    total: datosProcesados.datasets.reduce((sum, dataset) => sum + (dataset.data[i] || 0), 0)
+                }))
+                .sort((a, b) => a.total - b.total)
+                .map(item => datosProcesados.labels.indexOf(item.label));
+            
+            datosProcesados.labels = indices.map(i => datosProcesados.labels[i]);
+            datosProcesados.datasets.forEach(dataset => {
+                dataset.data = indices.map(i => dataset.data[i]);
+            });
+        } else if (orden === 'alpha') {
+            // Ordenar alfabéticamente
+            const indices = datosProcesados.labels
+                .map((label, i) => ({ label, index: i }))
+                .sort((a, b) => a.label.localeCompare(b.label))
+                .map(item => item.index);
+            
+            datosProcesados.labels = indices.map(i => datosProcesados.labels[i]);
+            datosProcesados.datasets.forEach(dataset => {
+                dataset.data = indices.map(i => dataset.data[i]);
+            });
+        } else if (orden === 'fecha') {
+            // Ordenar por fecha (ya está ordenado por defecto)
+            // No hacer nada
+        }
+        
+        // Limitar cantidad de períodos
+        if (cantidad > 0 && cantidad < datosProcesados.labels.length) {
+            datosProcesados.labels = datosProcesados.labels.slice(0, cantidad);
+            datosProcesados.datasets.forEach(dataset => {
+                dataset.data = dataset.data.slice(0, cantidad);
+            });
+        }
+
+        // Asegurar que tenga la propiedad ciudades si no la tiene
+        if (!datosProcesados.ciudades && datosProcesados.datasets) {
+            datosProcesados.ciudades = datosProcesados.datasets.map(d => d.label);
+        }
+        
+        // Recalcular total
+        datosProcesados.total = datosProcesados.datasets.reduce((total, dataset) => 
+            total + dataset.data.reduce((sum, val) => sum + (val || 0), 0), 0);
+        
+        return datosProcesados;
+    }
+
     // =============================================
     // FUNCIONES PARA CIUDAD POR TIEMPO - CON BARRAS
     // =============================================
@@ -592,7 +923,7 @@
         // Convertir a array y ordenar alfabéticamente
         const ciudadesArray = Array.from(todasCiudadesUnicas).sort();
 
-        // Preparar datasets - ahora para gráficos de barras agrupadas
+        // Preparar datasets para gráficas AGRUPADAS
         const datasets = ciudadesArray.map(ciudad => {
             // Determinar color basado en la ciudad
             const color = obtenerColorParaCiudad(ciudad);
@@ -610,9 +941,16 @@
             };
         });
 
+        // Ordenar datasets por total (mayor a menor)
+        const datasetsOrdenados = datasets.sort((a, b) => {
+            const totalA = a.data.reduce((sum, val) => sum + val, 0);
+            const totalB = b.data.reduce((sum, val) => sum + val, 0);
+            return totalB - totalA;
+        });
+
         const datosTiempo = {
             labels: labels,
-            datasets: datasets,
+            datasets: datasetsOrdenados,
             ciudades: ciudadesArray,
             total: participantes.length,
             conteo: conteo
@@ -625,7 +963,8 @@
             case 'anio': datosAnioCiudad = datosTiempo; break;
         }
 
-        console.log(`✅ Datos ${tipo} procesados:`, datosTiempo);
+        console.log(`✅ Datos ${tipo} procesados para gráficas agrupadas:`, datosTiempo);
+        return datosTiempo;
     }
 
     // =============================================
@@ -1328,6 +1667,919 @@
         llenarListaCiudadesModal(tipo);
     }
 
+    // Función para abrir modal de ciudad CON FILTROS DENTRO
+    function abrirModalCiudad(tipoGrafica) {
+        const modal = document.getElementById("chartModalCiudad");
+        if (!modal) {
+            console.error('Modal no encontrado');
+            return;
+        }
+        
+        // Limpiar modal anterior
+        const modalContent = document.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.innerHTML = '';
+        }
+        
+        modal.classList.add("show");
+        
+        // Actualizar contenido del modal
+        actualizarContenidoModal('ciudad', tipoGrafica);
+        
+        // Crear gráfica ampliada
+        setTimeout(() => {
+            crearGraficaAmpliadaCiudad(tipoGrafica);
+            llenarTablaModalCiudad();
+        }, 100);
+    }
+
+    // Llenar tabla del modal de ciudad
+    function llenarTablaModalCiudad() {
+        const tbody = document.getElementById("tbodyDatosCiudad");
+        if (!tbody) return;
+
+        const { labels, values, total } = datosCiudades.general;
+
+        tbody.innerHTML = labels.map((ciudad, index) => {
+            const cantidad = values[index];
+            const porcentaje = total > 0 ? ((cantidad / total) * 100).toFixed(1) : 0;
+            const descripcion = obtenerDescripcionCiudad(ciudad);
+            
+            return `
+                <tr>
+                    <td><strong>${ciudad}</strong></td>
+                    <td>${descripcion}</td>
+                    <td style="text-align: center; font-weight: bold">${cantidad.toLocaleString()}</td>
+                    <td style="text-align: center; color: #e74c3c; font-weight: bold">${porcentaje}%</td>
+                </tr>
+            `;
+        }).join('') + (total > 0 ? `
+            <tr style="background: #f8f9fa; font-weight: bold;">
+                <td colspan="2">TOTAL GENERAL</td>
+                <td style="text-align: center">${total.toLocaleString()}</td>
+                <td style="text-align: center">100%</td>
+            </tr>
+        ` : '');
+    }
+
+    function formatearFecha(fecha, tipo) {
+        switch(tipo) {
+            case 'fecha':
+                const fechaObj = new Date(fecha);
+                return fechaObj.toLocaleDateString('es-ES', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+            case 'mes':
+                return 'Mes completo';
+            case 'anio':
+                return 'Año completo';
+            default:
+                return fecha;
+        }
+    }
+
+    function obtenerColorParaCiudad(nombreCiudad) {
+        if (!nombreCiudad) return '#95a5a6';
+        
+        // Primero verificar si ya tenemos un color asignado
+        if (mapaColoresCiudades[nombreCiudad]) {
+            return mapaColoresCiudades[nombreCiudad];
+        }
+        
+        // Si no, asignar uno nuevo
+        const ciudadLower = nombreCiudad.toLowerCase();
+        
+        // Colores predefinidos para ciudades principales
+        if (ciudadLower.includes('bogotá') || ciudadLower.includes('bogota')) {
+            return '#e74c3c'; // Rojo
+        } else if (ciudadLower.includes('medellín') || ciudadLower.includes('medellin')) {
+            return '#3498db'; // Azul
+        } else if (ciudadLower.includes('cali')) {
+            return '#f39c12'; // Naranja
+        } else if (ciudadLower.includes('barranquilla')) {
+            return '#2ecc71'; // Verde
+        } else if (ciudadLower.includes('cartagena')) {
+            return '#9b59b6'; // Púrpura
+        } else if (ciudadLower.includes('bucaramanga')) {
+            return '#1abc9c'; // Turquesa
+        }
+        
+        // Para otras ciudades, generar color único basado en el nombre
+        let hash = 0;
+        for (let i = 0; i < nombreCiudad.length; i++) {
+            hash = nombreCiudad.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        
+        // Usar el hash para generar un color HSL
+        const hue = Math.abs(hash % 360);
+        const saturation = 70;
+        const lightness = 60;
+        
+        const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        
+        // Guardar en el mapa para consistencia
+        mapaColoresCiudades[nombreCiudad] = color;
+        
+        return color;
+    }
+
+    function ordenarFechas(fechas, tipo) {
+        return fechas.sort((a, b) => {
+            switch(tipo) {
+                case 'fecha':
+                    return new Date(a) - new Date(b);
+                case 'mes':
+                    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                    const [mesA, añoA] = a.split(' ');
+                    const [mesB, añoB] = b.split(' ');
+                    
+                    if (añoA !== añoB) {
+                        return parseInt(añoA) - parseInt(añoB);
+                    }
+                    return meses.indexOf(mesA) - meses.indexOf(mesB);
+                case 'anio':
+                    return parseInt(a) - parseInt(b);
+                default:
+                    return 0;
+            }
+        });
+    }
+
+    function obtenerDescripcionCiudad(ciudad) {
+        const ciudadLower = ciudad.toLowerCase();
+        if (ciudadLower.includes('bogotá') || ciudadLower.includes('bogota')) {
+            return 'Capital de Colombia';
+        } else if (ciudadLower.includes('medellín') || ciudadLower.includes('medellin')) {
+            return 'Ciudad de la eterna primavera';
+        } else if (ciudadLower.includes('cali')) {
+            return 'Capital mundial de la salsa';
+        } else if (ciudadLower === 'otras ciudades') {
+            return `${datosCiudades.detallado.otrasCiudades.length} ciudades adicionales`;
+        } else {
+            return 'Ciudad de Colombia';
+        }
+    }
+
+    function getDatosCiudadTiempo(tipo) {
+        switch(tipo) {
+            case 'fecha': return datosFechaCiudad || { labels: [], datasets: [], ciudades: [], total: 0 };
+            case 'mes': return datosMesCiudad || { labels: [], datasets: [], ciudades: [], total: 0 };
+            case 'anio': return datosAnioCiudad || { labels: [], datasets: [], ciudades: [], total: 0 };
+            default: return { labels: [], datasets: [], ciudades: [], total: 0 };
+        }
+    }
+
+    function getTituloTiempo(tipo) {
+        const titulos = {
+            'fecha': '🏙️ Ciudad por Fecha',
+            'mes': '🏙️ Ciudad por Mes', 
+            'anio': '🏙️ Ciudad por Año'
+        };
+        return titulos[tipo] || 'Ciudad por Tiempo';
+    }
+
+     function darkenColor(color, factor) {
+        if (color.startsWith('#')) {
+            let r = parseInt(color.slice(1, 3), 16);
+            let g = parseInt(color.slice(3, 5), 16);
+            let b = parseInt(color.slice(5, 7), 16);
+            
+            r = Math.max(0, Math.floor(r * (1 - factor)));
+            g = Math.max(0, Math.floor(g * (1 - factor)));
+            b = Math.max(0, Math.floor(b * (1 - factor)));
+            
+            return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+        }
+        return color;
+    }
+
+    function mostrarLoading(mensaje) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: mensaje,
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+        }
+    }
+
+    function cerrarLoading() {
+        if (typeof Swal !== 'undefined') Swal.close();
+    }
+
+    function mostrarErrorCiudad(mensaje = 'Error al cargar los datos de ciudad') {
+        const container = document.getElementById('data-container');
+        container.innerHTML = `
+            <div class="no-data" style="text-align: center; padding: 40px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #e74c3c;"></i>
+                <h3 style="color: #e74c3c;">Error al cargar datos</h3>
+                <p>${mensaje}</p>
+                <button class="btn btn-primary" onclick="window.CiudadSystem.cargarDatos()" style="background: #3498db; color: white; padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer;">
+                    <i class="fas fa-redo"></i> Reintentar
+                </button>
+            </div>
+        `;
+    }
+
+    function mostrarSinDatosCiudad() {
+        const container = document.getElementById('data-container');
+        container.innerHTML = `
+            <div class="no-data" style="text-align: center; padding: 40px;">
+                <i class="fas fa-city" style="font-size: 48px; color: #7f8c8d;"></i>
+                <h3>No hay datos de ciudades disponibles</h3>
+                <p>No se encontraron participantes con ciudad registrada.</p>
+                <button class="btn btn-primary" onclick="window.CiudadSystem.cargarDatos()" style="background: #3498db; color: white; padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer;">
+                    <i class="fas fa-redo"></i> Reintentar
+                </button>
+            </div>
+        `;
+    }
+
+    function mostrarSinDatosTiempo(tipo) {
+        const container = document.getElementById('data-container');
+        container.innerHTML = `
+            <div class="no-data" style="text-align: center; padding: 40px;">
+                <i class="fas fa-calendar-times" style="font-size: 48px; color: #7f8c8d;"></i>
+                <h3>No hay datos de ${tipo} disponibles</h3>
+                <p>No se encontraron visitantes con fechas de visita registradas.</p>
+                <button class="btn btn-primary" onclick="window.CiudadSystem.cargarDatosCiudadTiempo('${tipo}')" style="background: #3498db; color: white; padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer;">
+                    <i class="fas fa-redo"></i> Reintentar
+                </button>
+            </div>
+        `;
+    }
+
+    function mostrarExito(mensaje) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: mensaje,
+                timer: 3000,
+                showConfirmButton: false
+            });
+        }
+    }
+
+    function actualizarEstadisticas() {
+        const stats = datosCiudades.estadisticas;
+        
+        // Actualizar tarjetas de estadísticas
+        if (document.getElementById('total-visitantes')) {
+            document.getElementById('total-visitantes').textContent = 
+                stats.totalParticipantes.toLocaleString();
+        }
+        
+        if (document.getElementById('visitantes-con-ciudad')) {
+            document.getElementById('visitantes-con-ciudad').textContent = 
+                stats.totalConCiudad.toLocaleString();
+        }
+        
+        if (document.getElementById('total-ciudades')) {
+            document.getElementById('total-ciudades').textContent = 
+                stats.totalCiudadesUnicas.toLocaleString();
+        }
+    }
+
+
+    // Llenar tabla del modal de tiempo con datos filtrados
+    function llenarTablaModalCiudadTiempoConDatos(tipo, datosFiltrados) {
+        const tbody = document.getElementById("tbodyDatosCiudad");
+        if (!tbody) return;
+
+        // Verificar si tenemos datos
+        if (!datosFiltrados || !datosFiltrados.datasets || datosFiltrados.datasets.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 20px; color: #7f8c8d;">
+                        <i class="fas fa-exclamation-circle"></i> No hay datos disponibles con los filtros
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        let html = '';
+        const totalGeneral = datosFiltrados.total || 0;
+        
+        // Si solo hay una ciudad, mostrar formato simple
+        if (datosFiltrados.ciudades.length === 1) {
+            const ciudad = datosFiltrados.ciudades[0];
+            const dataset = datosFiltrados.datasets[0];
+            
+            html += `
+                <tr style="background: #f8f9fa; font-weight: bold;">
+                    <th>Fecha/Período</th>
+                    <th>Fecha Formato</th>
+                    <th>${ciudad}</th>
+                    <th>Porcentaje</th>
+                </tr>
+            `;
+            
+            datosFiltrados.labels.forEach((fecha, fechaIndex) => {
+                const valor = dataset.data[fechaIndex] || 0;
+                const porcentaje = totalGeneral > 0 ? ((valor / totalGeneral) * 100).toFixed(1) : 0;
+                
+                html += `
+                    <tr>
+                        <td><strong>${fecha}</strong></td>
+                        <td>${formatearFecha(fecha, tipo)}</td>
+                        <td style="text-align: center; font-weight: bold">${valor.toLocaleString()}</td>
+                        <td style="text-align: center; color: #e74c3c; font-weight: bold">${porcentaje}%</td>
+                    </tr>
+                `;
+            });
+            
+            const totalCiudad = dataset.data.reduce((sum, val) => sum + (val || 0), 0);
+            
+            html += `
+                <tr style="background: #f0f7ff; font-weight: bold;">
+                    <td colspan="2"><strong>TOTAL ${ciudad}</strong></td>
+                    <td style="text-align: center; background: #e74c3c; color: white;">${totalCiudad.toLocaleString()}</td>
+                    <td style="text-align: center; background: #e74c3c; color: white;">100%</td>
+                </tr>
+            `;
+        } else {
+            // Formato para múltiples ciudades
+            html += `
+                <tr style="background: #f8f9fa; font-weight: bold;">
+                    <th>Fecha/Período</th>
+                    <th>Fecha Formato</th>
+                    ${datosFiltrados.ciudades.map(ciudad => `<th>${ciudad}</th>`).join('')}
+                    <th>Total</th>
+                </tr>
+            `;
+            
+            datosFiltrados.labels.forEach((fecha, fechaIndex) => {
+                const totalPorFecha = datosFiltrados.datasets.reduce((sum, dataset) => 
+                    sum + (dataset.data[fechaIndex] || 0), 0);
+                
+                html += `
+                    <tr>
+                        <td><strong>${fecha}</strong></td>
+                        <td>${formatearFecha(fecha, tipo)}</td>
+                        ${datosFiltrados.datasets.map(dataset => 
+                            `<td style="text-align: center; font-weight: ${dataset.data[fechaIndex] > 0 ? 'bold' : 'normal'}">
+                                ${(dataset.data[fechaIndex] || 0).toLocaleString()}
+                            </td>`
+                        ).join('')}
+                        <td style="text-align: center; background: #ffeaa7; font-weight: bold;">
+                            ${totalPorFecha.toLocaleString()}
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            // Fila de totales
+            html += `
+                <tr style="background: #f0f7ff; font-weight: bold;">
+                    <td colspan="2"><strong>Total por Ciudad</strong></td>
+                    ${datosFiltrados.datasets.map(dataset => {
+                        const totalCiudad = dataset.data.reduce((sum, val) => sum + (val || 0), 0);
+                        return `<td style="text-align: center; color: #e74c3c;">${totalCiudad.toLocaleString()}</td>`;
+                    }).join('')}
+                    <td style="text-align: center; background: #e74c3c; color: white;">
+                        ${totalGeneral.toLocaleString()}
+                    </td>
+                </tr>
+            `;
+        }
+        
+        tbody.innerHTML = html;
+    }
+
+    // Llenar tabla del modal de tiempo
+    function llenarTablaModalCiudadTiempo(tipo) {
+        const tbody = document.getElementById("tbodyDatosCiudad");
+        if (!tbody) return;
+
+        const datos = getDatosCiudadTiempo(tipo);
+        
+        // Verificar si tenemos datos
+        if (!datos || !datos.datasets || datos.datasets.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 20px; color: #7f8c8d;">
+                        <i class="fas fa-exclamation-circle"></i> No hay datos disponibles
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        let html = '';
+        const totalGeneral = datos.total || 0;
+        
+        // Encabezado para formato de barras agrupadas
+        html += `
+            <tr style="background: #f8f9fa; font-weight: bold;">
+                <th>Fecha/Período</th>
+                <th>Fecha Formato</th>
+                ${datos.ciudades.slice(0, 5).map(ciudad => `<th>${ciudad}</th>`).join('')}
+                ${datos.ciudades.length > 5 ? '<th>Otras</th>' : ''}
+                <th>Total</th>
+            </tr>
+        `;
+        
+        // Filas de datos para cada fecha
+        datos.labels.forEach((fecha, fechaIndex) => {
+            const totalPorFecha = datos.datasets.reduce((sum, dataset) => 
+                sum + (dataset.data[fechaIndex] || 0), 0);
+            
+            // Calcular total de "otras" ciudades (más allá de las 5 principales)
+            let otrasTotal = 0;
+            if (datos.ciudades.length > 5) {
+                otrasTotal = datos.datasets.slice(5).reduce((sum, dataset) => 
+                    sum + (dataset.data[fechaIndex] || 0), 0);
+            }
+            
+            html += `
+                <tr>
+                    <td><strong>${fecha}</strong></td>
+                    <td>${formatearFecha(fecha, tipo)}</td>
+                    ${datos.datasets.slice(0, 5).map(dataset => 
+                        `<td style="text-align: center; font-weight: ${dataset.data[fechaIndex] > 0 ? 'bold' : 'normal'}">
+                            ${(dataset.data[fechaIndex] || 0).toLocaleString()}
+                        </td>`
+                    ).join('')}
+                    ${datos.ciudades.length > 5 ? 
+                        `<td style="text-align: center; color: #7f8c8d; font-weight: ${otrasTotal > 0 ? 'bold' : 'normal'}">
+                            ${otrasTotal.toLocaleString()}
+                        </td>` : ''}
+                    <td style="text-align: center; background: #ffeaa7; font-weight: bold;">
+                        ${totalPorFecha.toLocaleString()}
+                    </td>
+                </tr>
+            `;
+        });
+        
+        // Fila de totales
+        html += `
+            <tr style="background: #f0f7ff; font-weight: bold;">
+                <td colspan="2"><strong>Total por Ciudad</strong></td>
+                ${datos.datasets.slice(0, 5).map(dataset => {
+                    const totalCiudad = dataset.data.reduce((sum, val) => sum + (val || 0), 0);
+                    return `<td style="text-align: center; color: #e74c3c;">${totalCiudad.toLocaleString()}</td>`;
+                }).join('')}
+                ${datos.ciudades.length > 5 ? 
+                    `<td style="text-align: center; color: #7f8c8d;">
+                        ${datos.datasets.slice(5).reduce((sum, dataset) => 
+                            sum + dataset.data.reduce((s, v) => s + (v || 0), 0), 0).toLocaleString()}
+                    </td>` : ''}
+                <td style="text-align: center; background: #e74c3c; color: white;">
+                    ${totalGeneral.toLocaleString()}
+                </td>
+            </tr>
+        `;
+        
+        tbody.innerHTML = html;
+    }
+
+    // Llenar tabla del modal de ciudad con datos filtrados
+    function llenarTablaModalCiudadConDatos(datosFiltrados) {
+        const tbody = document.getElementById("tbodyDatosCiudad");
+        if (!tbody) return;
+
+        tbody.innerHTML = datosFiltrados.labels.map((ciudad, index) => {
+            const cantidad = datosFiltrados.values[index];
+            const porcentaje = datosFiltrados.total > 0 ? ((cantidad / datosFiltrados.total) * 100).toFixed(1) : 0;
+            const descripcion = obtenerDescripcionCiudad(ciudad);
+            
+            return `
+                <tr>
+                    <td><strong>${ciudad}</strong></td>
+                    <td>${descripcion}</td>
+                    <td style="text-align: center; font-weight: bold">${cantidad.toLocaleString()}</td>
+                    <td style="text-align: center; color: #e74c3c; font-weight: bold">${porcentaje}%</td>
+                </tr>
+            `;
+        }).join('') + (datosFiltrados.total > 0 ? `
+            <tr style="background: #f8f9fa; font-weight: bold;">
+                <td colspan="2">TOTAL GENERAL</td>
+                <td style="text-align: center">${datosFiltrados.total.toLocaleString()}</td>
+                <td style="text-align: center">100%</td>
+            </tr>
+        ` : '');
+    }
+
+
+    // Crear gráfica ampliada de tiempo
+    function crearGraficaAmpliadaCiudadTiempo(tipo, tipoGrafica, datosFiltrados = null) {
+        const canvas = document.getElementById("chartAmpliadoCiudad");
+        if (!canvas) {
+            console.error('❌ Canvas no encontrado!');
+            return;
+        }
+        
+        const ctx = canvas.getContext('2d');
+
+        // Destruir gráfica anterior si existe
+        if (chartAmpliadoCiudad) {
+            chartAmpliadoCiudad.destroy();
+        }
+
+        // Usar datos filtrados si se proporcionan, SINO datos originales
+        let datos;
+        if (datosFiltrados) {
+            datos = datosFiltrados;
+            console.log('✅ Usando datos filtrados en modal');
+        } else {
+            datos = getDatosCiudadTiempo(tipo);
+            console.log('✅ Usando datos originales en modal');
+        }
+
+        // Verificar si tenemos datos
+        if (!datos || !datos.datasets || datos.datasets.length === 0) {
+            console.log('⚠️ No hay datos para el modal');
+            // Mostrar gráfica vacía con mensaje
+            chartAmpliadoCiudad = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Sin datos'],
+                    datasets: [{
+                        data: [100],
+                        backgroundColor: ['#95a5a6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'No hay datos disponibles',
+                            font: { size: 16, weight: 'bold' }
+                        }
+                    }
+                }
+            });
+            return;
+        }
+
+        const tipoChart = tipoGrafica;
+
+        if (tipoChart === 'bar') {
+            // Verificar que tenemos datos
+            if (!datos.datasets || datos.datasets.length === 0) {
+                console.log('⚠️ No hay datasets para el gráfico de barras');
+                return;
+            }
+            
+            console.log('📊 Creando gráfico de barras AGRUPADAS con', datos.datasets.length, 'datasets');
+            
+            // Limitar a las 8 ciudades principales para mejor visualización
+            const datasetsLimitados = datos.datasets.slice(0, 8);
+            
+            chartAmpliadoCiudad = new Chart(ctx, {
+                type: tipoChart,
+                data: {
+                    labels: datos.labels,
+                    datasets: datasetsLimitados
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                font: { size: 12 }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: `${getTituloTiempo(tipo)} - Vista Ampliada ${datosFiltrados ? '(Filtrado)' : ''}`,
+                            font: { size: 18, weight: 'bold' },
+                            padding: 20
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 14 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.raw || 0;
+                                    return `${label}: ${value} visitantes`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            stacked: false,
+                            grid: { color: 'rgba(0,0,0,0.1)' },
+                            title: {
+                                display: true,
+                                text: 'Cantidad de Visitantes',
+                                font: { weight: 'bold', size: 14 }
+                            }
+                        },
+                        x: {
+                            stacked: false,
+                            grid: { display: false },
+                            title: {
+                                display: true,
+                                text: getTituloTiempo(tipo).split(' ')[2] || 'Período',
+                                font: { weight: 'bold', size: 14 }
+                            },
+                            ticks: {
+                                maxRotation: tipo === 'fecha' ? 45 : 0,
+                                minRotation: 0
+                            }
+                        }
+                    }
+                }
+            });
+        } else if (tipoChart === 'doughnut' || tipoChart === 'pie') {
+            // Calcular totales por ciudad
+            const totalesPorCiudad = {};
+            datos.datasets.forEach(dataset => {
+                const total = dataset.data.reduce((sum, val) => sum + (val || 0), 0);
+                if (total > 0) {
+                    totalesPorCiudad[dataset.label] = total;
+                }
+            });
+            
+            const labels = Object.keys(totalesPorCiudad);
+            const data = Object.values(totalesPorCiudad);
+
+            chartAmpliadoCiudad = new Chart(ctx, {
+                type: tipoChart,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: labels.map((label, index) => 
+                            obtenerColorParaCiudad(label)
+                        ),
+                        borderColor: '#fff',
+                        borderWidth: 2,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                font: { size: 12 }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: `${getTituloTiempo(tipo)} - Distribución por Ciudad ${datosFiltrados ? '(Filtrado)' : ''}`,
+                            font: { size: 18, weight: 'bold' },
+                            padding: 20
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 14 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return `${label}: ${value} visitantes (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: tipoChart === 'doughnut' ? '50%' : '0%'
+                }
+            });
+        }
+    }
+
+
+    // Crear gráfica ampliada de ciudad con datos filtrados
+    function crearGraficaAmpliadaCiudadConDatos(datosFiltrados, tipoGrafica) {
+        const ctx = document.getElementById("chartAmpliadoCiudad");
+        if (!ctx) return;
+
+        if (chartAmpliadoCiudad) {
+            chartAmpliadoCiudad.destroy();
+        }
+
+        const tipoChart = tipoGrafica;
+
+        chartAmpliadoCiudad = new Chart(ctx, {
+            type: tipoChart,
+            data: {
+                labels: datosFiltrados.labels,
+                datasets: [{
+                    label: "Cantidad de Visitantes",
+                    data: datosFiltrados.values,
+                    backgroundColor: datosFiltrados.colors,
+                    borderColor: tipoChart === "bar" ? 'transparent' : datosFiltrados.colors.map(color => darkenColor(color, 0.2)),
+                    borderWidth: tipoChart === "bar" ? 0 : 2,
+                    borderRadius: tipoChart === "bar" ? 8 : 0,
+                    barThickness: tipoChart === "bar" ? 35 : undefined,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: tipoChart === "bar" ? 'top' : 'right',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true,
+                            font: { size: 12 }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: datosFiltrados.labels.length === 1 ? 
+                            `Visitantes de ${datosFiltrados.labels[0]}` : 
+                            'Distribución por Ciudad (Filtrado)',
+                        font: { size: 18, weight: 'bold' },
+                        padding: 20
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 14 },
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed.y || context.parsed;
+                                const percentage = Math.round((value / datosFiltrados.total) * 100);
+                                return `${label}: ${value} visitantes (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                scales: tipoChart === "bar" ? {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.1)' },
+                        title: {
+                            display: true,
+                            text: 'Cantidad de Visitantes',
+                            font: { weight: 'bold', size: 14 }
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        title: {
+                            display: true,
+                            text: 'Ciudad',
+                            font: { weight: 'bold', size: 14 }
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 0
+                        }
+                    }
+                } : {},
+                cutout: tipoChart === "bar" ? '0%' : (tipoChart === 'doughnut' ? '40%' : '0%')
+            },
+        });
+    }
+
+    // Crear gráfica ampliada de ciudad
+    function crearGraficaAmpliadaCiudad(tipoGrafica) {
+        const ctx = document.getElementById("chartAmpliadoCiudad");
+        if (!ctx) return;
+
+        // Destruir gráfica anterior si existe
+        if (chartAmpliadoCiudad) {
+            chartAmpliadoCiudad.destroy();
+        }
+
+        const { labels, values, colors, total } = datosCiudades.general;
+        const tipoChart = tipoGrafica;
+
+        chartAmpliadoCiudad = new Chart(ctx, {
+            type: tipoChart,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Cantidad de Visitantes",
+                    data: values,
+                    backgroundColor: colors,
+                    borderColor: tipoChart === "bar" ? 'transparent' : colors.map(color => darkenColor(color, 0.2)),
+                    borderWidth: tipoChart === "bar" ? 0 : 2,
+                    borderRadius: tipoChart === "bar" ? 8 : 0,
+                    barThickness: tipoChart === "bar" ? 35 : undefined,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: tipoChart === "bar" ? 'top' : 'right',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true,
+                            font: { size: 12 }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Distribución por Ciudad - Vista Ampliada',
+                        font: { size: 18, weight: 'bold' },
+                        padding: 20
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 14 },
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed.y || context.parsed;
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: ${value} visitantes (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                scales: tipoChart === "bar" ? {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.1)' },
+                        title: {
+                            display: true,
+                            text: 'Cantidad de Visitantes',
+                            font: { weight: 'bold', size: 14 }
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        title: {
+                            display: true,
+                            text: 'Ciudad',
+                            font: { weight: 'bold', size: 14 }
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 0
+                        }
+                    }
+                } : {},
+                cutout: tipoChart === "bar" ? '0%' : (tipoChart === 'doughnut' ? '40%' : '0%')
+            },
+        });
+    }
+
+
+    // Función para abrir modal de tiempo CON FILTROS DENTRO
+    function abrirModalCiudadTiempo(tipo, tipoGrafica) {
+        const modal = document.getElementById("chartModalCiudad");
+        if (!modal) {
+            console.error('Modal no encontrado');
+            return;
+        }
+        
+        // DEBUG
+        console.log('🎯 Abriendo modal para tipo:', tipo, 'con gráfica:', tipoGrafica);
+        
+        // Limpiar modal anterior
+        const modalContent = document.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.innerHTML = '';
+        }
+        
+        modal.classList.add("show");
+        
+        // Actualizar contenido del modal
+        actualizarContenidoModal(tipo, tipoGrafica);
+        
+        // Crear gráfica ampliada
+        setTimeout(() => {
+            console.log('⏰ Creando gráfica para modal...');
+            const datosActuales = getDatosCiudadTiempo(tipo);
+            crearGraficaAmpliadaCiudadTiempo(tipo, tipoGrafica, datosActuales);
+            llenarTablaModalCiudadTiempo(tipo);
+        }, 200);
+    }
+
     // FUNCIÓN CAMBIADA: Ahora usa gráfico de barras en el modal
     function inicializarGraficoModal(tipo) {
         const datos = getDatosCiudadTiempo(tipo);
@@ -1553,6 +2805,150 @@
             text: mensaje,
             confirmButtonColor: '#3498db'
         });
+    }
+
+
+    // CAMBIA ESTA FUNCIÓN COMPLETA:
+function crearHTMLFiltrosModal(tipo) {
+    // Obtener todas las ciudades de datosCiudades
+    const opcionesCiudad = todasLasCiudades || [];
+
+    let html = `
+    <div class="modal-filtros-container" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h4 style="margin: 0; color: #2c3e50;">
+                <i class="fas fa-filter"></i> Filtros Avanzados
+            </h4>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn-filter-modal" onclick="window.CiudadSystem.aplicarFiltrosModal()" style="background: #e74c3c; color: white;">
+                    <i class="fas fa-check"></i> Aplicar
+                </button>
+                <button class="btn-filter-modal" onclick="window.CiudadSystem.limpiarFiltrosModal()" style="background: #95a5a6; color: white;">
+                    <i class="fas fa-times"></i> Limpiar
+                </button>
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+    `;
+
+    // SI ES GRÁFICA DE BARRAS, mostrar tipo de gráfica
+    // Para esto necesitamos saber qué tipo de gráfica vamos a mostrar
+    const modalTipoGrafica = document.getElementById('modalTipoGrafica')?.value || 'bar';
+    
+    if (modalTipoGrafica === 'bar') {
+        html += `
+            <!-- Tipo de Gráfica - SOLO PARA BARRAS -->
+            <div class="filter-group">
+                <label><i class="fas fa-chart-bar"></i> Tipo de Gráfica:</label>
+                <select id="modalTipoGrafica" class="filter-select">
+                    <option value="bar">Gráfico de Barras</option>
+                    <option value="doughnut">Gráfico Circular</option>
+                    <option value="pie">Gráfico de Pastel</option>
+                </select>
+            </div>
+        `;
+    } else {
+        // Para gráficas circulares, ocultamos el selector pero lo mantenemos
+        html += `
+            <!-- Tipo de Gráfica (oculto para circulares) -->
+            <input type="hidden" id="modalTipoGrafica" value="${modalTipoGrafica}">
+        `;
+    }
+
+    // Si no es ciudad general, agregar filtros de fecha
+    if (tipo !== 'ciudad') {
+        html += `
+            <!-- Fecha Inicial -->
+            <div class="filter-group">
+                <label><i class="fas fa-calendar-alt"></i> Fecha Inicial:</label>
+                <input type="date" id="modalFechaInicio" class="filter-input">
+            </div>
+            
+            <!-- Fecha Final -->
+            <div class="filter-group">
+                <label><i class="fas fa-calendar-alt"></i> Fecha Final:</label>
+                <input type="date" id="modalFechaFin" class="filter-input">
+            </div>
+        `;
+    }
+
+    // Agregar filtro de ciudad para todos los tipos
+    html += `
+            <!-- Ciudad -->
+            <div class="filter-group">
+                <label><i class="fas fa-city"></i> Ciudad:</label>
+                <select id="modalCiudad" class="filter-select">
+                    <option value="todas">Todas las ciudades</option>
+                    ${opcionesCiudad.map(ciudad => 
+                        `<option value="${ciudad}">${ciudad}</option>`
+                    ).join('')}
+                </select>
+            </div>
+            
+            <!-- Número de resultados -->
+            <div class="filter-group">
+                <label><i class="fas fa-list-ol"></i> Mostrar:</label>
+                <select id="modalCantidad" class="filter-select">
+                    <option value="5">Top 5</option>
+                    <option value="10" selected>Top 10</option>
+                    <option value="15">Top 15</option>
+                    <option value="20">Top 20</option>
+                    <option value="0">Todos</option>
+                </select>
+            </div>
+            
+            <!-- Ordenar por -->
+            <div class="filter-group">
+                <label><i class="fas fa-sort-amount-down"></i> Ordenar por:</label>
+                <select id="modalOrden" class="filter-select">
+                    <option value="desc">Mayor a menor</option>
+                    <option value="asc">Menor a mayor</option>
+                    <option value="alpha">Alfabético</option>
+                    ${tipo !== 'ciudad' ? '<option value="fecha">Por fecha</option>' : ''}
+                </select>
+            </div>
+        </div>
+    </div>
+    `;
+
+    return html;
+}
+
+    
+   // Función para limpiar filtros del modal
+    function limpiarFiltrosModal() {
+        // Limpiar todos los filtros
+        document.querySelectorAll('.filter-input, .filter-select').forEach(element => {
+            if (element.tagName === 'SELECT') {
+                if (element.id === 'modalTipoGrafica') {
+                    element.value = 'bar';
+                } else if (element.id === 'modalCantidad') {
+                    element.value = '10';
+                } else if (element.id === 'modalOrden') {
+                    element.value = 'desc';
+                } else if (element.id === 'modalCiudad') {
+                    element.value = 'todas';
+                }
+            } else if (element.tagName === 'INPUT') {
+                element.value = '';
+            }
+        });
+        
+        // Recargar gráfica original
+        const tipo = determinarTipoActualModal();
+        const tipoGrafica = document.getElementById('modalTipoGrafica')?.value || 'bar';
+        
+        if (tipo === 'ciudad') {
+            crearGraficaAmpliadaCiudad(tipoGrafica);
+            llenarTablaModalCiudad();
+        } else {
+            const datosOriginales = getDatosCiudadTiempo(tipo);
+            crearGraficaAmpliadaCiudadTiempo(tipo, tipoGrafica, datosOriginales);
+            llenarTablaModalCiudadTiempo(tipo);
+        }
+        
+        mostrarExito('Filtros limpiados - Mostrando todos los datos');
     }
 
     // =============================================
@@ -2074,5 +3470,136 @@
         return color;
     }
 
+    if (!window.CiudadSystem) {
+        window.CiudadSystem = {};
+    }
+
+    // Busca la sección "EXPOSICIÓN DE FUNCIONES GLOBALES" y agrega:
+    window.CiudadSystem.aplicarFiltrosModal = () => aplicarFiltrosModal();
+    window.CiudadSystem.limpiarFiltrosModal = () => limpiarFiltrosModal();
+
+    // Funciones principales
+    window.CiudadSystem.cargarDatos = cargarDatosCiudad;
+    window.CiudadSystem.cargarDatosCiudadTiempo = cargarDatosCiudadTiempo;
+    window.CiudadSystem.cambiarTipoReporte = function(tipo) {
+        console.log('🔄 Cambiando a reporte:', tipo);
+        
+        // Actualizar botones activos
+        document.querySelectorAll('.chart-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        const btn = document.querySelector(`.chart-btn[data-type="${tipo}"]`);
+        if (btn) btn.classList.add('active');
+        
+        tipoActual = tipo;
+        
+        if (tipo === 'ciudad') {
+            cargarDatosCiudad();
+        } else {
+            cargarDatosCiudadTiempo(tipo);
+        }
+    };
+
+    // Funciones de modal con filtros
+    window.CiudadSystem.abrirModal = (tipo) => abrirModalCiudad(tipo);
+    window.CiudadSystem.abrirModalTiempo = (tipo, tipoGrafica) => abrirModalCiudadTiempo(tipo, tipoGrafica);
+    window.CiudadSystem.cerrarModal = () => {
+        const modal = document.getElementById("chartModalCiudad");
+        if (modal) {
+            modal.classList.remove("show");
+        }
+    };
+    window.CiudadSystem.aplicarFiltrosModal = () => aplicarFiltrosModal();
+    window.CiudadSystem.limpiarFiltrosModal = () => limpiarFiltrosModal();
+    
+    // Funciones de descarga del modal
+    window.CiudadSystem.descargarPNGModal = () => {
+        const canvas = document.getElementById("chartAmpliadoCiudad");
+        if (canvas) {
+            const link = document.createElement("a");
+            link.download = "grafica_ampliada_ciudad.png";
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        }
+    };
+    
+    window.CiudadSystem.descargarExcelModal = () => {
+        const titulo = document.getElementById('modalTitleCiudad')?.textContent || 'Reporte Ciudad';
+        const tbody = document.getElementById("tbodyDatosCiudad");
+        if (!tbody) return;
+        
+        const filas = tbody.querySelectorAll('tr');
+        const datosExcel = [];
+        
+        // Obtener encabezados de la tabla
+        const thead = document.querySelector('#tablaDatosCiudad thead');
+        const encabezados = [];
+        if (thead) {
+            const ths = thead.querySelectorAll('th');
+            ths.forEach(th => encabezados.push(th.textContent.trim()));
+            datosExcel.push(encabezados);
+        } else {
+            // Encabezados por defecto
+            datosExcel.push(['Ciudad/Período', 'Descripción', 'Total Visitantes', 'Porcentaje', 'Detalles']);
+        }
+        
+        // Obtener datos de las filas
+        filas.forEach(fila => {
+            const celdas = fila.querySelectorAll('td');
+            if (celdas.length > 0) {
+                const filaDatos = [];
+                celdas.forEach(celda => filaDatos.push(celda.textContent.trim()));
+                datosExcel.push(filaDatos);
+            }
+        });
+        
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(datosExcel);
+        XLSX.utils.book_append_sheet(wb, ws, "Datos Filtrados Ciudad");
+        XLSX.writeFile(wb, "reporte_filtrado_ciudad.xlsx");
+    };
+
+    console.log('✅ Sistema de Ciudad CON GRÁFICAS AGRUPADAS Y FILTROS EN MODAL cargado correctamente');
+
     console.log('✅ Sistema de Ciudad CON BARRAS cargado correctamente');
+
+    // =============================================
+    // FUNCIÓN DE INICIALIZACIÓN
+    // =============================================
+
+    window.CiudadSystem.inicializar = function() {
+        console.log('✅ Inicializando sistema de ciudad...');
+        this.cargarDatos();
+    };
+
+    // Funciones de filtros combinados (si no existen)
+    window.CiudadSystem.aplicarFiltrosCombinados = function() {
+        console.log('Aplicando filtros combinados...');
+        // Implementa esta función según necesites
+        alert('Funcionalidad de filtros combinados en desarrollo');
+    };
+
+    window.CiudadSystem.limpiarFiltrosCombinados = function() {
+        console.log('Limpiando filtros combinados...');
+        // Implementa esta función según necesites
+        alert('Funcionalidad de limpiar filtros en desarrollo');
+    };
+
+    window.CiudadSystem.exportarDatosFiltrados = function() {
+        console.log('Exportando datos filtrados...');
+        // Implementa esta función según necesites
+        alert('Funcionalidad de exportar datos filtrados en desarrollo');
+    };
+
+    // Inicializar automáticamente cuando se carga el DOM
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.CiudadSystem && window.CiudadSystem.inicializar) {
+            setTimeout(() => {
+                window.CiudadSystem.inicializar();
+            }, 1000);
+        }
+    });
+
+    console.log('✅ Sistema de Ciudad CON BARRAS cargado correctamente');
+
 })();
