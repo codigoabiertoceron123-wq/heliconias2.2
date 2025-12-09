@@ -33,6 +33,7 @@ class DataProcessor {
 
         // Procesar datos por categorías (NUEVO: con todas las categorías de la versión antigua)
         this.procesarDatosPorCategorias(participantes);
+        
 
         console.log('✅ Datos procesados COMPLETOS:', this.datosSimulados);
 
