@@ -94,7 +94,7 @@ class FilterManager {
                 showConfirmButton: false
             });
         } else {
-            console.log(`${titulo}: ${texto}`);
+            console.log(${titulo}: ${texto});
         }
     }
 }

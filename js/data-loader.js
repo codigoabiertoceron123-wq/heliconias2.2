@@ -1,4 +1,3 @@
-// Módulo para carga de datos - VERSIÓN COMPLETAMENTE CORREGIDA
 class DataLoader {
     constructor() {
         this.filtrosActivos = {};
@@ -56,7 +55,7 @@ class DataLoader {
                 return await this.cargarDatosAlternativos();
             }
 
-            console.log(`✅ ${participantes?.length || 0} participantes cargados`);
+            console.log(✅ ${participantes?.length || 0} participantes cargados);
 
             if (participantes && participantes.length > 0) {
                 console.log('📊 Ejemplo de datos cargados:', participantes[0]);
@@ -73,13 +72,13 @@ class DataLoader {
                     Swal.fire({
                         icon: 'success',
                         title: 'Datos cargados',
-                        text: `Se cargaron ${participantes.length} participantes`,
+                        text: Se cargaron ${participantes.length} participantes,
                         timer: 2000,
                         showConfirmButton: false
                     });
                 }
             } else {
-                console.log('⚠️ No se encontraron participantes');
+                console.log('⚠ No se encontraron participantes');
                 this.cargarDatosDemo();
             }
             
@@ -109,7 +108,7 @@ async cargarDatosAlternativos() {
         if (error) throw error;
 
         if (participantes && participantes.length > 0) {
-            console.log(`✅ ${participantes.length} participantes cargados (alternativo)`);
+            console.log(✅ ${participantes.length} participantes cargados (alternativo));
             
             if (this.dataProcessor) {
                 this.dataProcessor.procesarDatosCompletos(participantes);
@@ -233,9 +232,9 @@ async cargarDatosAlternativos() {
                     if (typeof Swal !== 'undefined') {
                         let mensaje = '';
                         if (huboCambio) {
-                            mensaje = `Filtros aplicados\nResultados: ${reservasFiltradas} reservas y ${participantesFiltrados.length} participantes`;
+                            mensaje = Filtros aplicados\nResultados: ${reservasFiltradas} reservas y ${participantesFiltrados.length} participantes;
                         } else {
-                            mensaje = `Los filtros no modificaron los resultados\nSe mantienen: ${reservasFiltradas} reservas y ${participantesFiltrados.length} participantes`;
+                            mensaje = Los filtros no modificaron los resultados\nSe mantienen: ${reservasFiltradas} reservas y ${participantesFiltrados.length} participantes;
                         }
                         
                         Swal.fire({
