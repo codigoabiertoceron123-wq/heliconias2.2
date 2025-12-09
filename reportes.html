@@ -3008,114 +3008,138 @@ document.getElementById('save-report-btn').addEventListener('click', async funct
     }
 });
 
-        // Botón de ayuda del header
-        document.getElementById('help-main-btn').addEventListener('click', function() {
-            Swal.fire({
-                title: '<div style="display: flex; align-items: center; gap: 10px; color: #2c3e50;"><i class="fas fa-home" style="color: #27ae60; font-size: 1.5rem;"></i><span>Centro de Ayuda - Panel Principal</span></div>',
-                html: `
-                    <div style="text-align: left;">
-                        <div style="background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                            <h4 style="margin: 0; display: flex; align-items: center; gap: 8px;">
-                                <i class="fas fa-star"></i>
-                                Funcionalidades Principales
-                            </h4>
+        // Botón de ayuda del header - Panel Principal
+document.getElementById('help-main-btn').addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    const screenWidth = window.innerWidth;
+    let modalWidth = '800px';
+    
+    if (screenWidth <= 768) modalWidth = '95%';
+    if (screenWidth <= 480) modalWidth = '98%';
+    
+    Swal.fire({
+        title: '<div style="display: flex; align-items: center; justify-content: center; gap: 10px; color: #2c3e50;"><i class="fas fa-home" style="color: #27ae60; font-size: 1.5rem;"></i><span style="font-size: 1.5rem;">Centro de Ayuda - Panel Principal</span></div>',
+        html: `
+            <div style="text-align: center;">
+                <div style="background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                    <h4 style="margin: 0; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1.1rem;">
+                        <i class="fas fa-star"></i>
+                        Funcionalidades Principales del Sistema
+                    </h4>
+                </div>
+                
+                <div style="display: grid; gap: 15px; margin: 25px 0;">
+                    <div style="display: flex; align-items: start; gap: 15px; padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #27ae60;">
+                        <i class="fas fa-file-signature" style="color: #27ae60; font-size: 1.3rem; margin-top: 2px;"></i>
+                        <div style="text-align: left;">
+                            <h5 style="margin: 0 0 8px 0; color: #2c3e50;">Escribir Informes</h5>
+                            <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">Crea y registra nuevos reportes de actividades, eventos e incidentes del parque de manera organizada.</p>
                         </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: start; gap: 15px; padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #3498db;">
+                        <i class="fas fa-search" style="color: #3498db; font-size: 1.3rem; margin-top: 2px;"></i>
+                        <div style="text-align: left;">
+                            <h5 style="margin: 0 0 8px 0; color: #2c3e50;">Consultar Informes</h5>
+                            <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">Busca y visualiza reportes existentes en el sistema de manera rápida y eficiente.</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: start; gap: 15px; padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #e74c3c;">
+                        <i class="fas fa-chart-line" style="color: #e74c3c; font-size: 1.3rem; margin-top: 2px;"></i>
+                        <div style="text-align: left;">
+                            <h5 style="margin: 0 0 8px 0; color: #2c3e50;">Reportes Estadísticos</h5>
+                            <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">Accede a análisis detallados por edad, género, nacionalidad, ciudad e institución.</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: start; gap: 15px; padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #9b59b6;">
+                        <i class="fas fa-calendar-alt" style="color: #9b59b6; font-size: 1.3rem; margin-top: 2px;"></i>
+                        <div style="text-align: left;">
+                            <h5 style="margin: 0 0 8px 0; color: #2c3e50;">Gestión de Eventos</h5>
+                            <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">Administra eventos especiales y actividades programadas en el parque.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #ffeaa7, #fab1a0); padding: 20px; border-radius: 10px; border-left: 4px solid #e17055; margin: 25px 0;">
+                    <div style="text-align: left;">
+                        <h5 style="margin: 0 0 15px 0; color: #2d3436; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-graduation-cap"></i>
+                            Consejos de Navegación
+                        </h5>
                         
-                        <div style="display: grid; gap: 15px; margin-bottom: 20px;">
-                            <div style="display: flex; align-items: start; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #27ae60;">
-                                <i class="fas fa-file-signature" style="color: #27ae60; font-size: 1.2rem; margin-top: 2px;"></i>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255, 255, 255, 0.9); border-radius: 8px;">
+                                <i class="fas fa-mouse-pointer" style="color: #27ae60; font-size: 1.2rem;"></i>
                                 <div>
-                                    <strong style="color: #2c3e50;">Escribir Informes</strong>
-                                    <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 0.9rem;">Crea y registra nuevos reportes de actividades, eventos e incidentes del parque</p>
+                                    <strong style="color: #2d3436; display: block; font-size: 0.9rem;">Acceso Rápido</strong>
+                                    <span style="color: #636e72; font-size: 0.8rem;">Usa el menú superior para navegar</span>
                                 </div>
                             </div>
                             
-                            <div style="display: flex; align-items: start; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #3498db;">
-                                <i class="fas fa-search-plus" style="color: #3498db; font-size: 1.2rem; margin-top: 2px;"></i>
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255, 255, 255, 0.9); border-radius: 8px;">
+                                <i class="fas fa-bolt" style="color: #f39c12; font-size: 1.2rem;"></i>
                                 <div>
-                                    <strong style="color: #2c3e50;">Consultar Informes</strong>
-                                    <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 0.9rem;">Busca y visualiza reportes existentes en el sistema de manera rápida</p>
+                                    <strong style="color: #2d3436; display: block; font-size: 0.9rem;">Botones Principales</strong>
+                                    <span style="color: #636e72; font-size: 0.8rem;">Acciones frecuentes visibles</span>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255, 255, 255, 0.9); border-radius: 8px;">
+                                <i class="fas fa-history" style="color: #3498db; font-size: 1.2rem;"></i>
+                                <div>
+                                    <strong style="color: #2d3436; display: block; font-size: 0.9rem;">Historial Rápido</strong>
+                                    <span style="color: #636e72; font-size: 0.8rem;">Accede a informes recientes</span>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <div style="background: linear-gradient(135deg, #ffeaa7, #fab1a0); padding: 15px; border-radius: 10px; border-left: 4px solid #e17055; margin-bottom: 20px;">
-                            <h5 style="margin: 0 0 8px 0; color: #2d3436; display: flex; align-items: center; gap: 8px;">
-                                <i class="fas fa-graduation-cap"></i>
-                                Consejos de Navegación
-                            </h5>
-                            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                                <span style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: #2d3436; display: flex; align-items: center; gap: 5px;">
-                                    <i class="fas fa-mouse-pointer" style="color: #27ae60;"></i>
-                                    Acceso Rápido
-                                </span>
-                                <span style="background: white; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: #2d3436; display: flex; align-items: center; gap: 5px;">
-                                    <i class="fas fa-bolt" style="color: #f39c12;"></i>
-                                    Botones Principales
-                                </span>
-                            </div>
-                        </div>
-
-                        <div style="background: linear-gradient(135deg, #27ae60, #229954); color: white; padding: 15px; border-radius: 10px; text-align: center;">
-                            <p style="margin: 0; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                                <i class="fas fa-rocket"></i>
-                                ¡Comienza seleccionando cualquier función del menú superior!
+                <div style="background: linear-gradient(135deg, #27ae60, #229954); color: white; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+                        <i class="fas fa-rocket" style="font-size: 1.5rem;"></i>
+                        <div>
+                            <h5 style="margin: 0 0 5px 0; font-size: 1rem;">¡Todo listo para comenzar!</h5>
+                            <p style="margin: 0; font-size: 0.9rem; opacity: 0.9;">
+                                Selecciona cualquier función del menú superior para empezar a usar el sistema
                             </p>
                         </div>
                     </div>
-                `,
-                icon: 'info',
-                showCloseButton: true,
-                confirmButtonColor: '#27ae60',
-                confirmButtonText: '<i class="fas fa-check-circle"></i> ¡Empezar!',
-                width: 650,
-                background: '#ffffff',
-                customClass: {
-                    popup: 'animated-popup',
-                    title: 'custom-title',
-                    htmlContainer: 'custom-html',
-                    confirmButton: 'custom-confirm-btn'
-                },
-                showClass: {
-                    popup: 'animate__animated animate__fadeInDown'
-                },
-                hideClass: {
-                    popup: 'animate__animated animate__fadeOutUp'
-                }
-            });
-        });
-
-        // Botón de ayuda principal
-        document.getElementById('help-main-btn').addEventListener('click', function() {
-            Swal.fire({
-                title: '¿Qué hace esta página?',
-                html: `
-                    <div style="text-align: left;">
-                        <p><strong>Heliconias Reports</strong> es el sistema de gestión del Parque de las Heliconias que te permite:</p>
-                        <ul style="list-style: none; padding-left: 0;">
-                            <li style="margin-bottom: 12px;">📋 <strong>Escribir Informes:</strong> Crear y registrar nuevos reportes de actividades, eventos e incidentes</li>
-                            <li style="margin-bottom: 12px;">🔎 <strong>Consultar Informes:</strong> Buscar y visualizar reportes existentes en el sistema</li>
-                            <li style="margin-bottom: 12px;">📅 <strong>Gestionar Eventos:</strong> Administrar el calendario de eventos del parque</li>
-                            <li style="margin-bottom: 12px;">📈 <strong>Generar Reportes:</strong> Crear reportes estadísticos y financieros</li>
-                            <li style="margin-bottom: 12px;">💰 <strong>Control Financiero:</strong> Gestionar ingresos, gastos y presupuestos</li>
-                            <li style="margin-bottom: 12px;">🕒 <strong>Historial:</strong> Consultar el registro histórico de todas las actividades</li>
-                            <li style="margin-bottom: 12px;">⚙️ <strong>Configuración:</strong> Personalizar ajustes del sistema</li>
-                        </ul>
-                        <p style="text-align: center; margin-top: 20px; font-weight: bold; color: #17a2b8;">¡Selecciona la opción que necesites para comenzar!</p>
-                    </div>
-                `,
-                icon: 'info',
-                confirmButtonText: 'Entendido',
-                confirmButtonColor: '#17a2b8',
-                width: '650px',
-                background: '#f8f9fa',
-                customClass: {
-                    title: 'custom-title',
-                    htmlContainer: 'custom-html'
-                }
-            });
-        });
-
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <p style="margin: 0; color: #7f8c8d; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fas fa-question-circle" style="color: #3498db;"></i>
+                        ¿Necesitas ayuda específica? Usa los botones de ayuda en cada sección
+                    </p>
+                </div>
+            </div>
+        `,
+        showCloseButton: true,
+        showCancelButton: false,
+        confirmButtonColor: '#27ae60',
+        confirmButtonText: '<i class="fas fa-play-circle"></i> ¡Comenzar a Explorar!',
+        width: modalWidth,
+        padding: '2rem',
+        background: '#ffffff',
+        customClass: {
+            popup: 'animated-popup',
+            title: 'custom-title',
+            htmlContainer: 'custom-html',
+            confirmButton: 'custom-confirm-btn'
+        },
+        showClass: {
+            popup: 'animate__animated animate__fadeInDown'
+        },
+        hideClass: {
+            popup: 'animate__animated animate__fadeOutUp'
+        }
+    });
+});
+        
         // Botón de salir
         document.getElementById("logout-btn").addEventListener("click", function() {
             Swal.fire({
