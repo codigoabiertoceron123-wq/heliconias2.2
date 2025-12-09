@@ -12,38 +12,34 @@ class App {
         // ✅ AGREGAR: Control para evitar notificaciones duplicadas
         this.notificacionEnProceso = false;
     }
-// En app.js, modifica el método initialize():
-initialize() {
-    console.log('🚀 Inicializando aplicación...');
-    
-    try {
-        // Inicializar módulos
-        this.modules = {
-            dataLoader: new DataLoader(),
-            dataProcessor: new DataProcessor(),
-            chartManager: new ChartManager()
-        };
-        
-        // Configurar dependencias básicas
-        this.modules.dataLoader.setApp(this);
-        this.modules.dataProcessor.setApp(this);
-        
-        // ✅ Asignar referencias directamente (sin setChartManager si no existe)
-        this.modules.chartManager.app = this;
-        this.modules.chartManager.dataProcessor = this.modules.dataProcessor;
-        
-        // Cargar datos iniciales
-        this.loadInitialData();
-        
-        
-        console.log('✅ Aplicación inicializada correctamente');
-        
-    } catch (error) {
-        console.error('❌ Error inicializando aplicación:', error);
-        this.mostrarError('Error al inicializar la aplicación');
+
+    async initialize() {
+        try {
+            console.log('🚀 Inicializando aplicación...');
+            
+            // Inicializar módulos en orden correcto
+            await this.initializeModules();
+            
+            // Configurar referencias cruzadas
+            this.setupModuleReferences();
+            
+            // Configurar eventos globales
+            this.setupGlobalEvents();
+            
+            // Cargar datos iniciales
+            await this.loadInitialData();
+            
+            this.isInitialized = true;
+            console.log('✅ Aplicación inicializada correctamente');
+            
+        } catch (error) {
+            console.error('❌ Error inicializando aplicación:', error);
+            // Inicialización mínima incluso si hay errores
+            this.setupGlobalEvents();
+            await this.loadInitialData();
+        }
     }
-}
-       async initializeModules() {
+    async initializeModules() {
         try {
             // 1. DataProcessor (sin dependencias)
             this.modules.dataProcessor = new DataProcessor();
@@ -58,7 +54,7 @@ initialize() {
                 this.modules.chartManager = new ChartManager();
                 console.log('✅ ChartManager inicializado');
             } else {
-                console.warn('⚠️ ChartManager no disponible');
+                console.warn('⚠ ChartManager no disponible');
             }
             
             // 4. UIManager (depende de todos los anteriores)
@@ -66,7 +62,7 @@ initialize() {
                 this.modules.uiManager = new UIManager();
                 console.log('✅ UIManager inicializado');
             } else {
-                console.warn('⚠️ UIManager no disponible');
+                console.warn('⚠ UIManager no disponible');
             }
 
             // 5. ExportManager (depende de ChartManager y DataProcessor)
@@ -77,7 +73,7 @@ initialize() {
                 this.modules.exportManager = exportManager;
                 console.log('✅ ExportManager (global) vinculado');
             } else {
-                console.warn('⚠️ ExportManager no disponible');
+                console.warn('⚠ ExportManager no disponible');
             }
             
             // 6. ModalManager (depende de ChartManager y DataProcessor)
@@ -85,7 +81,7 @@ initialize() {
                 this.modules.modalManager = new ModalManager();
                 console.log('✅ ModalManager inicializado');
             } else {
-                console.warn('⚠️ ModalManager no disponible');
+                console.warn('⚠ ModalManager no disponible');
             }
             
             // 7. FilterManager (depende de DataLoader)
@@ -93,7 +89,7 @@ initialize() {
                 this.modules.filterManager = new FilterManager();
                 console.log('✅ FilterManager inicializado');
             } else {
-                console.warn('⚠️ FilterManager no disponible');
+                console.warn('⚠ FilterManager no disponible');
             }
             
         } catch (error) {
@@ -211,7 +207,7 @@ initialize() {
                 console.log('✅ Datos listos, mostrando interfaz...');
                 this.modules.uiManager.mostrarDatos();
             } else {
-                console.warn('⚠️ Datos no disponibles, reintentando...');
+                console.warn('⚠ Datos no disponibles, reintentando...');
                 setTimeout(() => {
                     if (this.modules.uiManager) {
                         this.modules.uiManager.mostrarDatos();
@@ -333,7 +329,7 @@ initialize() {
             console.log('✅ Notificando a UIManager');
             this.modules.uiManager.mostrarDatos();
         } else {
-            console.warn('⚠️ UIManager no disponible para notificar');
+            console.warn('⚠ UIManager no disponible para notificar');
         }
         
         // Liberar el bloqueo después de un tiempo
@@ -360,6 +356,26 @@ initialize() {
             this.modules.uiManager.cerrarModal();
         } else if (typeof cerrarModal !== 'undefined') {
             cerrarModal();
+        }
+    }
+
+    aplicarFiltrosModal() {
+        if (this.modules.uiManager) {
+            this.modules.uiManager.aplicarFiltrosModal();
+        } else if (this.modules.filterManager) {
+            this.modules.filterManager.aplicarFiltrosModal();
+        } else if (typeof aplicarFiltrosModal !== 'undefined') {
+            aplicarFiltrosModal();
+        }
+    }
+
+    limpiarFiltrosModal() {
+        if (this.modules.uiManager) {
+            this.modules.uiManager.limpiarFiltrosModal();
+        } else if (this.modules.filterManager) {
+            this.modules.filterManager.limpiarFiltrosModal();
+        } else if (typeof limpiarFiltrosModal !== 'undefined') {
+            limpiarFiltrosModal();
         }
     }
 
@@ -393,201 +409,6 @@ initialize() {
         } else if (typeof descargarGraficoPrincipal !== 'undefined') {
             descargarGraficoPrincipal();
         }
-    }
-
-    // Función global para aplicar filtros del modal
-        aplicarFiltrosModal() {
-        const fechaInicio = document.getElementById('modal-filtro-fecha-inicio')?.value;
-        const fechaFin = document.getElementById('modal-filtro-fecha-fin')?.value;
-        const tipoReserva = document.getElementById('modal-filtro-tipo-reserva')?.value;
-        
-        console.log('🎯 Aplicando filtros del modal:', {
-            fechaInicio, fechaFin, tipoReserva
-        });
-        
-        // Validar fechas
-        if (fechaInicio && fechaFin && fechaInicio > fechaFin) {
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error en fechas',
-                    text: 'La fecha inicial no puede ser mayor que la fecha final',
-                    confirmButtonColor: '#e74c3c'
-                });
-            }
-            return;
-        }
-        
-        // Usar el método aplicarFiltrosCombinados que YA TIENES
-        if (this.modules.dataLoader && this.modules.dataLoader.aplicarFiltrosCombinados) {
-            this.modules.dataLoader.aplicarFiltrosCombinados(fechaInicio, fechaFin, tipoReserva);
-        } else if (window.dataLoader && window.dataLoader.aplicarFiltrosCombinados) {
-            dataLoader.aplicarFiltrosCombinados(fechaInicio, fechaFin, tipoReserva);
-        } else {
-            console.error('dataLoader no disponible');
-        }
-    }
-    
-
-    // Función para limpiar filtros del modal
-    limpiarFiltrosModal() {
-        document.getElementById('modal-filtro-fecha-inicio').value = '';
-        document.getElementById('modal-filtro-fecha-fin').value = '';
-        document.getElementById('modal-filtro-tipo-reserva').value = 'todas';
-        
-        console.log('🧹 Filtros del modal limpiados');
-        
-        // Recargar datos sin filtros
-        if (window.dataLoader && window.dataLoader.cargarDatosVisitantes) {
-            dataLoader.cargarDatosVisitantes();
-        } else {
-            console.error('dataLoader no disponible');
-        }
-    }
-
-        procesarDatosPorTiempo(participantes, tipo, filtros) {
-        console.log(`🔄 Procesando datos por ${tipo}...`);
-        
-        // Validar que haya participantes
-        if (!participantes || participantes.length === 0) {
-            console.log('⚠️ No hay participantes para procesar');
-            return;
-        }
-        
-        // Objeto para almacenar los resultados
-        const resultados = {
-            labels: [],
-            values: [],
-            total: 0,
-            tipo: tipo,
-            filtros: filtros
-        };
-        
-        // Contadores según el tipo
-        const conteo = {};
-        
-        // Procesar cada participante
-        participantes.forEach(participante => {
-            const fechaReserva = participante.reservas?.fecha_reserva;
-            if (!fechaReserva) return;
-            
-            const fecha = new Date(fechaReserva);
-            let clave = '';
-            
-            switch(tipo) {
-                case 'mes':
-                    // Formato: "Enero 2024"
-                    const meses = [
-                        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-                    ];
-                    clave = `${meses[fecha.getMonth()]} ${fecha.getFullYear()}`;
-                    break;
-                    
-                case 'anio':
-                    // Formato: "2024"
-                    clave = fecha.getFullYear().toString();
-                    break;
-                    
-                case 'fecha':
-                    // Formato: "2024-01-15"
-                    clave = fecha.toISOString().split('T')[0];
-                    break;
-                    
-                default:
-                    console.warn(`Tipo no reconocido: ${tipo}`);
-                    return;
-            }
-            
-            // Incrementar contador
-            conteo[clave] = (conteo[clave] || 0) + 1;
-        });
-        
-        // Ordenar las claves según el tipo
-        let clavesOrdenadas = Object.keys(conteo);
-        
-        if (tipo === 'mes') {
-            // Ordenar meses cronológicamente
-            clavesOrdenadas.sort((a, b) => {
-                const [mesA, añoA] = a.split(' ');
-                const [mesB, añoB] = b.split(' ');
-                const meses = [
-                    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-                ];
-                
-                if (añoA !== añoB) return parseInt(añoA) - parseInt(añoB);
-                return meses.indexOf(mesA) - meses.indexOf(mesB);
-            });
-        } else if (tipo === 'anio') {
-            // Ordenar años ascendente
-            clavesOrdenadas.sort((a, b) => parseInt(a) - parseInt(b));
-        } else if (tipo === 'fecha') {
-            // Ordenar fechas ascendente
-            clavesOrdenadas.sort();
-        }
-        
-        // Preparar arrays para gráficas
-        resultados.labels = clavesOrdenadas;
-        resultados.values = clavesOrdenadas.map(clave => conteo[clave]);
-        resultados.total = resultados.values.reduce((sum, val) => sum + val, 0);
-        
-        // Agrupar datos por tipo de reserva si está disponible
-        if (filtros.tipoReserva === 'todas' || !filtros.tipoReserva) {
-            // Contar por tipo de reserva también
-            const conteoPorTipo = {};
-            participantes.forEach(participante => {
-                const tipoReserva = participante.reservas?.tipo_reserva || 'Sin tipo';
-                conteoPorTipo[tipoReserva] = (conteoPorTipo[tipoReserva] || 0) + 1;
-            });
-            
-            resultados.conteoPorTipo = conteoPorTipo;
-        }
-        
-        console.log(`✅ Datos procesados por ${tipo}:`, {
-            totalParticipantes: resultados.total,
-            periodos: resultados.labels.length,
-            periodosEjemplo: resultados.labels.slice(0, 3)
-        });
-        
-        // Guardar resultados en el dataProcessor
-        if (this.dataProcessor) {
-            // Crear estructura para el dataProcessor
-            const datosParaProcessor = {
-                tipo: tipo,
-                labels: resultados.labels,
-                values: resultados.values,
-                total: resultados.total,
-                datosCompletos: resultados,
-                filtrosAplicados: filtros
-            };
-            
-            // Verificar si el dataProcessor tiene el método
-            if (typeof this.dataProcessor.procesarDatosPorTiempo === 'function') {
-                this.dataProcessor.procesarDatosPorTiempo(datosParaProcessor);
-            } else if (typeof this.dataProcessor.procesarDatosCompletos === 'function') {
-                // Fallback: usar procesarDatosCompletos
-                this.dataProcessor.procesarDatosCompletos(participantes);
-                
-                // También guardar datos específicos por tiempo
-                if (!this.dataProcessor.datosSimulados) {
-                    this.dataProcessor.datosSimulados = {};
-                }
-                this.dataProcessor.datosSimulados[tipo] = datosParaProcessor;
-                
-                console.log(`📊 Datos de ${tipo} guardados en dataProcessor`);
-            }
-        }
-        
-        // También notificar a la app si es necesario
-        if (this.app && this.app.setDatosSimulados) {
-            if (!this.app.datosSimulados) {
-                this.app.datosSimulados = {};
-            }
-            this.app.datosSimulados[tipo] = resultados;
-        }
-        
-        return resultados;
     }
 }
 

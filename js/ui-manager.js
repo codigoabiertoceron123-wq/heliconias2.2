@@ -1,6 +1,6 @@
 // Módulo para gestión de interfaz - VERSIÓN CORREGIDA
 class UIManager {
-    constructor() {
+    constructor() { // probando
         this.dataLoader = null;
         this.chartManager = null;
         this.dataProcessor = null;
@@ -232,9 +232,6 @@ class UIManager {
         
         modal.classList.add("show");
 
-        // Crear filtros en el modal
-        this.crearFiltrosModal(); 
-
         // Guardar tipo de gráfica
         const modalChartContainer = document.querySelector('.modal-chart-container');
         if (modalChartContainer) {
@@ -249,12 +246,6 @@ class UIManager {
 
         // Crear gráfica inicial
         this.actualizarGraficaModal(tipoGrafica);
-    }
-
-    crearFiltrosEnModal(tipoActual) {
-        // Esta función ya existe como crearFiltrosModal()
-        // Simplemente llama a la función existente
-        this.crearFiltrosModal();
     }
 
     limpiarFiltrosDuplicados() {

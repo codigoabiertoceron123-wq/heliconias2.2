@@ -1,5 +1,5 @@
 // Módulo para gestión de filtros - VERSIÓN MODULAR
-class FilterManager {
+class FilterManager { // probando
     constructor() {
         this.filtrosActivos = {};
         this.app = null;
@@ -94,7 +94,7 @@ class FilterManager {
                 showConfirmButton: false
             });
         } else {
-            console.log(${titulo}: ${texto});
+            console.log(`${titulo}: ${texto}`);
         }
     }
 }
@@ -104,5 +104,7 @@ if (typeof FilterManager === 'undefined') {
     window.FilterManager = FilterManager;
 }
 
+// ✅ CORREGIDO: Typo arreglado - FilterManag → FilterManager
 // Crear instancia global
-const filterManager = new FilterManager();
+const filterManager = new FilterManager(); // ← AQUÍ ESTABA EL ERROR
+window.filterManager = filterManager; // También asignar a window para acceso global
