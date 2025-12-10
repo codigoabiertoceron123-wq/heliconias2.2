@@ -178,23 +178,18 @@ class DataLoader {
         }
     }
 
-    async aplicarFiltrosCombinados(fechaInicio, fechaFin, tipoReserva) {
+    async aplicarFiltrosCombinados(fechaInicio, fechaFin, tipoReserva, estado) {
         try {
             if (window.Swal) {
                 Swal.fire({
                     title: 'Aplicando filtros...',
                     text: 'Filtrando datos por criterios seleccionados',
                     allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
+                    didOpen: () => Swal.showLoading()
                 });
             }
 
-            console.log('Aplicando filtros:', { fechaInicio, fechaFin, tipoReserva });
-
-            const participantesAnteriores = this.dataProcessor ? 
-                this.dataProcessor.datosVisitantes.length : 0;
+            console.log('Aplicando filtros:', { fechaInicio, fechaFin, tipoReserva, estado});
 
             let query = supabase
                 .from('participantes_reserva')
@@ -208,72 +203,60 @@ class DataLoader {
                     intereses(*)
                 `);
 
+            // FILTRO FECHAS
             if (fechaInicio && fechaFin) {
-                query = query.gte('reservas.fecha_reserva', fechaInicio + 'T00:00:00')
-                            .lte('reservas.fecha_reserva', fechaFin + 'T23:59:59');
+                query = query
+                    .gte('reservas.fecha_reserva', fechaInicio + 'T00:00:00')
+                    .lte('reservas.fecha_reserva', fechaFin + 'T23:59:59');
             }
 
-            if (tipoReserva && tipoReserva !== 'todas') {
-                query = query.eq('reservas.tipo_reserva', tipoReserva);
+            // FILTRO TIPO RESERVA
+            if (tipoReserva && tipoReserva !== '' && tipoReserva !== 'todas') {
+                query = query.eq('reservas.tipo_reserva', tipoReserva.toLowerCase());
+            }
+
+            // 🚨 FILTRO ESTADO DE RESERVA CORREGIDO
+            if (estado && estado !== '' && estado !== 'todas') {
+                query = query.eq('reservas.estado', estado.toLowerCase());
             }
 
             const { data: participantesFiltrados, error } = await query;
 
             if (error) throw error;
 
-            this.ocultarCarga();
+            if (participantesFiltrados?.length > 0) {
 
-            if (participantesFiltrados && participantesFiltrados.length > 0) {
-                // ✅ CORREGIDO: Solo procesar datos filtrados
+                // si tienes dataProcessor lo usamos
                 if (this.dataProcessor) {
                     this.dataProcessor.procesarDatosCompletos(participantesFiltrados);
-                    
-                    const huboCambio = participantesFiltrados.length !== participantesAnteriores;
-                    const reservasFiltradas = [...new Set(participantesFiltrados.map(p => p.id_reserva))].length;
+                }
 
-                    if (window.Swal) {
-                        let mensaje = '';
-                        if (huboCambio) {
-                            mensaje = `Filtros aplicados\nResultados: ${reservasFiltradas} reservas y ${participantesFiltrados.length} participantes`;
-                        } else {
-                            mensaje = `Los filtros no modificaron los resultados\nSe mantienen: ${reservasFiltradas} reservas y ${participantesFiltrados.length} participantes`;
-                        }
-                        
-                        Swal.fire({
-                            icon: huboCambio ? 'success' : 'info',
-                            title: huboCambio ? 'Filtros aplicados' : 'Sin cambios',
-                            text: mensaje,
-                            timer: 3000,
-                            showConfirmButton: false
-                        });
-                    }
-                } else if (window.dataProcessor) {
-                    // Fallback a versión global
-                    window.dataProcessor.procesarDatosCompletos(participantesFiltrados);
-                }
+                Swal.close();
+                Swal.fire({
+                    icon: "success",
+                    title: "Filtros aplicados",
+                    text: `Resultados: ${participantesFiltrados.length} participantes`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
             } else {
-                if (window.Swal) {
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'Sin resultados',
-                        text: 'No se encontraron datos para los filtros aplicados',
-                        confirmButtonColor: '#3498db'
-                    });
-                }
+                Swal.close();
+                Swal.fire({
+                    icon: "info",
+                    title: "Sin resultados",
+                    text: "No se encontraron datos",
+                });
             }
 
         } catch (error) {
-            console.error('Error aplicando filtros:', error);
-            this.ocultarCarga();
-            
-            if (window.Swal) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudieron aplicar los filtros: ' + error.message,
-                    confirmButtonColor: '#e74c3c'
-                });
-            }
+            console.error(error);
+            Swal.close();
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: error.message
+            });
         }
     }
 }

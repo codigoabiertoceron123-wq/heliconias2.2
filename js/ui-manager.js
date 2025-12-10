@@ -960,12 +960,16 @@ class UIManager {
             if (this.dataLoader) {
                 this.dataLoader.aplicarFiltrosCombinados(
                     filtros.fechaInicio, 
-                    filtros.fechaFin
+                    filtros.fechaFin,
+                    filtros.tipoReserva,
+                    filtros.estado
                 );
             } else if (typeof dataLoader !== 'undefined') {
                 dataLoader.aplicarFiltrosCombinados(
                     filtros.fechaInicio, 
-                    filtros.fechaFin
+                    filtros.fechaFin,
+                    filtros.tipoReserva,
+                    filtros.estado
                 );
             }
         }
@@ -1029,6 +1033,7 @@ class UIManager {
             if (participantesFiltrados && participantesFiltrados.length > 0) {
                 // Procesar datos filtrados con información de los filtros aplicados
                 if (this.dataProcessor) {
+                    console.log("RESULTADO QUERY", participantesFiltrados.map(x => x.reservas.estado))
                     this.dataProcessor.procesarDatosConFiltros(participantesFiltrados, filtros);
                     
                     // Actualizar gráfica en el modal

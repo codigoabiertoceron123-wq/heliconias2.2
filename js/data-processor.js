@@ -289,6 +289,17 @@ class DataProcessor {
     // PARA GRAFICA DE RESERVAS ESTADO
     procesarDatosConFiltros(participantes, filtros) {
         console.log('🔄 Procesando datos con filtros:', filtros);
+        if (filtros.tipoReserva && filtros.tipoReserva !== 'todas') {
+            participantes = participantes.filter(p =>
+                p.reservas?.tipo_reserva === filtros.tipoReserva
+            );
+        }
+
+        if (filtros.estado && filtros.estado !== 'todas') {
+            participantes = participantes.filter(p =>
+                p.reservas?.estado === filtros.estado
+            );
+        }
         this.datosVisitantes = participantes;
 
         const totalParticipantes = participantes.length;
@@ -344,8 +355,8 @@ class DataProcessor {
         const reserva = participante.reservas;
         if (!reserva || !reserva.tipo_reserva || !reserva.estado) return;
 
-        const tipo = reserva.tipo_reserva;
-        const estado = reserva.estado;
+        const tipo = (reserva.tipo_reserva || '').toLowerCase().trim();
+        const estado = (reserva.estado || '').toLowerCase().trim();
         
         if (datosPorTipoYEstado[tipo] && datosPorTipoYEstado[tipo][estado] !== undefined) {
             datosPorTipoYEstado[tipo][estado]++;
@@ -356,7 +367,8 @@ class DataProcessor {
 
     let labels = [];
     let datasets = [];
-    const estados = ['confirmada', 'pendiente', 'cancelada'];
+    let estado = (reserva.estado || '').toLowerCase().trim();
+
     const coloresEstados = {
         'confirmada': '#27ae60',
         'pendiente': '#f39c12', 
@@ -391,12 +403,10 @@ class DataProcessor {
                 borderRadius: 6
             }];
         }
-    } else if (filtros.tipoReserva === 'individual' || filtros.tipoReserva === 'grupal') {
-        // CASO 2: Tipo específico (individual o grupal)
+    } else if (['individual','grupal'].includes(filtros.tipoReserva)) {
         const tipoSeleccionado = filtros.tipoReserva;
-        
-        if (filtros.estado === 'todas' || !filtros.estado) {
-            // Mostrar todos los estados del tipo seleccionado
+
+        if (filtros.estado === 'todas') {
             labels = estados.map(estado => this.formatearEstado(estado));
             datasets = [{
                 label: tipoSeleccionado === 'individual' ? 'Reservas Individuales' : 'Reservas Grupales',
@@ -405,15 +415,16 @@ class DataProcessor {
                 borderRadius: 6
             }];
         } else {
-            // Mostrar solo un estado específico del tipo seleccionado
-            labels = [tipoSeleccionado === 'individual' ? 'Individual' : 'Grupal'];
+            // SOLO UN DATO
+            labels = [ this.formatearEstado(filtros.estado) ];
             datasets = [{
-                label: this.formatearEstado(filtros.estado),
+                label: tipoSeleccionado === 'individual' ? 'Individual' : 'Grupal',
                 data: [datosPorTipoYEstado[tipoSeleccionado][filtros.estado]],
                 backgroundColor: coloresEstados[filtros.estado],
                 borderRadius: 6
             }];
         }
+
     }
 
     // Actualizar datos simulados con estructura para gráficas agrupadas

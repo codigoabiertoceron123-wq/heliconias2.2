@@ -78,18 +78,18 @@ class TimeProcessor {
 
         const datosPorFecha = {};
         const fechasSet = new Set();
-        const tiposSet = new Set(['Confirmada', 'Pendiente', 'Cancelada']);
+        const tiposSet = new Set(); 
 
         participantes.forEach(p => {
             const fecha = p.reservas?.fecha_reserva || p.fecha_visita;
             
-            const tipoRaw = p.reservas?.estado || 'pendiente';
+            const tipoRaw = p.reservas?.estado || '';
             let tipo = tipoRaw.trim().toLowerCase();
 
             if (tipo === "confirmada") tipo = "Confirmada";
             else if (tipo === "pendiente") tipo = "Pendiente";
             else if (tipo === "cancelada") tipo = "Cancelada";
-            else tipo = "Pendiente"; // default
+            else return;// default
 
             if (fecha) {
                 const fechaStr = new Date(fecha).toISOString().split('T')[0];
@@ -139,23 +139,28 @@ class TimeProcessor {
     procesarPorMesAgrupado(participantes) {
         console.log('🔍 Procesando MES agrupado...', participantes?.length);
 
-        const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                    'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        const meses = [
+            'Enero','Febrero','Marzo','Abril','Mayo','Junio',
+            'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
+        ];
 
         const datosPorMes = {};
         const mesesSet = new Set();
-        const tiposSet = new Set(['Confirmada', 'Pendiente', 'Cancelada']);
+        const tiposSet = new Set(); 
 
         participantes.forEach(p => {
             const fecha = p.reservas?.fecha_reserva || p.fecha_visita;
 
-            const tipoRaw = p.reservas?.estado || 'pendiente';
+            // 🔥 Normalización segura
+            const tipoRaw = p.reservas?.estado || '';
             let tipo = tipoRaw.trim().toLowerCase();
 
-            if (tipo === "confirmada") tipo = "Confirmada";
-            else if (tipo === "pendiente") tipo = "Pendiente";
-            else if (tipo === "cancelada") tipo = "Cancelada";
-            else tipo = "Pendiente";
+            if (tipo.includes('confirm')) tipo = "Confirmada";
+            else if (tipo.includes('pend')) tipo = "Pendiente";
+            else if (tipo.includes('cancel')) tipo = "Cancelada";
+            else return;  // fallback
+
+            // --------------------------
 
             if (fecha) {
                 const d = new Date(fecha);
@@ -208,23 +213,26 @@ class TimeProcessor {
         };
     }
 
+
     procesarPorAnioAgrupado(participantes) {
         console.log('🔍 Procesando AÑO agrupado...', participantes?.length);
 
         const datosPorAnio = {};
         const añosSet = new Set();
-        const tiposSet = new Set(['Confirmada', 'Pendiente', 'Cancelada']);
+        const tiposSet = new Set();  // <--- vacio
 
         participantes.forEach(p => {
             const fecha = p.reservas?.fecha_reserva || p.fecha_visita;
 
-            const tipoRaw = p.reservas?.estado || 'pendiente';
+            const tipoRaw = p.reservas?.estado;
+            if (!tipoRaw) return;
+
             let tipo = tipoRaw.trim().toLowerCase();
 
             if (tipo === "confirmada") tipo = "Confirmada";
             else if (tipo === "pendiente") tipo = "Pendiente";
             else if (tipo === "cancelada") tipo = "Cancelada";
-            else tipo = "Pendiente";
+            else return; // <--- no asumir Pendiente
 
             if (fecha) {
                 const año = new Date(fecha).getFullYear().toString();
@@ -233,12 +241,10 @@ class TimeProcessor {
                 tiposSet.add(tipo);
 
                 if (!datosPorAnio[año]) {
-                    datosPorAnio[año] = {
-                        'Confirmada': 0,
-                        'Pendiente': 0,
-                        'Cancelada': 0
-                    };
+                    datosPorAnio[año] = {};
                 }
+
+                if (!datosPorAnio[año][tipo]) datosPorAnio[año][tipo] = 0;
 
                 datosPorAnio[año][tipo]++;
             }
@@ -247,7 +253,12 @@ class TimeProcessor {
         const añosOrdenados = Array.from(añosSet).sort();
         const tiposLista = Array.from(tiposSet);
 
-        const datasets = tiposLista.map((tipo, index) => ({
+        // quitar tipos sin datos
+        const tiposFiltrados = tiposLista.filter(t =>
+            añosOrdenados.some(a => datosPorAnio[a][t] > 0)
+        );
+
+        const datasets = tiposFiltrados.map((tipo, index) => ({
             label: tipo,
             data: añosOrdenados.map(año => datosPorAnio[año]?.[tipo] || 0),
             backgroundColor: this.getColorForTipo(tipo, index),
@@ -257,15 +268,12 @@ class TimeProcessor {
             barThickness: 20
         }));
 
-        const total = datasets.reduce((total, dataset) =>
-            total + dataset.data.reduce((sum, val) => sum + val, 0), 0);
-
         return {
             labels: añosOrdenados,
             datasets,
-            tipos: tiposLista,
+            tipos: tiposFiltrados,
             años: añosOrdenados,
-            total,
+            total: datasets.reduce((acc, ds) => acc + ds.data.reduce((s, v) => s + v, 0), 0),
             type: 'grouped'
         };
     }
