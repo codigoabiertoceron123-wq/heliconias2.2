@@ -271,19 +271,20 @@ class TimeProcessor {
         };
     }
 
-    // Métodos auxiliares para colores
     getColorForTipo(tipo, index) {
+        tipo = tipo.trim().toLowerCase();  
+
         const colores = {
-            'Individual': '#3498db',  // Azul
-            'Grupal': '#2ecc71',      // Verde
-            'Confirmada': '#27ae60',  // Verde oscuro
-            'Pendiente': '#f39c12',   // Naranja
-            'Cancelada': '#e74c3c',    // Rojo
-            'Tour Guiado': '#3498db',
-            'Visita Libre': '#e67e22',
-            'Taller': '#9b59b6'
+            'individual': '#3498db',
+            'grupal': '#2ecc71',
+            'confirmada': '#27ae60',
+            'pendiente': '#f39c12',
+            'cancelada': '#e74c3c',
+            'tour guiado': '#3498db',
+            'visita libre': '#e67e22',
+            'taller': '#9b59b6'
         };
-        
+
         return colores[tipo] || this.getRandomColor(index);
     }
 

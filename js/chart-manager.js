@@ -693,7 +693,7 @@ class ChartManager {
         } 
         else if (tipoReservaSeleccionado === 'grupal') {
             datasets = [
-                { label: "Grupal", data: datos.grupal, backgroundColor: colors[1], borderRadius: 6, barThickness: 18 }
+                { label: "Grupal", data: datos.grupal, backgroundColor: colors[2], borderRadius: 6, barThickness: 18 }
             ];
         }
 
@@ -714,7 +714,7 @@ class ChartManager {
             data: {
                 labels: labels,
                 datasets: [{
-                    label: "Total de Visitantes",
+                    label: "Total de reservas",
                     data: values,
                     backgroundColor: colors,
                     borderRadius: 6,
