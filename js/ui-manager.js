@@ -182,7 +182,7 @@ class UIManager {
             }
 
             .modern-modal-header {
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                background: linear-gradient(135deg, #2e7d32, #4caf50 100%);
                 color: white;
                 padding: 20px 30px;
                 display: flex;
@@ -285,11 +285,11 @@ class UIManager {
                 color: #111827;
                 margin-bottom: 15px;
                 padding-bottom: 10px;
-                border-bottom: 2px solid #10b981;
+                border-bottom: 2px solid #4caf50;
             }
 
             .modern-table-header i {
-                color: #10b981;
+                color: #4caf50;
             }
 
             .modern-table-container {
@@ -320,7 +320,7 @@ class UIManager {
                 font-size: 0.9rem;
                 border-bottom: 2px solid #e5e7eb;
                 white-space: nowrap;
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                background: linear-gradient(135deg, #2e7d32, #4caf50 100%);
                 color: white;
             }
 
@@ -377,7 +377,7 @@ class UIManager {
 
             .modern-filter-input:focus {
                 outline: none;
-                border-color: #10b981;
+                border-color: #4caf50;
                 box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
             }
 
@@ -393,7 +393,7 @@ class UIManager {
 
             .modern-filter-select:focus {
                 outline: none;
-                border-color: #10b981;
+                border-color: #4caf50;
                 box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
             }
 
@@ -419,7 +419,7 @@ class UIManager {
             }
 
             .modern-filter-btn-primary {
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                background: linear-gradient(135deg, #2e7d32, #4caf50 100%);
                 color: white;
             }
 
@@ -465,12 +465,12 @@ class UIManager {
             }
 
             .modern-modal-scrollable::-webkit-scrollbar-thumb {
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                background: linear-gradient(135deg, #2e7d32, #4caf50 100%);
                 border-radius: 4px;
             }
 
             .modern-modal-scrollable::-webkit-scrollbar-thumb:hover {
-                background: linear-gradient(135deg, #0da271 0%, #047852 100%);
+                background: linear-gradient(135deg, #2e7d32, #4caf50 100%);
             }
 
             .modern-table-container::-webkit-scrollbar {
@@ -484,12 +484,12 @@ class UIManager {
             }
 
             .modern-table-container::-webkit-scrollbar-thumb {
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                background: linear-gradient(135deg, #2e7d32, #4caf50 100%);
                 border-radius: 3px;
             }
 
             .modern-table-container::-webkit-scrollbar-thumb:hover {
-                background: linear-gradient(135deg, #0da271 0%, #047852 100%);
+                background: linear-gradient(135deg, #2e7d32, #4caf50 100%);
             }
 
             /* Responsive */
@@ -1472,7 +1472,7 @@ class UIManager {
                         <td><strong>${label} - ${dataset.label}</strong></td>
                         <td style="text-align: center;">${valor.toLocaleString()}</td>
                         <td style="text-align: center; font-weight: bold">${subtotal.toLocaleString()}</td>
-                        <td style="text-align: center; color: #10b981; font-weight: bold">${porcentaje}%</td>
+                        <td style="text-align: center; color: #2e7d32; font-weight: bold">${porcentaje}%</td>
                     </tr>`;
                 });
                 
@@ -1484,7 +1484,7 @@ class UIManager {
             tablaHTML += `<tr style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);">
                 <td><strong>TOTAL GENERAL</strong></td>
                 <td style="text-align: center; font-weight: bold" colspan="2">${totalGeneral.toLocaleString()}</td>
-                <td style="text-align: center; color: #10b981; font-weight: bold">${porcentajeTotal}</td>
+                <td style="text-align: center; color: #2e7d32; font-weight: bold">${porcentajeTotal}</td>
             </tr>`;
 
         } else {
@@ -1505,7 +1505,7 @@ class UIManager {
                 return `<tr>
                     <td><strong>${label}</strong></td>
                     <td style="text-align: center; font-weight: bold">${valor.toLocaleString()}</td>
-                    <td style="text-align: center; color: #10b981; font-weight: bold">${porcentaje}%</td>
+                    <td style="text-align: center; color: #2e7d32; font-weight: bold">${porcentaje}%</td>
                 </tr>`;
             }).join("");
 
@@ -1514,7 +1514,7 @@ class UIManager {
                 tablaHTML += `<tr style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);">
                     <td><strong>TOTAL</strong></td>
                     <td style="text-align: center; font-weight: bold">${total.toLocaleString()}</td>
-                    <td style="text-align: center; color: #10b981; font-weight: bold">100%</td>
+                    <td style="text-align: center; color: #2e7d32; font-weight: bold">100%</td>
                 </tr>`;
             }
         }
@@ -2070,7 +2070,7 @@ class UIManager {
                                 label: function(context) {
                                     const label = context.dataset.label || '';
                                     const value = context.raw || 0;
-                                    return `${label}: ${value.toLocaleString()} visitantes`;
+                                    return `${label}: ${value.toLocaleString()} reservas`;
                                 }
                             }
                         }
@@ -2149,7 +2149,7 @@ class UIManager {
                     <td style="text-align: center; font-weight: bold;">
                         ${totalPeriodo.toLocaleString()}
                     </td>
-                    <td style="text-align: center; color: #10b981; font-weight: bold;">
+                    <td style="text-align: center; color: #2e7d32; font-weight: bold;">
                         ${porcentajePeriodo}%
                     </td>
                 </tr>
@@ -2164,7 +2164,7 @@ class UIManager {
                     return `<td style="text-align: center; font-weight: bold;">${totalTipo.toLocaleString()}</td>`;
                 }).join('')}
                 <td style="text-align: center; font-weight: bold;">${totalGeneral.toLocaleString()}</td>
-                <td style="text-align: center; color: #10b981; font-weight: bold;">100%</td>
+                <td style="text-align: center; color: #2e7d32 font-weight: bold;">100%</td>
             </tr>
         `;
 
@@ -2192,17 +2192,17 @@ class UIManager {
                 <tr>
                     <td><strong>${label}</strong></td>
                     <td style="text-align: center; font-weight: bold">${valor.toLocaleString()}</td>
-                    <td style="text-align: center; color: #10b981; font-weight: bold">${porcentaje}%</td>
+                    <td style="text-align: center; color: #2e7d32; font-weight: bold">${porcentaje}%</td>
                 </tr>
             `;
         }).join("") + (total > 0 ? `
             <tr style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);">
                 <td><strong>TOTAL GENERAL</strong></td>
                 <td style="text-align: center; font-weight: bold">${total.toLocaleString()}</td>
-                <td style="text-align: center; color: #10b981; font-weight: bold">100%</td>
+                <td style="text-align: center; color: #2e7d32; font-weight: bold">100%</td>
             </tr>
         ` : '');
     }
-}
+}   
 
 const uiManager = new UIManager();
