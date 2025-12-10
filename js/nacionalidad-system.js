@@ -1494,15 +1494,7 @@
             </div>
             
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                <!-- Tipo de Gráfica -->
-                <div class="filter-group">
-                    <label><i class="fas fa-chart-bar"></i> Tipo de Gráfica:</label>
-                    <select id="modalTipoGrafica" class="filter-select">
-                        <option value="bar">Gráfico de Barras</option>
-                        <option value="doughnut">Gráfico Circular</option>
-                        <option value="pie">Gráfico de Pastel</option>
-                    </select>
-                </div>
+               
         `;
 
         // Si no es nacionalidad, agregar filtros de fecha

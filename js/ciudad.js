@@ -2838,15 +2838,7 @@ function crearHTMLFiltrosModal(tipo) {
     
     if (modalTipoGrafica === 'bar') {
         html += `
-            <!-- Tipo de Gráfica - SOLO PARA BARRAS -->
-            <div class="filter-group">
-                <label><i class="fas fa-chart-bar"></i> Tipo de Gráfica:</label>
-                <select id="modalTipoGrafica" class="filter-select">
-                    <option value="bar">Gráfico de Barras</option>
-                    <option value="doughnut">Gráfico Circular</option>
-                    <option value="pie">Gráfico de Pastel</option>
-                </select>
-            </div>
+            
         `;
     } else {
         // Para gráficas circulares, ocultamos el selector pero lo mantenemos
