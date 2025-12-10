@@ -84,7 +84,8 @@ class TimeProcessor {
         
         participantes.forEach(p => {
             const fecha = p.reservas?.fecha_reserva || p.fecha_visita;
-            const tipo = p.reservas?.tipo_reserva || 'Individual';
+            const tipoRaw = p.reservas?.tipo_reserva || 'individual';
+            const tipo = tipoRaw.trim().toLowerCase() === "grupal" ? "Grupal" : "Individual";
             
             if (fecha) {
                 const fechaStr = new Date(fecha).toISOString().split('T')[0];
@@ -152,7 +153,8 @@ class TimeProcessor {
         
         participantes.forEach(p => {
             const fecha = p.reservas?.fecha_reserva || p.fecha_visita;
-            const tipo = p.reservas?.tipo_reserva || 'Individual';
+            const tipoRaw = p.reservas?.tipo_reserva || 'individual';
+            const tipo = tipoRaw.trim().toLowerCase() === "grupal" ? "Grupal" : "Individual";
             
             if (fecha) {
                 const d = new Date(fecha);
@@ -214,59 +216,59 @@ class TimeProcessor {
 
     procesarPorAnioAgrupado(participantes) {
         console.log('🔍 Procesando AÑO agrupado...', participantes?.length);
-        
-        // Agrupar por año y tipo de reserva
+
         const datosPorAnio = {};
         const añosSet = new Set();
         const tiposSet = new Set(['Individual', 'Grupal']);
-        
+
         participantes.forEach(p => {
             const fecha = p.reservas?.fecha_reserva || p.fecha_visita;
-            const tipo = p.reservas?.tipo_reserva || 'Individual';
-            
+
+            // normalización
+            const tipoRaw = (p.reservas?.tipo_reserva || 'individual')
+                .trim()
+                .toLowerCase();
+
+            const tipo = tipoRaw === 'grupal' ? 'Grupal' : 'Individual';
+
             if (fecha) {
                 const año = new Date(fecha).getFullYear().toString();
                 añosSet.add(año);
                 tiposSet.add(tipo);
-                
+
                 if (!datosPorAnio[año]) {
                     datosPorAnio[año] = {
                         'Individual': 0,
                         'Grupal': 0
                     };
                 }
-                
+
                 datosPorAnio[año][tipo] = (datosPorAnio[año][tipo] || 0) + 1;
             }
         });
-        
+
         const añosOrdenados = Array.from(añosSet).sort();
         const tiposLista = Array.from(tiposSet);
-        
-        // Preparar datasets
-        const datasets = tiposLista.map((tipo, index) => {
-            const data = añosOrdenados.map(año => datosPorAnio[año]?.[tipo] || 0);
-            
-            return {
-                label: tipo,
-                data: data,
-                backgroundColor: this.getColorForTipo(tipo, index),
-                borderColor: this.getBorderColorForTipo(tipo, index),
-                borderWidth: 1,
-                borderRadius: 6,
-                barThickness: 20
-            };
-        });
-        
-        const total = datasets.reduce((total, dataset) => 
+
+        const datasets = tiposLista.map((tipo, index) => ({
+            label: tipo,
+            data: añosOrdenados.map(año => datosPorAnio[año]?.[tipo] || 0),
+            backgroundColor: this.getColorForTipo(tipo, index),
+            borderColor: this.getBorderColorForTipo(tipo, index),
+            borderWidth: 1,
+            borderRadius: 6,
+            barThickness: 20
+        }));
+
+        const total = datasets.reduce((total, dataset) =>
             total + dataset.data.reduce((sum, val) => sum + val, 0), 0);
-        
+
         return {
             labels: añosOrdenados,
-            datasets: datasets,
+            datasets,
             tipos: tiposLista,
             años: añosOrdenados,
-            total: total,
+            total,
             type: 'grouped'
         };
     }
