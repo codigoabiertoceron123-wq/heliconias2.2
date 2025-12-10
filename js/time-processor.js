@@ -149,7 +149,7 @@ class TimeProcessor {
         participantes.forEach(p => {
             const fecha = p.reservas?.fecha_reserva || p.fecha_visita;
 
-            const tipoRaw = p.reservas?.estado_reserva || 'pendiente';
+            const tipoRaw = p.reservas?.estado || 'pendiente';
             let tipo = tipoRaw.trim().toLowerCase();
 
             if (tipo === "confirmada") tipo = "Confirmada";
@@ -218,7 +218,7 @@ class TimeProcessor {
         participantes.forEach(p => {
             const fecha = p.reservas?.fecha_reserva || p.fecha_visita;
 
-            const tipoRaw = p.reservas?.estado_reserva || 'pendiente';
+            const tipoRaw = p.reservas?.estado || 'pendiente';
             let tipo = tipoRaw.trim().toLowerCase();
 
             if (tipo === "confirmada") tipo = "Confirmada";
