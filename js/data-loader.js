@@ -13,7 +13,7 @@ class DataLoader {
             this.dataProcessor = app.modules.dataProcessor;
         }
     }
-
+    
     async cargarDatosVisitantes() {
         try {
             console.log('🔍 Cargando datos para REPORTE DE RESERVAS...');

@@ -2070,7 +2070,7 @@ class UIManager {
                                 label: function(context) {
                                     const label = context.dataset.label || '';
                                     const value = context.raw || 0;
-                                    return `${label}: ${value.toLocaleString()} visitantes`;
+                                    return `${label}: ${value.toLocaleString()} reservas`;
                                 }
                             }
                         }
@@ -2203,6 +2203,6 @@ class UIManager {
             </tr>
         ` : '');
     }
-}
+}   
 
 const uiManager = new UIManager();

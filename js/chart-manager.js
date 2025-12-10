@@ -11,7 +11,7 @@ class ChartManager {
         
         // Paletas de colores actualizadas con todas las categorías
         this.colorPalettes = {
-            tipo_reserva: ['#3498db', '#e74c3c'],
+            tipo_reserva: ['#3498db', '#2ecc71'],
             estado: ['#27ae60', '#f39c12', '#e74c3c'],
             actividad: ['#3498db', '#e67e22', '#9b59b6', '#2ecc71'],
             institucion: ['#e74c3c', '#3498db', '#f39c12', '#27ae60'],
@@ -673,27 +673,30 @@ class ChartManager {
     }
 
     crearGraficaBarrasTemporal(tipo, datos, etiquetaDescriptiva, tituloDescriptivo, ctx) {
-        const tipoReservaSeleccionado = document.getElementById('modal-filtro-tipo-reserva') ? 
-                                    document.getElementById('modal-filtro-tipo-reserva').value : 'todas';
-        
+        const tipoReservaSeleccionado = document.getElementById('modal-filtro-tipo-reserva').value.toLowerCase() ? 
+                                        document.getElementById('modal-filtro-tipo-reserva').value.toLowerCase() : 'todas';
+
         let datasets = [];
-        const colors = ['#3498db', '#e74c3c', '#2ecc71'];
-        
+        const colors = ['#3498db', '#e74c3c', '#2ecc71']; // Azul, rojo, verde
+
         if (tipoReservaSeleccionado === 'todas') {
             datasets = [
                 { label: "Individual", data: datos.individual, backgroundColor: colors[0], borderRadius: 6, barThickness: 18 },
-                { label: "Grupal", data: datos.grupal, backgroundColor: colors[1], borderRadius: 6, barThickness: 18 },
-                { label: "Total", data: datos.total, backgroundColor: colors[2], borderRadius: 6, barThickness: 18 }
+                { label: "Grupal", data: datos.grupal, backgroundColor: colors[2], borderRadius: 6, barThickness: 18 },
+                { label: "Total", data: datos.total, backgroundColor: colors[1], borderRadius: 6, barThickness: 18 }
             ];
-        } else if (tipoReservaSeleccionado === 'individual') {
+        } 
+        else if (tipoReservaSeleccionado === 'individual') {
             datasets = [
                 { label: "Individual", data: datos.individual, backgroundColor: colors[0], borderRadius: 6, barThickness: 18 }
             ];
-        } else if (tipoReservaSeleccionado === 'grupal') {
+        } 
+        else if (tipoReservaSeleccionado === 'grupal') {
             datasets = [
                 { label: "Grupal", data: datos.grupal, backgroundColor: colors[1], borderRadius: 6, barThickness: 18 }
             ];
         }
+
         
         this.chartBar = new Chart(ctx, {
             type: "bar",
@@ -743,7 +746,7 @@ class ChartManager {
             const totalIndividual = datos.individual ? datos.individual.reduce((a, b) => a + b, 0) : 0;
             const totalGrupal = datos.grupal ? datos.grupal.reduce((a, b) => a + b, 0) : 0;
             datosCircular = [totalIndividual, totalGrupal];
-            colorsCircular = ['#3498db', '#e74c3c'];
+            colorsCircular = ['#3498db', '#2ecc71'];
         }
         
         this.chartPie = new Chart(ctx, {
@@ -797,7 +800,7 @@ class ChartManager {
                 y: {
                     beginAtZero: true,
                     grid: { color: 'rgba(0,0,0,0.05)' },
-                    title: { display: true, text: 'Cantidad de Visitantes', font: { weight: 'bold' } }
+                    title: { display: true, text: 'Cantidad de Rerservas', font: { weight: 'bold' } }
                 },
                 x: {
                     grid: { display: false },
