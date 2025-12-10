@@ -239,13 +239,15 @@ function obtenerTituloDescriptivo(tipo) {
 
 // Función para obtener clase CSS por género
 function obtenerClaseGenero(genero) {
+    const g = genero.trim().toLowerCase();
     const clases = {
         'masculino': 'masculino',
         'femenino': 'femenino',
         'otro': 'otro',
-        'prefiero no decirlo': 'prefiero-no-decir'
+        'prefiero no decirlo': 'prefiero-no-decirlo',
+        'prefiero no decir': 'prefiero-no-decirlo', // <-- agrega esta variante
     };
-    return clases[genero.toLowerCase()] || 'masculino';
+    return clases[g] || 'prefiero-no-decirlo'; // fallback seguro
 }
 
 // Función para obtener clase CSS por interés
@@ -1954,9 +1956,12 @@ async function procesarDatosGeneroEspecifico(participantes, generos, generoSelec
     console.log(`📊 Procesando datos para género específico: ${generoSeleccionado}`);
     
     // Filtrar participantes por el género seleccionado
-    const participantesFiltrados = participantes.filter(p => 
-        p.genero && p.genero.genero === generoSeleccionado
-    );
+    const participantesFiltrados = participantes.filter(p => {
+        const generoParticipante = p.genero?.genero?.trim().toLowerCase();
+        const generoSeleccionadoClean = generoSeleccionado.trim().toLowerCase();
+        
+        return generoSeleccionadoClean === 'todos' || generoParticipante === generoSeleccionadoClean;
+    });
     
     console.log(`👥 Participantes del género ${generoSeleccionado}:`, participantesFiltrados.length);
     
@@ -1993,7 +1998,10 @@ async function procesarDatosAgrupadosPorGenero(participantes, generos, fechaInic
     
     // Obtener fechas únicas dentro del rango
     const fechasUnicas = {};
-    const generosNombres = generos.map(g => g.genero);
+    const generosNombres = Array.from(new Set([
+        ...generos.map(g => g.genero),  // géneros de la tabla
+        ...participantes.map(p => p.genero?.genero).filter(Boolean) // géneros de participantes
+    ]));
     
     // Inicializar estructura de datos
     participantes.forEach(participante => {
@@ -2020,21 +2028,15 @@ async function procesarDatosAgrupadosPorGenero(participantes, generos, fechaInic
     });
     
     // Crear datasets para cada género
-    const datasets = generosNombres.map(genero => {
-        const color = coloresPorGenero[genero] || '#95a5a6';
-        return {
-            label: genero,
-            data: fechasOrdenadas.map(fecha => fechasUnicas[fecha][genero] || 0),
-            backgroundColor: color,
-            borderColor: darkenColor(color, 0.3),
-            borderWidth: 2,
-            borderRadius: 6,
-            barThickness: 25,
-            maxBarThickness: 30,
-            barPercentage: 0.8,
-            categoryPercentage: 0.9
-        };
-    });
+    const datasets = generosNombres.map(genero => ({
+        label: genero,
+        data: fechasOrdenadas.map(fecha => fechasUnicas[fecha][genero] || 0),
+        backgroundColor: coloresPorGenero[genero] || '#95a5a6',
+        borderColor: darkenColor(coloresPorGenero[genero] || '#95a5a6', 0.3),
+        borderWidth: 2,
+        borderRadius: 6,
+        barThickness: 25,
+    }));
     
     // Calcular total general
     const totalGeneral = datasets.reduce((total, dataset) => {
@@ -2712,7 +2714,11 @@ function actualizarTablaComparativaMensual(datosComparativa) {
                 <tr style="${estiloFila}">
                     <td>
                         <span class="gender-badge-3d ${claseGenero}">
-                            <i class="fas ${genero === 'Masculino' ? 'fa-mars' : genero === 'Femenino' ? 'fa-venus' : 'fa-genderless'}"></i>
+                            <i class="fas ${
+                                generoLower === 'masculino' ? 'fa-mars' : 
+                                generoLower === 'femenino' ? 'fa-venus' : 
+                                'fa-genderless'
+                            }"></i>
                             ${generoFormateado}
                             ${esMaximo ? '<i class="fas fa-crown" style="margin-left: 5px; color: #f39c12;"></i>' : ''}
                         </span>
@@ -3356,7 +3362,7 @@ function actualizarTablaDatosAgrupados(datosProcesados) {
                 const valor = dataset.data[fechaIndex] || 0;
                 if (valor > 0) {
                     const porcentaje = totalFecha > 0 ? ((valor / totalFecha) * 100).toFixed(1) : 0;
-                    const claseGenero = obtenerClaseGenero(dataset.label.toLowerCase());
+                    const claseGenero = obtenerClaseGenero(dataset.label.trim().toLowerCase());
                     
                     tablaHTML += `
                         <tr>
@@ -3665,7 +3671,7 @@ async function aplicarFiltroPorGeneroYFecha() {
     const fechaFinal = document.getElementById('filtroFechaFinal').value;
     const generoSeleccionado = document.getElementById('filtroGeneroFecha').value;
     
-    console.log('🎯 Aplicando filtro por FECHA:', { fechaInicial, fechaFinal, generoSeleccionado });
+    console.log('🎯 Aplicando filtro por FECHA:', { fechaInicial, fechaFinal, generoSeleccionado});
     
     // Validaciones básicas
     if (!fechaInicial || !fechaFinal) {
@@ -3952,7 +3958,7 @@ function actualizarTablaMesesAgrupados(datosProcesados) {
                 const valor = dataset.data[mesIndex] || 0;
                 if (valor > 0) {
                     const porcentaje = totalMes > 0 ? ((valor / totalMes) * 100).toFixed(1) : 0;
-                    const claseGenero = obtenerClaseGenero(dataset.label.toLowerCase());
+                    const claseGenero = obtenerClaseGenero(dataset.label.trim().toLowerCase());
                     
                     tablaHTML += `
                         <tr>

@@ -384,7 +384,7 @@ function crearFiltrosModal() {
                         <option value="Masculino">Masculino</option>
                         <option value="Femenino">Femenino</option>
                         <option value="Otro">Otro</option>
-                        <option value="Prefiero no decir">Prefiero no decir</option>
+                        <option value="Prefiero no decirlo">Prefiero no decirlo</option>
                     </select>
                 </div>
             `;
@@ -411,7 +411,7 @@ function crearFiltrosModal() {
                         <option value="Masculino">Masculino</option>
                         <option value="Femenino">Femenino</option>
                         <option value="Otro">Otro</option>
-                        <option value="Prefiero no decir">Prefiero no decir</option>
+                        <option value="Prefiero no decirlo">Prefiero no decirlo</option>
                     </select>
                 </div>
                 <div class="filtro-grupo">
@@ -481,7 +481,7 @@ function crearFiltrosModal() {
                         <option value="Masculino">Masculino</option>
                         <option value="Femenino">Femenino</option>
                         <option value="Otro">Otro</option>
-                        <option value="Prefiero no decir">Prefiero no decir</option>
+                        <option value="Prefiero no decirlo">Prefiero no decirlo</option>
                     </select>
                 </div>
                 <div class="filtro-grupo">
@@ -513,10 +513,11 @@ function crearFiltrosModal() {
                         <option value="Masculino">Masculino</option>
                         <option value="Femenino">Femenino</option>
                         <option value="Otro">Otro</option>
-                        <option value="Prefiero no decir">Prefiero no decir</option>
+                        <option value="Prefiero no decirlo">Prefiero no decirlo</option>
                     </select>
                 </div>
                 <div class="filtro-grupo">
+
                     <button class="btn-aplicar-filtro" onclick="aplicarFiltroRangoAnios()">
                         <i class="fas fa-filter"></i> Aplicar Filtro
                     </button>
