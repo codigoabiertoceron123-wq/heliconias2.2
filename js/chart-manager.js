@@ -673,35 +673,30 @@ class ChartManager {
     }
 
     crearGraficaBarrasTemporal(tipo, datos, etiquetaDescriptiva, tituloDescriptivo, ctx) {
-        const tipoReservaSeleccionado = document.getElementById('modal-filtro-tipo-reserva').value.toLowerCase() ? 
-                                        document.getElementById('modal-filtro-tipo-reserva').value.toLowerCase() : 'todas';
+    
+        const colors = {
+            confirmada: '#27ae60',
+            pendiente:  '#f39c12',
+            cancelada:  '#e74c3c'
+        };
 
-        let datasets = [];
-        const colors = ['#3498db', '#e74c3c', '#2ecc71']; // Azul, rojo, verde
+        const estados = ['confirmada', 'pendiente', 'cancelada'];
 
-        if (tipoReservaSeleccionado === 'todas') {
-            datasets = [
-                { label: "Individual", data: datos.individual, backgroundColor: colors[0], borderRadius: 6, barThickness: 18 },
-                { label: "Grupal", data: datos.grupal, backgroundColor: colors[2], borderRadius: 6, barThickness: 18 },
-                { label: "Total", data: datos.total, backgroundColor: colors[1], borderRadius: 6, barThickness: 18 }
-            ];
-        } 
-        else if (tipoReservaSeleccionado === 'individual') {
-            datasets = [
-                { label: "Individual", data: datos.individual, backgroundColor: colors[0], borderRadius: 6, barThickness: 18 }
-            ];
-        } 
-        else if (tipoReservaSeleccionado === 'grupal') {
-            datasets = [
-                { label: "Grupal", data: datos.grupal, backgroundColor: colors[2], borderRadius: 6, barThickness: 18 }
-            ];
-        }
+        const datasets = estados.map(estado => ({
+            label: estado.charAt(0).toUpperCase() + estado.slice(1),
+            data: datos[estado] || [],
+            backgroundColor: colors[estado],
+            borderRadius: 6,
+            barThickness: 18
+        }));
 
-        
         this.chartBar = new Chart(ctx, {
             type: "bar",
-            data: { labels: datos.labels, datasets: datasets },
-            options: this.obtenerOpcionesBarras(etiquetaDescriptiva, tituloDescriptivo, tipoReservaSeleccionado)
+            data: {
+                labels: datos.labels,
+                datasets: datasets
+            },
+            options: this.obtenerOpcionesBarras(etiquetaDescriptiva, tituloDescriptivo)
         });
     }
 
@@ -768,7 +763,7 @@ class ChartManager {
     }
 
     generarColores(tipo, labels) {
-        const palette = this.colorPalettes[tipo] || this.colorPalettes.tipo_reserva;
+        const palette = this.colorPalettes[tipo] || this.colorPalettes.estado;
         return labels.map((_, i) => palette[i % palette.length]);
     }
 

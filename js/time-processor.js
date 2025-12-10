@@ -73,143 +73,137 @@ class TimeProcessor {
         };
     }
 
-    // NUEVO: Métodos para gráficas agrupadas por TIPO DE RESERVA
     procesarPorFechaAgrupado(participantes) {
         console.log('🔍 Procesando FECHA agrupado...', participantes?.length);
-        
-        // Agrupar por fecha y tipo de reserva
+
         const datosPorFecha = {};
         const fechasSet = new Set();
-        const tiposSet = new Set(['Individual', 'Grupal']);
-        
+        const tiposSet = new Set(['Confirmada', 'Pendiente', 'Cancelada']);
+
         participantes.forEach(p => {
             const fecha = p.reservas?.fecha_reserva || p.fecha_visita;
-            const tipoRaw = p.reservas?.tipo_reserva || 'individual';
-            const tipo = tipoRaw.trim().toLowerCase() === "grupal" ? "Grupal" : "Individual";
             
+            const tipoRaw = p.reservas?.estado || 'pendiente';
+            let tipo = tipoRaw.trim().toLowerCase();
+
+            if (tipo === "confirmada") tipo = "Confirmada";
+            else if (tipo === "pendiente") tipo = "Pendiente";
+            else if (tipo === "cancelada") tipo = "Cancelada";
+            else tipo = "Pendiente"; // default
+
             if (fecha) {
                 const fechaStr = new Date(fecha).toISOString().split('T')[0];
+
                 fechasSet.add(fechaStr);
                 tiposSet.add(tipo);
-                
+
                 if (!datosPorFecha[fechaStr]) {
                     datosPorFecha[fechaStr] = {
-                        'Individual': 0,
-                        'Grupal': 0
+                        'Confirmada': 0,
+                        'Pendiente': 0,
+                        'Cancelada': 0
                     };
                 }
-                
-                datosPorFecha[fechaStr][tipo] = (datosPorFecha[fechaStr][tipo] || 0) + 1;
+
+                datosPorFecha[fechaStr][tipo]++;
             }
         });
-        
+
         const fechasOrdenadas = Array.from(fechasSet).sort();
         const tiposLista = Array.from(tiposSet);
-        
-        console.log('📊 Datos por fecha agrupado:', {
-            fechas: fechasOrdenadas.length,
-            tipos: tiposLista,
-            datosPorFecha: datosPorFecha
-        });
-        
-        // Preparar datasets para gráficas agrupadas
-        const datasets = tiposLista.map((tipo, index) => {
-            const data = fechasOrdenadas.map(fecha => datosPorFecha[fecha]?.[tipo] || 0);
-            
-            return {
-                label: tipo,
-                data: data,
-                backgroundColor: this.getColorForTipo(tipo, index),
-                borderColor: this.getBorderColorForTipo(tipo, index),
-                borderWidth: 1,
-                borderRadius: 6,
-                barThickness: 20
-            };
-        });
-        
-        const total = datasets.reduce((total, dataset) => 
-            total + dataset.data.reduce((sum, val) => sum + val, 0), 0);
-        
+
+        const datasets = tiposLista.map((tipo, index) => ({
+            label: tipo,
+            data: fechasOrdenadas.map(fecha => datosPorFecha[fecha]?.[tipo] || 0),
+            backgroundColor: this.getColorForTipo(tipo, index),
+            borderColor: this.getBorderColorForTipo(tipo, index),
+            borderWidth: 1,
+            borderRadius: 6,
+            barThickness: 20
+        }));
+
+        const total = datasets.reduce(
+            (total, dataset) => total + dataset.data.reduce((sum, val) => sum + val, 0), 0
+        );
+
         return {
             labels: fechasOrdenadas,
             datasets: datasets,
             tipos: tiposLista,
             fechas: fechasOrdenadas,
             total: total,
-            type: 'grouped' // Indicar que es gráfica agrupada
+            type: 'grouped'
         };
     }
 
     procesarPorMesAgrupado(participantes) {
         console.log('🔍 Procesando MES agrupado...', participantes?.length);
-        
+
         const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                      'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-        
-        // Agrupar por mes y tipo de reserva
+                    'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
         const datosPorMes = {};
         const mesesSet = new Set();
-        const tiposSet = new Set(['Individual', 'Grupal']);
-        
+        const tiposSet = new Set(['Confirmada', 'Pendiente', 'Cancelada']);
+
         participantes.forEach(p => {
             const fecha = p.reservas?.fecha_reserva || p.fecha_visita;
-            const tipoRaw = p.reservas?.tipo_reserva || 'individual';
-            const tipo = tipoRaw.trim().toLowerCase() === "grupal" ? "Grupal" : "Individual";
-            
+
+            const tipoRaw = p.reservas?.estado_reserva || 'pendiente';
+            let tipo = tipoRaw.trim().toLowerCase();
+
+            if (tipo === "confirmada") tipo = "Confirmada";
+            else if (tipo === "pendiente") tipo = "Pendiente";
+            else if (tipo === "cancelada") tipo = "Cancelada";
+            else tipo = "Pendiente";
+
             if (fecha) {
                 const d = new Date(fecha);
-                const mesKey = `${d.getFullYear()}-${d.getMonth()}`;
                 const mesLabel = `${meses[d.getMonth()]} ${d.getFullYear()}`;
-                
+
                 mesesSet.add(mesLabel);
                 tiposSet.add(tipo);
-                
+
                 if (!datosPorMes[mesLabel]) {
                     datosPorMes[mesLabel] = {
-                        'Individual': 0,
-                        'Grupal': 0
+                        'Confirmada': 0,
+                        'Pendiente': 0,
+                        'Cancelada': 0
                     };
                 }
-                
-                datosPorMes[mesLabel][tipo] = (datosPorMes[mesLabel][tipo] || 0) + 1;
+
+                datosPorMes[mesLabel][tipo]++;
             }
         });
-        
-        // Ordenar meses cronológicamente
+
         const mesesOrdenados = Array.from(mesesSet).sort((a, b) => {
             const [mesA, añoA] = a.split(' ');
             const [mesB, añoB] = b.split(' ');
-            
             if (añoA !== añoB) return parseInt(añoA) - parseInt(añoB);
             return meses.indexOf(mesA) - meses.indexOf(mesB);
         });
-        
+
         const tiposLista = Array.from(tiposSet);
-        
-        // Preparar datasets
-        const datasets = tiposLista.map((tipo, index) => {
-            const data = mesesOrdenados.map(mes => datosPorMes[mes]?.[tipo] || 0);
-            
-            return {
-                label: tipo,
-                data: data,
-                backgroundColor: this.getColorForTipo(tipo, index),
-                borderColor: this.getBorderColorForTipo(tipo, index),
-                borderWidth: 1,
-                borderRadius: 6,
-                barThickness: 20
-            };
-        });
-        
-        const total = datasets.reduce((total, dataset) => 
+
+        const datasets = tiposLista.map((tipo, index) => ({
+            label: tipo,
+            data: mesesOrdenados.map(mes => datosPorMes[mes]?.[tipo] || 0),
+            backgroundColor: this.getColorForTipo(tipo, index),
+            borderColor: this.getBorderColorForTipo(tipo, index),
+            borderWidth: 1,
+            borderRadius: 6,
+            barThickness: 20
+        }));
+
+        const total = datasets.reduce((total, dataset) =>
             total + dataset.data.reduce((sum, val) => sum + val, 0), 0);
-        
+
         return {
             labels: mesesOrdenados,
-            datasets: datasets,
+            datasets,
             tipos: tiposLista,
             meses: mesesOrdenados,
-            total: total,
+            total,
             type: 'grouped'
         };
     }
@@ -219,31 +213,34 @@ class TimeProcessor {
 
         const datosPorAnio = {};
         const añosSet = new Set();
-        const tiposSet = new Set(['Individual', 'Grupal']);
+        const tiposSet = new Set(['Confirmada', 'Pendiente', 'Cancelada']);
 
         participantes.forEach(p => {
             const fecha = p.reservas?.fecha_reserva || p.fecha_visita;
 
-            // normalización
-            const tipoRaw = (p.reservas?.tipo_reserva || 'individual')
-                .trim()
-                .toLowerCase();
+            const tipoRaw = p.reservas?.estado_reserva || 'pendiente';
+            let tipo = tipoRaw.trim().toLowerCase();
 
-            const tipo = tipoRaw === 'grupal' ? 'Grupal' : 'Individual';
+            if (tipo === "confirmada") tipo = "Confirmada";
+            else if (tipo === "pendiente") tipo = "Pendiente";
+            else if (tipo === "cancelada") tipo = "Cancelada";
+            else tipo = "Pendiente";
 
             if (fecha) {
                 const año = new Date(fecha).getFullYear().toString();
+
                 añosSet.add(año);
                 tiposSet.add(tipo);
 
                 if (!datosPorAnio[año]) {
                     datosPorAnio[año] = {
-                        'Individual': 0,
-                        'Grupal': 0
+                        'Confirmada': 0,
+                        'Pendiente': 0,
+                        'Cancelada': 0
                     };
                 }
 
-                datosPorAnio[año][tipo] = (datosPorAnio[año][tipo] || 0) + 1;
+                datosPorAnio[año][tipo]++;
             }
         });
 
