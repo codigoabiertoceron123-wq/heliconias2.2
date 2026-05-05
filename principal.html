@@ -41,10 +41,9 @@
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: white; /* Fondo blanco */
+                background: white;
                 z-index: -1;
             }
-            /* Header Styles */
             /* Header Styles */
             .header {
                 background: linear-gradient(135deg, #ffffff, #ffffff);
@@ -64,9 +63,9 @@
             }
 
             .logo {
-                display: flex;           /* Activar flexbox */
-                align-items: center;     /* Centrar verticalmente el contenido */
-                gap: 15px;               /* Espacio entre logo y título */
+                display: flex;
+                align-items: center;
+                gap: 15px;
             }
 
             .logo-img {
@@ -99,8 +98,8 @@
             
             .top-bar {
                 display: flex;
-                justify-content: space-between; /* izquierda - derecha */
-                align-items: center;            /* misma línea */
+                justify-content: space-between;
+                align-items: center;
                 width: 100%;
                 margin-bottom: 10px;
                 margin-top: 15px; 
@@ -113,14 +112,14 @@
                 gap: 10px;
                 font-weight: 500;
                 color: #000000;
-                background: rgba(255, 255, 255, 0.15); /* efecto cristal */
+                background: rgba(255, 255, 255, 0.15);
                 padding: 10px 18px;
                 border-radius: 25px;
-                backdrop-filter: blur(6px);  /* efecto vidrio borroso */
+                backdrop-filter: blur(6px);
                 -webkit-backdrop-filter: blur(6px);
                 box-shadow: 0 4px 12px rgba(0,0,0,0.25);
                 font-size: 15px;
-                letter-spacing: 0.5px;        /* más elegante */
+                letter-spacing: 0.5px;
             }
 
             /* Navigation Styles */
@@ -135,7 +134,7 @@
             .main-nav {
                 display: flex;
                 gap: 5px;
-                left: 50px;/* ajusta el valor para mover más a la izquierda o derecha */
+                left: 50px;
             }
 
             .nav-item {
@@ -147,31 +146,30 @@
                 text-decoration: none;
                 border-radius: 6px;
                 position: relative;
-                background: transparent; /* quitar fondo */
+                background: transparent;
                 transition: all 0.3s ease;
             }
 
-            /* Línea inferior al pasar el mouse */
             .nav-item::after {
                 content: '';
                 position: absolute;
                 bottom: 0;
-                left: 10%;           /* margen izquierdo de la línea */
-                width: 80%;          /* ancho de la línea */
-                height: 2px;         /* grosor de la línea */
+                left: 10%;
+                width: 80%;
+                height: 2px;
                 background: linear-gradient(135deg, #2e7d32, #4caf50);
-                transform: scaleX(0); /* inicialmente invisible */
+                transform: scaleX(0);
                 transition: transform 0.3s ease;
                 transform-origin: center;
             }
 
             .nav-item:hover::after {
-                transform: scaleX(1); /* línea aparece */
+                transform: scaleX(1);
             }
 
             .user-actions {
-                display: flex;        /* ya estaba flex */
-                justify-content: flex-end;  /* esto los lleva a la derecha */
+                display: flex;
+                justify-content: flex-end;
                 gap: 10px; 
             }
 
@@ -187,14 +185,13 @@
                 gap: 6px;
                 transition: all 0.3s ease;
                 position: relative;
-                left: -20px; /* mueve cada botón 20px hacia la izquierda */
+                left: -20px;
             }
 
             .btn-primary {
-                background: linear-gradient(135deg, #2e7d32, #4caf50); /* verde degradado */
+                background: linear-gradient(135deg, #2e7d32, #4caf50);
                 color: white;
             }
-
 
             .btn-accent {
                 background: linear-gradient(135deg, #e74c3c, #fe5926); 
@@ -313,7 +310,7 @@
                 align-items: center;
                 gap: 8px;
                 padding: 10px 20px;
-                background: linear-gradient(135deg, #2e7d32, #4caf50); /* verde degradado */
+                background: linear-gradient(135deg, #2e7d32, #4caf50);
                 color: white;
                 text-decoration: none;
                 border-radius: 6px;
@@ -369,8 +366,8 @@
                 
                 .user-actions {
                     flex-wrap: wrap;
-                    justify-content: flex-end; /* alineación a la derecha */
-                    gap: 10px; /* espacio entre botones */
+                    justify-content: flex-end;
+                    gap: 10px;
                 }
                 
                 .nav-item {
@@ -390,7 +387,7 @@
                     </div>
                     <h1>Heliconias Reports</h1>
                 </div>
-                    <!-- Navegación horizontal -->
+                <!-- Navegación horizontal -->
                 <nav class="main-nav">
                     <a href="principal.html" class="nav-item active tooltip">
                         <i class="fas fa-home"></i>
@@ -462,7 +459,6 @@
                         <i class="fas fa-venus-mars stat-icon"></i>Por género
                     </h2>
                     <div class="stats-container" id="genero-stats-container">
-                        <!-- Los géneros se cargarán dinámicamente aquí -->
                         <div class="no-data">Cargando géneros...</div>
                     </div>
                     <div class="section-actions">
@@ -478,7 +474,6 @@
                         <i class="fas fa-child stat-icon"></i>Por edad
                     </h2>
                     <div class="stats-container" id="edad-stats-container">
-                        <!-- Las edades se cargarán dinámicamente aquí -->
                         <div class="no-data">Cargando edades...</div>
                     </div>
                     <div class="section-actions">
@@ -494,7 +489,6 @@
                         <i class="fas fa-flag stat-icon"></i>Por nacionalidad
                     </h2>
                     <div class="stats-container" id="nacionalidad-stats-container">
-                        <!-- Las nacionalidades se cargarán dinámicamente aquí -->
                         <div class="no-data">Cargando nacionalidades...</div>
                     </div>
                     <div class="section-actions">
@@ -534,7 +528,7 @@
                     </div>
                 </div>
 
-                <!-- Por Institución - ACTUALIZADO -->
+                <!-- Por Institución -->
                 <div class="content-section">
                     <h2 class="section-title">
                         <i class="fas fa-school stat-icon"></i>Por institución
@@ -585,10 +579,13 @@
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
         
         <script>
-            // Inicializar Supabase
-            const supabaseUrl = 'https://umncnddwzmjxgmvisvqz.supabase.co';
-            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtbmNuZGR3em1qeGdtdmlzdnF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NDIyNzksImV4cCI6MjA3ODExODI3OX0.ODvus28cTCTD8gGewQ2sAZ8PcXbEe4CIy_zv6bip8J0';
-            const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+            // Inicializar Supabase - Versión corregida SIN declaración duplicada
+            if (!window.supabaseClient) {
+                const supabaseUrl = 'https://umncnddwzmjxgmvisvqz.supabase.co';
+                const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtbmNuZGR3em1qeGdtdmlzdnF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NDIyNzksImV4cCI6MjA3ODExODI3OX0.ODvus28cTCTD8gGewQ2sAZ8PcXbEe4CIy_zv6bip8J0';
+                window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+            }
+            const sb = window.supabaseClient; // Usar 'sb' en lugar de 'supabase' para evitar conflictos
 
             // Función para actualizar fecha y hora
             function updateDateTime() {
@@ -620,7 +617,6 @@
                 let edad = hoy.getFullYear() - nacimiento.getFullYear();
                 const mes = hoy.getMonth() - nacimiento.getMonth();
                 
-                // Ajustar si aún no ha pasado el mes de cumpleaños
                 if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
                     edad--;
                 }
@@ -640,8 +636,7 @@
                 try {
                     console.log('Iniciando carga de datos de visitantes...');
                     
-                    // Consulta simple para obtener todos los registros de participantes_reserva
-                    const { data: visitantesData, error: visitantesError } = await supabase
+                    const { data: visitantesData, error: visitantesError } = await sb
                         .from('participantes_reserva')
                         .select('id_participante');
                     
@@ -653,7 +648,6 @@
                         return;
                     }
                     
-                    // Actualizar total de visitantes
                     const totalVisitantes = visitantesData ? visitantesData.length : 0;
                     document.getElementById('total-visitantes').textContent = totalVisitantes.toLocaleString();
                     
@@ -670,8 +664,7 @@
                 try {
                     console.log('=== CARGANDO DATOS DE GÉNERO DINÁMICAMENTE ===');
                     
-                    // Consulta todos los participantes con id_genero
-                    const { data: participantes, error } = await supabase
+                    const { data: participantes, error } = await sb
                         .from('participantes_reserva')
                         .select('id_genero')
                         .not('id_genero', 'is', null);
@@ -684,7 +677,6 @@
 
                     console.log('Datos de género obtenidos:', participantes);
 
-                    // Contar géneros por ID
                     const conteoGeneros = {};
                     
                     participantes.forEach(participante => {
@@ -696,17 +688,14 @@
 
                     console.log('Conteo por ID de género:', conteoGeneros);
 
-                    // Crear mapeo de nombres de género dinámicamente
                     const nombresGenero = {
                         1: 'Masculino',
                         2: 'Femenino',
                         3: 'No binario',
                         4: 'Prefiero no decir',
                         5: 'Otro'
-                        // Se agregarán automáticamente más IDs si existen
                     };
 
-                    // Generar la interfaz dinámicamente
                     generarInterfazGeneros(conteoGeneros, nombresGenero);
 
                 } catch (error) {
@@ -719,21 +708,17 @@
             function generarInterfazGeneros(conteoGeneros, nombresGenero) {
                 const statsContainer = document.getElementById('genero-stats-container');
                 
-                // Limpiar contenedor
                 statsContainer.innerHTML = '';
 
-                // Si no hay datos
                 if (Object.keys(conteoGeneros).length === 0) {
                     statsContainer.innerHTML = '<div class="no-data">No hay datos de género</div>';
                     return;
                 }
 
-                // Ordenar géneros por cantidad (mayor a menor)
                 const generosOrdenados = Object.keys(conteoGeneros).sort((a, b) => {
                     return conteoGeneros[b] - conteoGeneros[a];
                 });
 
-                // Crear elementos para cada género
                 generosOrdenados.forEach(idGenero => {
                     const cantidad = conteoGeneros[idGenero];
                     const nombre = nombresGenero[idGenero] || `Género ${idGenero}`;
@@ -756,8 +741,7 @@
                 try {
                     console.log('=== CARGANDO DATOS DE EDAD DINÁMICAMENTE ===');
                     
-                    // Consulta todos los participantes con fecha_nacimiento
-                    const { data: participantes, error } = await supabase
+                    const { data: participantes, error } = await sb
                         .from('participantes_reserva')
                         .select('fecha_nacimiento')
                         .not('fecha_nacimiento', 'is', null);
@@ -770,14 +754,12 @@
 
                     console.log('Datos de edad obtenidos:', participantes);
 
-                    // Inicializar contadores
                     const conteoEdades = {
                         menores: 0,
                         adultos: 0,
                         mayores: 0
                     };
 
-                    // Calcular edades y clasificar
                     participantes.forEach(participante => {
                         const fechaNacimiento = participante.fecha_nacimiento;
                         if (fechaNacimiento) {
@@ -791,7 +773,6 @@
 
                     console.log('Conteo por categoría de edad:', conteoEdades);
 
-                    // Generar la interfaz dinámicamente
                     generarInterfazEdades(conteoEdades);
 
                 } catch (error) {
@@ -804,16 +785,13 @@
             function generarInterfazEdades(conteoEdades) {
                 const statsContainer = document.getElementById('edad-stats-container');
                 
-                // Limpiar contenedor
                 statsContainer.innerHTML = '';
 
-                // Si no hay datos
                 if (conteoEdades.menores === 0 && conteoEdades.adultos === 0 && conteoEdades.mayores === 0) {
                     statsContainer.innerHTML = '<div class="no-data">No hay datos de edad</div>';
                     return;
                 }
 
-                // Crear elementos para cada categoría de edad
                 const categorias = [
                     { key: 'menores', label: 'Menores de 18' },
                     { key: 'adultos', label: '18 - 60 años' },
@@ -836,13 +814,12 @@
                 console.log('✅ Interfaz de edades generada dinámicamente');
             }
 
-            // Función para cargar datos de nacionalidad - COLOMBIA vs OTROS PAÍSES
+            // Función para cargar datos de nacionalidad
             async function cargarDatosNacionalidad() {
                 try {
                     console.log('=== CARGANDO DATOS DE NACIONALIDAD - COLOMBIA vs OTROS ===');
                     
-                    // 1. Obtener todos los participantes con id_ciudad
-                    const { data: participantes, error: errorParticipantes } = await supabase
+                    const { data: participantes, error: errorParticipantes } = await sb
                         .from('participantes_reserva')
                         .select('id_ciudad')
                         .not('id_ciudad', 'is', null);
@@ -860,12 +837,10 @@
                         return;
                     }
 
-                    // 2. Obtener todos los IDs de ciudades únicos
                     const idsCiudadesUnicos = [...new Set(participantes.map(p => p.id_ciudad))];
                     console.log('IDs de ciudades únicos:', idsCiudadesUnicos);
 
-                    // 3. Obtener información de ciudades con sus países
-                    const { data: ciudades, error: errorCiudades } = await supabase
+                    const { data: ciudades, error: errorCiudades } = await sb
                         .from('ciudades')
                         .select(`
                             id, 
@@ -885,7 +860,6 @@
 
                     console.log('Ciudades obtenidas con países:', ciudades);
 
-                    // 4. Contar participantes por país
                     const conteoPaises = {};
                     let sinPaisCount = 0;
 
@@ -896,7 +870,6 @@
                             const nombrePais = ciudad.pais.pais;
                             conteoPaises[nombrePais] = (conteoPaises[nombrePais] || 0) + 1;
                         } else {
-                            // Si no encontramos el país
                             sinPaisCount++;
                         }
                     });
@@ -904,7 +877,6 @@
                     console.log('Conteo completo por país:', conteoPaises);
                     console.log('Sin país:', sinPaisCount);
 
-                    // 5. Separar Colombia de otros países
                     let colombiaCount = 0;
                     let otrosPaisesCount = 0;
 
@@ -916,7 +888,6 @@
                         }
                     });
 
-                    // Agregar los que no tienen país a "Otros países"
                     otrosPaisesCount += sinPaisCount;
 
                     const conteoFinal = {
@@ -937,10 +908,8 @@
             function generarInterfazNacionalidades(conteoNacionalidades) {
                 const statsContainer = document.getElementById('nacionalidad-stats-container');
                 
-                // Limpiar contenedor
                 statsContainer.innerHTML = '';
 
-                // Crear elementos para Colombia y Otros países
                 const categorias = [
                     { label: 'Colombia', value: conteoNacionalidades['Colombia'] || 0 },
                     { label: 'Otros países', value: conteoNacionalidades['Otros países'] || 0 }
@@ -960,13 +929,12 @@
                 console.log('✅ Interfaz de nacionalidades generada');
             }
 
-            // Función para cargar datos de ciudades - ACTUALIZADA
+            // Función para cargar datos de ciudades
             async function cargarDatosCiudad() {
                 try {
                     console.log('=== CARGANDO DATOS DE CIUDAD ===');
                     
-                    // 1. Obtener todos los participantes con id_ciudad
-                    const { data: participantes, error: errorParticipantes } = await supabase
+                    const { data: participantes, error: errorParticipantes } = await sb
                         .from('participantes_reserva')
                         .select('id_ciudad')
                         .not('id_ciudad', 'is', null);
@@ -984,17 +952,12 @@
                         return;
                     }
 
-                    // 2. Obtener todos los IDs de ciudades únicos
                     const idsCiudadesUnicos = [...new Set(participantes.map(p => p.id_ciudad))];
                     console.log('IDs de ciudades únicos:', idsCiudadesUnicos);
 
-                    // 3. Obtener información de ciudades con sus nombres
-                    const { data: ciudades, error: errorCiudades } = await supabase
+                    const { data: ciudades, error: errorCiudades } = await sb
                         .from('ciudades')
-                        .select(`
-                            id, 
-                            nombre
-                        `)
+                        .select('id, nombre')
                         .in('id', idsCiudadesUnicos);
 
                     if (errorCiudades) {
@@ -1005,7 +968,6 @@
 
                     console.log('Ciudades obtenidas:', ciudades);
 
-                    // 4. Contar participantes por ciudad
                     const conteoCiudades = {};
                     let sinCiudadCount = 0;
 
@@ -1016,7 +978,6 @@
                             const nombreCiudad = ciudad.nombre;
                             conteoCiudades[nombreCiudad] = (conteoCiudades[nombreCiudad] || 0) + 1;
                         } else {
-                            // Si no encontramos la ciudad
                             sinCiudadCount++;
                         }
                     });
@@ -1024,7 +985,6 @@
                     console.log('Conteo completo por ciudad:', conteoCiudades);
                     console.log('Sin ciudad:', sinCiudadCount);
 
-                    // 5. Separar ciudades principales de Colombia vs otras ciudades
                     let bogotaCount = 0;
                     let medellinCount = 0;
                     let caliCount = 0;
@@ -1044,7 +1004,6 @@
                         }
                     });
 
-                    // Agregar los que no tienen ciudad a "Otras ciudades"
                     otrasCiudadesCount += sinCiudadCount;
 
                     console.log('Conteo final ciudades:', {
@@ -1054,7 +1013,6 @@
                         'Otras': otrasCiudadesCount
                     });
 
-                    // 6. Actualizar la interfaz con los datos reales
                     actualizarInterfazCiudades(bogotaCount, medellinCount, caliCount, otrasCiudadesCount);
 
                 } catch (error) {
@@ -1065,7 +1023,6 @@
 
             // Función para actualizar la interfaz de ciudades
             function actualizarInterfazCiudades(bogota, medellin, cali, otras) {
-                // Actualizar los elementos existentes en el HTML
                 document.getElementById('ciudad-bogota').textContent = bogota.toLocaleString();
                 document.getElementById('ciudad-medellin').textContent = medellin.toLocaleString();
                 document.getElementById('ciudad-cali').textContent = cali.toLocaleString();
@@ -1075,151 +1032,138 @@
             }
 
             // Función para actualizar la interfaz de instituciones
-function actualizarInterfazInstituciones(univalle, nacional, andes, otras) {
-    try {
-        console.log('Actualizando interfaz instituciones:', { univalle, nacional, andes, otras });
-        
-        // Actualizar los elementos existentes en el HTML
-        document.getElementById('institucion-univalle').textContent = univalle.toLocaleString();
-        document.getElementById('institucion-nacional').textContent = nacional.toLocaleString();
-        document.getElementById('institucion-andes').textContent = andes.toLocaleString();
-        document.getElementById('institucion-otras').textContent = otras.toLocaleString();
+            function actualizarInterfazInstituciones(univalle, nacional, andes, otras) {
+                try {
+                    console.log('Actualizando interfaz instituciones:', { univalle, nacional, andes, otras });
+                    
+                    document.getElementById('institucion-univalle').textContent = univalle.toLocaleString();
+                    document.getElementById('institucion-nacional').textContent = nacional.toLocaleString();
+                    document.getElementById('institucion-andes').textContent = andes.toLocaleString();
+                    document.getElementById('institucion-otras').textContent = otras.toLocaleString();
 
-        console.log('✅ Interfaz de instituciones actualizada');
-    } catch (error) {
-        console.error('Error al actualizar interfaz instituciones:', error);
-    }
-}
-
-// Función para mostrar sin datos en institución
-function mostrarSinDatosInstitucion() {
-    try {
-        document.getElementById('institucion-univalle').textContent = '0';
-        document.getElementById('institucion-nacional').textContent = '0';
-        document.getElementById('institucion-andes').textContent = '0';
-        document.getElementById('institucion-otras').textContent = '0';
-    } catch (error) {
-        console.error('Error en mostrarSinDatosInstitucion:', error);
-    }
-}
-
-// Función para mostrar error en la sección de institución
-function mostrarErrorInstitucion() {
-    try {
-        document.getElementById('institucion-univalle').textContent = 'Error';
-        document.getElementById('institucion-nacional').textContent = 'Error';
-        document.getElementById('institucion-andes').textContent = 'Error';
-        document.getElementById('institucion-otras').textContent = 'Error';
-    } catch (error) {
-        console.error('Error en mostrarErrorInstitucion:', error);
-    }
-}
-
-// Función para cargar datos de instituciones - CORREGIDA
-async function cargarDatosInstitucion() {
-    try {
-        console.log('=== CARGANDO DATOS DE INSTITUCIÓN ===');
-        
-        // 1. Obtener todos los participantes con id_institucion
-        const { data: participantes, error: errorParticipantes } = await supabase
-            .from('participantes_reserva')
-            .select('id_institucion')
-            .not('id_institucion', 'is', null);
-
-        if (errorParticipantes) {
-            console.error('Error al obtener participantes:', errorParticipantes);
-            mostrarErrorInstitucion();
-            return;
-        }
-
-        console.log('Participantes con instituciones:', participantes);
-
-        if (!participantes || participantes.length === 0) {
-            mostrarSinDatosInstitucion();
-            return;
-        }
-
-        // 2. Obtener todos los IDs de instituciones únicos
-        const idsInstitucionesUnicos = [...new Set(participantes.map(p => p.id_institucion))];
-        console.log('IDs de instituciones únicos:', idsInstitucionesUnicos);
-
-        // 3. Obtener información de instituciones - CON LOS NOMBRES CORRECTOS DE CAMPOS
-        let todasLasInstituciones = [];
-
-        // Consulta corregida con los nombres reales de campos
-        const { data: instituciones, error: errorInstituciones } = await supabase
-            .from('instituciones')
-            .select('id_institucion, nombre_institucion')  // Campos corregidos
-            .order('nombre_institucion');
-
-        if (errorInstituciones) {
-            console.error('Error al obtener instituciones:', errorInstituciones);
-            mostrarErrorInstitucion();
-            return;
-        }
-
-        todasLasInstituciones = instituciones || [];
-        console.log('Todas las instituciones obtenidas:', todasLasInstituciones);
-
-        // 4. Contar participantes por institución - CORREGIDO
-        const conteoInstituciones = {};
-        let sinInstitucionCount = 0;
-
-        participantes.forEach(participante => {
-            // Usar id_institucion en lugar de id
-            const institucion = todasLasInstituciones.find(i => i.id_institucion === participante.id_institucion);
-            
-            if (institucion && institucion.nombre_institucion) {
-                const nombreInstitucion = institucion.nombre_institucion;
-                conteoInstituciones[nombreInstitucion] = (conteoInstituciones[nombreInstitucion] || 0) + 1;
-            } else {
-                // Si no encontramos la institución
-                sinInstitucionCount++;
+                    console.log('✅ Interfaz de instituciones actualizada');
+                } catch (error) {
+                    console.error('Error al actualizar interfaz instituciones:', error);
+                }
             }
-        });
 
-        console.log('Conteo completo por institución:', conteoInstituciones);
-        console.log('Sin institución:', sinInstitucionCount);
-
-        // 5. Separar instituciones principales vs otras instituciones
-        let univalleCount = 0;
-        let nacionalCount = 0;
-        let andesCount = 0;
-        let otrasInstitucionesCount = 0;
-
-        Object.keys(conteoInstituciones).forEach(nombreInstitucion => {
-            const cantidad = conteoInstituciones[nombreInstitucion];
-            const nombreLower = nombreInstitucion.toLowerCase();
-            
-            if (nombreLower.includes('universidad del valle') || nombreLower.includes('univalle')) {
-                univalleCount += cantidad;
-            } else if (nombreLower.includes('universidad nacional') || nombreLower.includes('nacional de colombia')) {
-                nacionalCount += cantidad;
-            } else if (nombreLower.includes('universidad de los andes') || nombreLower.includes('uniandes')) {
-                andesCount += cantidad;
-            } else {
-                otrasInstitucionesCount += cantidad;
+            // Función para mostrar sin datos en institución
+            function mostrarSinDatosInstitucion() {
+                try {
+                    document.getElementById('institucion-univalle').textContent = '0';
+                    document.getElementById('institucion-nacional').textContent = '0';
+                    document.getElementById('institucion-andes').textContent = '0';
+                    document.getElementById('institucion-otras').textContent = '0';
+                } catch (error) {
+                    console.error('Error en mostrarSinDatosInstitucion:', error);
+                }
             }
-        });
 
-        // Agregar los que no tienen institución a "Otras instituciones"
-        otrasInstitucionesCount += sinInstitucionCount;
+            // Función para mostrar error en la sección de institución
+            function mostrarErrorInstitucion() {
+                try {
+                    document.getElementById('institucion-univalle').textContent = 'Error';
+                    document.getElementById('institucion-nacional').textContent = 'Error';
+                    document.getElementById('institucion-andes').textContent = 'Error';
+                    document.getElementById('institucion-otras').textContent = 'Error';
+                } catch (error) {
+                    console.error('Error en mostrarErrorInstitucion:', error);
+                }
+            }
 
-        console.log('Conteo final instituciones:', {
-            'Universidad del Valle': univalleCount,
-            'Universidad Nacional': nacionalCount,
-            'Universidad de los Andes': andesCount,
-            'Otras': otrasInstitucionesCount
-        });
+            // Función para cargar datos de instituciones
+            async function cargarDatosInstitucion() {
+                try {
+                    console.log('=== CARGANDO DATOS DE INSTITUCIÓN ===');
+                    
+                    const { data: participantes, error: errorParticipantes } = await sb
+                        .from('participantes_reserva')
+                        .select('id_institucion')
+                        .not('id_institucion', 'is', null);
 
-        // 6. Actualizar la interfaz con los datos reales
-        actualizarInterfazInstituciones(univalleCount, nacionalCount, andesCount, otrasInstitucionesCount);
+                    if (errorParticipantes) {
+                        console.error('Error al obtener participantes:', errorParticipantes);
+                        mostrarErrorInstitucion();
+                        return;
+                    }
 
-    } catch (error) {
-        console.error('Error en cargarDatosInstitucion:', error);
-        mostrarErrorInstitucion();
-    }
-}
+                    console.log('Participantes con instituciones:', participantes);
+
+                    if (!participantes || participantes.length === 0) {
+                        mostrarSinDatosInstitucion();
+                        return;
+                    }
+
+                    const idsInstitucionesUnicos = [...new Set(participantes.map(p => p.id_institucion))];
+                    console.log('IDs de instituciones únicos:', idsInstitucionesUnicos);
+
+                    const { data: instituciones, error: errorInstituciones } = await sb
+                        .from('instituciones')
+                        .select('id_institucion, nombre_institucion')
+                        .order('nombre_institucion');
+
+                    if (errorInstituciones) {
+                        console.error('Error al obtener instituciones:', errorInstituciones);
+                        mostrarErrorInstitucion();
+                        return;
+                    }
+
+                    const todasLasInstituciones = instituciones || [];
+                    console.log('Todas las instituciones obtenidas:', todasLasInstituciones);
+
+                    const conteoInstituciones = {};
+                    let sinInstitucionCount = 0;
+
+                    participantes.forEach(participante => {
+                        const institucion = todasLasInstituciones.find(i => i.id_institucion === participante.id_institucion);
+                        
+                        if (institucion && institucion.nombre_institucion) {
+                            const nombreInstitucion = institucion.nombre_institucion;
+                            conteoInstituciones[nombreInstitucion] = (conteoInstituciones[nombreInstitucion] || 0) + 1;
+                        } else {
+                            sinInstitucionCount++;
+                        }
+                    });
+
+                    console.log('Conteo completo por institución:', conteoInstituciones);
+                    console.log('Sin institución:', sinInstitucionCount);
+
+                    let univalleCount = 0;
+                    let nacionalCount = 0;
+                    let andesCount = 0;
+                    let otrasInstitucionesCount = 0;
+
+                    Object.keys(conteoInstituciones).forEach(nombreInstitucion => {
+                        const cantidad = conteoInstituciones[nombreInstitucion];
+                        const nombreLower = nombreInstitucion.toLowerCase();
+                        
+                        if (nombreLower.includes('universidad del valle') || nombreLower.includes('univalle')) {
+                            univalleCount += cantidad;
+                        } else if (nombreLower.includes('universidad nacional') || nombreLower.includes('nacional de colombia')) {
+                            nacionalCount += cantidad;
+                        } else if (nombreLower.includes('universidad de los andes') || nombreLower.includes('uniandes')) {
+                            andesCount += cantidad;
+                        } else {
+                            otrasInstitucionesCount += cantidad;
+                        }
+                    });
+
+                    otrasInstitucionesCount += sinInstitucionCount;
+
+                    console.log('Conteo final instituciones:', {
+                        'Universidad del Valle': univalleCount,
+                        'Universidad Nacional': nacionalCount,
+                        'Universidad de los Andes': andesCount,
+                        'Otras': otrasInstitucionesCount
+                    });
+
+                    actualizarInterfazInstituciones(univalleCount, nacionalCount, andesCount, otrasInstitucionesCount);
+
+                } catch (error) {
+                    console.error('Error en cargarDatosInstitucion:', error);
+                    mostrarErrorInstitucion();
+                }
+            }
 
             // Funciones de manejo de errores y estados
             function mostrarSinDatosNacionalidad() {
@@ -1246,20 +1190,6 @@ async function cargarDatosInstitucion() {
                 document.getElementById('ciudad-otras').textContent = 'Error';
             }
 
-            function mostrarSinDatosInstitucion() {
-                document.getElementById('institucion-univalle').textContent = '0';
-                document.getElementById('institucion-nacional').textContent = '0';
-                document.getElementById('institucion-andes').textContent = '0';
-                document.getElementById('institucion-otras').textContent = '0';
-            }
-
-            function mostrarErrorInstitucion() {
-                document.getElementById('institucion-univalle').textContent = 'Error';
-                document.getElementById('institucion-nacional').textContent = 'Error';
-                document.getElementById('institucion-andes').textContent = 'Error';
-                document.getElementById('institucion-otras').textContent = 'Error';
-            }
-
             function mostrarErrorGenero() {
                 const statsContainer = document.getElementById('genero-stats-container');
                 statsContainer.innerHTML = '<div class="no-data">Error al cargar datos de género</div>';
@@ -1275,22 +1205,11 @@ async function cargarDatosInstitucion() {
                 try {
                     console.log('🚀 Iniciando carga de todos los datos...');
                     
-                    // Cargar datos de visitantes
                     await cargarDatosVisitantes();
-                    
-                    // Cargar datos de género
                     await cargarDatosGenero();
-                    
-                    // Cargar datos de edad
                     await cargarDatosEdad();
-                    
-                    // Cargar datos de nacionalidad
                     await cargarDatosNacionalidad();
-
-                    // Cargar datos de ciudad
                     await cargarDatosCiudad();
-
-                    // Cargar datos de institución
                     await cargarDatosInstitucion();
                     
                     console.log('✅ Todos los datos cargados exitosamente');
@@ -1307,8 +1226,6 @@ async function cargarDatosInstitucion() {
             // Cargar datos cuando la página esté lista
             document.addEventListener('DOMContentLoaded', function() {
                 console.log('📄 DOM cargado, iniciando carga de datos...');
-                
-                // Cargar todos los datos
                 cargarTodosLosDatos();
             });
 
@@ -1392,7 +1309,6 @@ async function cargarDatosInstitucion() {
                     cancelButtonText: 'Cancelar'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // Mostrar mensaje de "Saliendo..."
                         Swal.fire({
                             title: 'Saliendo...',
                             text: "Cerrando sesión",
@@ -1404,7 +1320,6 @@ async function cargarDatosInstitucion() {
                                 Swal.showLoading()
                             }
                         }).then(() => {
-                            // Redirigir a index.html después de mostrar el mensaje
                             window.location.href = 'index.html';
                         });
                     }

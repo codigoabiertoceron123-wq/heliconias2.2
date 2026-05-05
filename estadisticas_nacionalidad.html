@@ -791,9 +791,42 @@
     
     <!-- Inicializar Supabase -->
     <script>
+         (function() {
         const supabaseUrl = 'https://umncnddwzmjxgmvisvqz.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtbmNuZGR3em1qeGdtdmlzdnF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NDIyNzksImV4cCI6MjA3ODExODI3OX0.ODvus28cTCTD8gGewQ2sAZ8PcXbEe4CIy_zv6bip8J0';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // Función para inicializar Supabase
+        function inicializarSupabase() {
+            if (typeof supabase !== 'undefined' && supabase.createClient) {
+                window.supabase = supabase.createClient(supabaseUrl, supabaseKey);
+                window.supabaseClient = window.supabase;
+                console.log('✅ Supabase inicializado correctamente');
+                return true;
+            }
+            return false;
+        }
+        
+        // Intentar inicializar
+        if (!inicializarSupabase()) {
+            console.warn('⏳ Supabase no disponible, esperando...');
+            let intentos = 0;
+            const intervalo = setInterval(() => {
+                intentos++;
+                if (inicializarSupabase()) {
+                    clearInterval(intervalo);
+                    console.log(`✅ Supabase listo después de ${intentos} intentos`);
+                } else if (intentos > 30) {
+                    clearInterval(intervalo);
+                    console.error('❌ Error: No se pudo cargar Supabase');
+                    document.body.innerHTML += `
+                        <div style="position: fixed; bottom: 20px; right: 20px; background: #e74c3c; color: white; padding: 15px; border-radius: 8px; z-index: 9999;">
+                            Error de conexión con Supabase. Recarga la página.
+                        </div>
+                    `;
+                }
+            }, 200);
+        }
+    })();
     </script>
 
     <!-- SISTEMA DE NACIONALIDAD COMPLETO -->

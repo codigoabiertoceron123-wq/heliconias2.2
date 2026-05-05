@@ -447,59 +447,182 @@ function lightenColor(color, factor) {
     }
     return color;
 }
-
-// Función principal para cargar datos de géneros
+// data-functions.js - Versión con mejor validación
 async function cargarDatosGeneros() {
     try {
-        mostrarLoading('Cargando datos...');
-
         console.log('=== INICIANDO CARGA DE DATOS ===');
         
-        // PRIMERO: Verificar tabla genero
-        const generos = await verificarTablaGenero();
-        if (!generos || generos.length === 0) {
-            throw new Error('No se encontraron géneros en la base de datos');
+        // Intentar obtener el cliente de diferentes maneras
+        let supabaseClient = null;
+        
+        // Opción 1: window.supabaseClient
+        if (window.supabaseClient && typeof window.supabaseClient.from === 'function') {
+            supabaseClient = window.supabaseClient;
+            console.log('✅ Usando window.supabaseClient');
         }
-
-        console.log('✅ Géneros cargados:', generos);
-
-        // SEGUNDO: Cargar participantes CON DATOS REALES
-        await cargarDatosDesdeParticipantes(generos);
-
-        cerrarLoading();
-        console.log('✅ Todos los datos REALES cargados, mostrando interfaz...');
-        mostrarDatos();
+        // Opción 2: window.supabase
+        else if (window.supabase && typeof window.supabase.from === 'function') {
+            supabaseClient = window.supabase;
+            console.log('✅ Usando window.supabase');
+        }
+        // Opción 3: crear nuevo cliente
+        else {
+            console.warn('⚠️ Cliente Supabase no encontrado, creando uno nuevo...');
+            const SUPABASE_URL = 'https://umncnddwzmjxgmvisvqz.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtbmNuZGR3em1qeGdtdmlzdnF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NDIyNzksImV4cCI6MjA3ODExODI3OX0.ODvus28cTCTD8gGewQ2sAZ8PcXbEe4CIy_zv6bip8J0';
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            window.supabaseClient = supabaseClient;
+            window.supabase = supabaseClient;
+        }
         
-    } catch (error) {
-        console.error('Error cargando géneros:', error);
-        cerrarLoading();
+        // Verificación final
+        if (!supabaseClient || typeof supabaseClient.from !== 'function') {
+            throw new Error('Supabase no está inicializado correctamente. from no es una función.');
+        }
         
-        mostrarError('No se pudieron cargar los datos de la base de datos: ' + error.message);
+        console.log('✅ Cliente Supabase verificado, procediendo a cargar datos...');
         
-        // NO usar datos de ejemplo - mostrar error real
-        mostrarSinDatos();
-    }
-}
-
-// Función para verificar tabla genero
-async function verificarTablaGenero() {
-    try {
-        console.log('=== VERIFICANDO TABLA GENERO ===');
-        const { data: generos, error } = await supabase
+        // Obtener datos de género
+        const { data: generos, error: generosError } = await supabaseClient
             .from('genero')
             .select('*');
         
-        if (error) {
-            console.error('❌ Error en tabla genero:', error);
-            return null;
+        if (generosError) {
+            throw new Error('Error cargando géneros: ' + generosError.message);
         }
         
-        console.log('✅ Tabla genero - Datos:', generos);
-        console.log('✅ Total de géneros:', generos.length);
-        return generos;
+        console.log('✅ Géneros cargados:', generos);
+        
+        // Obtener participantes
+        const { data: participantes, error: participantesError } = await supabaseClient
+            .from('participantes_reserva')
+            .select('id_genero')
+            .not('id_genero', 'is', null);
+        
+        if (participantesError) {
+            throw new Error('Error cargando participantes: ' + participantesError.message);
+        }
+        
+        console.log('✅ Participantes cargados:', participantes.length);
+        
+        // Procesar datos
+        const conteoGeneros = {};
+        participantes.forEach(p => {
+            if (p.id_genero) {
+                conteoGeneros[p.id_genero] = (conteoGeneros[p.id_genero] || 0) + 1;
+            }
+        });
+        
+        console.log('📊 Conteo por género:', conteoGeneros);
+        
+        // Crear mapeo de nombres
+        const nombresGenero = {};
+        if (generos && generos.length > 0) {
+            generos.forEach(g => {
+                nombresGenero[g.id_genero] = g.nombre_genero || `Género ${g.id_genero}`;
+            });
+        } else {
+            // Mapeo por defecto si no hay datos en tabla genero
+            nombresGenero[1] = 'Masculino';
+            nombresGenero[2] = 'Femenino';
+            nombresGenero[3] = 'No binario';
+            nombresGenero[4] = 'Prefiero no decir';
+            nombresGenero[5] = 'Otro';
+        }
+        
+        // Mostrar resultados
+        mostrarResultadosGenero(conteoGeneros, nombresGenero);
+        
     } catch (error) {
-        console.error('💥 Error verificando tabla genero:', error);
-        return null;
+        console.error('❌ Error cargando géneros:', error);
+        mostrarError('Error al cargar datos: ' + error.message);
+    }
+}
+
+// Función para mostrar resultados (sin cambios, pero añadimos verificación)
+function mostrarResultadosGenero(conteoGeneros, nombresGenero) {
+    const total = Object.values(conteoGeneros).reduce((a, b) => a + b, 0);
+    const dataContainer = document.getElementById('data-container');
+    
+    if (!dataContainer) {
+        console.error('❌ data-container no encontrado');
+        return;
+    }
+    
+    console.log('📊 Mostrando resultados, total:', total);
+    
+    // Actualizar tarjetas
+    const totalVisitantesSpan = document.getElementById('total-visitantes');
+    const distribucionGenero = document.getElementById('distribucion-genero');
+    const totalGeneros = document.getElementById('total-generos');
+    
+    if (totalVisitantesSpan) totalVisitantesSpan.textContent = total;
+    if (totalGeneros) totalGeneros.textContent = Object.keys(conteoGeneros).length;
+    
+    // Crear gráfico
+    const labels = [];
+    const values = [];
+    
+    Object.keys(conteoGeneros).forEach(id => {
+        labels.push(nombresGenero[id] || `Género ${id}`);
+        values.push(conteoGeneros[id]);
+    });
+    
+    // Mostrar distribución porcentual
+    if (distribucionGenero && values.length > 0) {
+        const maxValue = Math.max(...values);
+        const maxIndex = values.indexOf(maxValue);
+        const porcentaje = ((maxValue / total) * 100).toFixed(1);
+        distribucionGenero.textContent = `${porcentaje}% (${labels[maxIndex]})`;
+    }
+    
+    // Crear gráfico de torta
+    const ctx = document.createElement('canvas');
+    dataContainer.innerHTML = '';
+    ctx.id = 'genderChart';
+    ctx.style.maxWidth = '400px';
+    ctx.style.margin = '20px auto';
+    dataContainer.appendChild(ctx);
+    
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const porcentaje = ((value / total) * 100).toFixed(1);
+                            return `${label}: ${value} (${porcentaje}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    console.log('✅ Gráfico creado correctamente');
+}
+
+// Función para mostrar errores
+function mostrarError(mensaje) {
+    console.error('❌', mensaje);
+    const dataContainer = document.getElementById('data-container');
+    if (dataContainer) {
+        dataContainer.innerHTML = `<div style="color: red; padding: 20px; text-align: center;">
+            <i class="fas fa-exclamation-triangle"></i><br>
+            ${mensaje}
+        </div>`;
     }
 }
 

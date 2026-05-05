@@ -743,12 +743,56 @@
     <!-- Incluir Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        // Inicializar Supabase
+    <!-- Inicialización CORRECTA de Supabase -->
+<script>
+    (function() {
         const supabaseUrl = 'https://umncnddwzmjxgmvisvqz.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtbmNuZGR3em1qeGdtdmlzdnF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NDIyNzksImV4cCI6MjA3ODExODI3OX0.ODvus28cTCTD8gGewQ2sAZ8PcXbEe4CIy_zv6bip8J0';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-
+        
+        function initSupabase() {
+            if (typeof supabase !== 'undefined' && supabase.createClient) {
+                window.supabase = supabase.createClient(supabaseUrl, supabaseKey);
+                window.supabaseClient = window.supabase;
+                console.log('✅ Supabase inicializado correctamente');
+                return true;
+            }
+            return false;
+        }
+        
+        // Intentar inicializar inmediatamente
+        if (!initSupabase()) {
+            console.log('⏳ Esperando carga de Supabase...');
+            let attempts = 0;
+            const interval = setInterval(() => {
+                attempts++;
+                if (initSupabase()) {
+                    clearInterval(interval);
+                    console.log(`✅ Supabase inicializado después de ${attempts} intentos`);
+                } else if (attempts > 30) {
+                    clearInterval(interval);
+                    console.error('❌ Error: No se pudo inicializar Supabase');
+                    
+                    // Mostrar error en la interfaz
+                    const container = document.getElementById('data-container');
+                    if (container) {
+                        container.innerHTML = `
+                            <div class="no-data" style="color: #e74c3c;">
+                                <i class="fas fa-exclamation-triangle fa-3x"></i>
+                                <h3>Error de conexión con la base de datos</h3>
+                                <p>No se pudo conectar con Supabase. Por favor, verifica tu conexión a internet y recarga la página.</p>
+                                <button onclick="location.reload()" class="btn btn-primary" style="margin-top: 15px;">
+                                    <i class="fas fa-sync-alt"></i> Recargar página
+                                </button>
+                            </div>
+                        `;
+                    }
+                }
+            }, 200);
+        }
+    })();
+</script>
+    <script>
+       
         // Función para actualizar fecha y hora
             function updateDateTime() {
                 const now = new Date();

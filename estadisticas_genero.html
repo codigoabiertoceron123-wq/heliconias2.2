@@ -150,13 +150,14 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- Scripts propios -->
-    <script src="js/supabase-client.js"></script>
-    <script src="js/data-functions.js"></script>
-    <script src="js/chart-functions.js"></script>
-    <script src="js/ui-functions.js"></script>
-    <script src="js/swal-functions.js"></script>
-    <script src="js/main.js"></script>
+    
+<!-- Scripts propios - EN EL ORDEN CORRECTO -->
+<script src="js/supabase-client.js"></script>    <!-- 1. Primero: inicializa Supabase -->
+<script src="js/data-functions.js"></script>     <!-- 2. Segundo: define cargarDatosGeneros y otras funciones -->
+<script src="js/chart-functions.js"></script>    <!-- 3. Tercero: funciones de gráficos -->
+<script src="js/ui-functions.js"></script>      <!-- 4. Cuarto: funciones de UI -->
+<script src="js/swal-functions.js"></script>    <!-- 5. Quinto: funciones de SweetAlert -->
+<script src="js/main.js"></script>              <!-- 6. Último: main.js que llama a las funciones -->
 
     
     <script>
