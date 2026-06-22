@@ -42,4 +42,4 @@ Centralizar la información del parque, reducir el uso de papel y Excel, y mejor
 
 ## 👩‍💻 Autor
 
-Proyecto desarrollado por **Ángela Romero Meléndez, Jhonnatan Ceron Amariles**
+Proyecto desarrollado por **Ángela Romero Meléndez, Jhonnatan Ceron Amariles, Nicolas Gutierrez**
