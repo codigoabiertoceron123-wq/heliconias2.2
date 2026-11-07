@@ -1783,6 +1783,7 @@ select.tool-btn {
 
     .hamburger-btn {
         display: flex !important;
+        margin-left: auto !important;
     }
 
     main {
@@ -2075,6 +2076,7 @@ select.tool-btn {
     .hamburger-btn {
         align-self: flex-end;
         margin-top: -5px;
+        margin-left: auto !important;
     }
 
     .top-bar {
@@ -2259,27 +2261,7 @@ select.tool-btn {
     }
 }
 
-/* ===== Login/Registro: hamburguesa a la izquierda ===== */
-.login-page .hamburger-btn {
-    margin-left: 0 !important;
-    margin-right: auto !important;
-    order: 1 !important;
-}
-
-.login-page .logo {
-    order: 2 !important;
-}
-
-.login-page .main-nav {
-    order: 3 !important;
-}
-
-.login-page .top-section {
-    justify-content: space-between !important;
-    flex-direction: row !important;
-}
-/* =========================================== */
-/* EDITOR: BOTONES SOLO ICONO (sin texto)      */
+/* ===== SWEETALERT EDITOR: BOTONES SOLO ICONO (sin texto)      */
 /* =========================================== */
 
 /* Bot�n cerrar editor - SOLO la X, sin texto */
