@@ -558,14 +558,13 @@
 .high-contrast .calendar-container,
 .high-contrast .calendar-header,
 .high-contrast .calendar-grid,
-.high-contrast .calendar-header h3,
-.high-contrast .calendar-controls,
-.high-contrast .calendar-controls label,
-.high-contrast .calendar-controls select {
+.high-contrast .calendar-header h3 {
     color: #ffffff !important;
 }
 
+/* Selector de mes en verde (cuando se elige el mes) */
 .high-contrast .calendar-controls select {
+    color: #195b35 !important;
     background: #ffffff !important;
     border: 2px solid #2e7d32 !important;
 }
