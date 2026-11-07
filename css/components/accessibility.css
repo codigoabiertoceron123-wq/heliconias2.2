@@ -26,11 +26,7 @@
     color: var(--hc-text) !important;
 }
 
-/* FORZAR TODO EL TEXTO A SER VISIBLE EN ALTO CONTRASTE (no blanco sobre blanco) */
-.high-contrast * {
-    color: var(--hc-text) !important;
-}
-
+/* Texto normal en alto contraste: verde oscuro para legibilidad */
 .high-contrast p,
 .high-contrast span,
 .high-contrast div,
@@ -43,22 +39,38 @@
 .high-contrast li,
 .high-contrast label,
 .high-contrast td,
-.high-contrast th,
-.high-contrast a,
-.high-contrast .nav-item,
-.high-contrast .mobile-nav-item,
-.high-contrast .btn,
-.high-contrast button {
+.high-contrast th {
     color: var(--hc-text) !important;
 }
 
-/* Enlaces y botones en alto contraste: verde del proyecto para que se vean */
+/* Enlaces y botones mantienen su estilo original (texto blanco en botones verdes) */
 .high-contrast a,
 .high-contrast .nav-item,
-.high-contrast .mobile-nav-item,
+.high-contrast .mobile-nav-item {
+    color: var(--hc-link) !important;
+    font-weight: 600;
+}
+
 .high-contrast .btn,
 .high-contrast button {
-    color: var(--hc-link) !important;
+    color: var(--hc-button-text) !important; /* blanco */
+}
+
+/* Iconos de botones mantienen blanco en alto contraste */
+.high-contrast .btn i,
+.high-contrast button i {
+    color: #ffffff !important;
+}
+
+/* Formulario de configuración: nombre y rol deben ser legibles (verde oscuro) */
+.high-contrast #profile-name,
+.high-contrast #profile-role,
+.high-contrast .info-label,
+.high-contrast .info-value,
+.high-contrast .stat-label,
+.high-contrast .stat-number,
+.high-contrast .stat-description {
+    color: var(--hc-text) !important;
 }
 
 .high-contrast .nav-item:hover,
