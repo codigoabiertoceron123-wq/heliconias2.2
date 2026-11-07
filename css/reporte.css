@@ -274,13 +274,100 @@ main {
 
 .editor-header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
     margin-bottom: 15px;
     padding-bottom: 12px;
     border-bottom: 2px solid #e8f5e8;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
 }
 
+.editor-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.editor-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* Botón cerrar editor - SOLO la X */
+.btn-close-editor {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.btn-close-editor:hover {
+    background: #c0392b;
+    transform: scale(1.05);
+}
+
+/* Botones de solo icono (guardar, etc.) */
+.btn-icon-only {
+    background: #2e7d32;
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.btn-icon-only:hover {
+    background: #1e6b26;
+    transform: scale(1.05);
+}
+
+.btn-icon-only.secondary {
+    background: #3498db;
+}
+
+.btn-icon-only.secondary:hover {
+    background: #2980b9;
+}
+
+.btn-icon-only.danger {
+    background: #e74c3c;
+}
+
+.btn-icon-only.danger:hover {
+    background: #c0392b;
+}
+
+/* Editor tools sin desbordamiento */
 .editor-tools {
     display: flex;
     gap: 8px;
@@ -289,6 +376,52 @@ main {
     padding: 12px;
     background: #f8f9fa;
     border-radius: 8px;
+    width: 100%;
+    overflow-x: auto;
+}
+
+.editor-tools .tool-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Editor page sin desbordamiento */
+.page {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.page-content {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    max-width: 100%;
+}
+
+.element-container {
+    max-width: 95% !important;
+    overflow: hidden;
+}
+
+/* Forzar botón cerrar a mostrar solo la X */
+.btn-close-editor span,
+.btn-close-editor .btn-text {
+    display: none !important;
+}
+
+/* Cualquier botón dentro del editor que sea solo icono */
+.editor-container .btn-icon-only i,
+.editor-container .btn-close-editor i {
+    font-size: 1.1rem;
+}
+
+/* Títulos de página del editor sin desbordamiento */
+.page-title,
+.page .page-title {
+    font-size: 1.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .tool-group {
