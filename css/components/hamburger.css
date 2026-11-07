@@ -70,24 +70,16 @@
     z-index: 5;
 }
 
-.mobile-sidebar-header .logo h1 {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #195b35;
-    margin: 0;
+.mobile-sidebar-header .sidebar-logo {
     display: flex;
+    justify-content: center;
     align-items: center;
-    gap: 8px;
 }
 
-.mobile-sidebar-header .logo h1 img {
-    width: 32px;
-    height: 32px;
-    object-fit: contain;
-}
-
-.mobile-sidebar-header .logo h1 i {
-    color: #2e7d32;
+.mobile-sidebar-header .sidebar-logo img {
+    width: 42px !important;
+    height: 42px !important;
+    object-fit: contain !important;
 }
 
 .mobile-sidebar-close {
