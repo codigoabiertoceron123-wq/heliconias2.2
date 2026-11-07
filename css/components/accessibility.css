@@ -26,21 +26,39 @@
     color: var(--hc-text) !important;
 }
 
-.high-contrast .header,
-.high-contrast .top-bar,
-.high-contrast .main-nav,
-.high-contrast .mobile-sidebar,
-.high-contrast .mobile-sidebar-header {
-    background: var(--hc-surface) !important;
+/* FORZAR TODO EL TEXTO A SER VISIBLE EN ALTO CONTRASTE (no blanco sobre blanco) */
+.high-contrast * {
     color: var(--hc-text) !important;
-    border-color: var(--hc-border) !important;
 }
 
+.high-contrast p,
+.high-contrast span,
+.high-contrast div,
+.high-contrast h1,
+.high-contrast h2,
+.high-contrast h3,
+.high-contrast h4,
+.high-contrast h5,
+.high-contrast h6,
+.high-contrast li,
+.high-contrast label,
+.high-contrast td,
+.high-contrast th,
 .high-contrast a,
 .high-contrast .nav-item,
-.high-contrast .mobile-nav-item {
+.high-contrast .mobile-nav-item,
+.high-contrast .btn,
+.high-contrast button {
+    color: var(--hc-text) !important;
+}
+
+/* Enlaces y botones en alto contraste: verde del proyecto para que se vean */
+.high-contrast a,
+.high-contrast .nav-item,
+.high-contrast .mobile-nav-item,
+.high-contrast .btn,
+.high-contrast button {
     color: var(--hc-link) !important;
-    font-weight: 600;
 }
 
 .high-contrast .nav-item:hover,
@@ -58,6 +76,26 @@
 .high-contrast .btn:hover,
 .high-contrast button:hover {
     background: var(--hc-focus) !important;
+}
+
+.high-contrast .header,
+.high-contrast .top-bar,
+.high-contrast .main-nav,
+.high-contrast .mobile-sidebar,
+.high-contrast .mobile-sidebar-header {
+    background: var(--hc-surface) !important;
+    color: var(--hc-text) !important;
+    border-color: var(--hc-border) !important;
+}
+
+.high-contrast .card,
+.high-contrast .profile-card,
+.high-contrast .content-section,
+.high-contrast .stat-card,
+.high-contrast .mobile-actions {
+    background: var(--hc-surface) !important;
+    color: var(--hc-text) !important;
+    border: 2px solid var(--hc-border) !important;
 }
 
 .high-contrast .card,
