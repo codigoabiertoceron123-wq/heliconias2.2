@@ -2639,11 +2639,12 @@ select.tool-btn {
     background: #2980b9 !important;
 }
 
-/* Iconos dentro de los botones del SweetAlert - MÁS ESPACIO */
+/* Iconos dentro de los botones del SweetAlert - MÁS ESPACIO A LA IZQUIERDA */
 .swal2-popup .swal2-actions .swal2-confirm i,
 #editor-panel .swal2-actions .swal2-confirm i {
     color: white !important;
     font-size: 1.2rem !important;
+    margin-left: 8px !important;
     margin-right: 10px !important;
 }
 
@@ -2651,6 +2652,7 @@ select.tool-btn {
 #editor-panel .swal2-actions .swal2-deny i {
     color: white !important;
     font-size: 1.2rem !important;
+    margin-left: 8px !important;
     margin-right: 10px !important;
 }
 
@@ -2658,6 +2660,7 @@ select.tool-btn {
 #editor-panel .swal2-actions .swal2-cancel i {
     color: white !important;
     font-size: 1.2rem !important;
+    margin-left: 8px !important;
     margin-right: 10px !important;
 }
 
