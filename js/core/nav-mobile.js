@@ -43,6 +43,13 @@
             link.addEventListener('click', closeMenu);
         });
 
+        // Cerrar al hacer clic en los botones de acción (Soporte, Ayuda, Salir)
+        // dentro del sidebar, para que el menú se cierre y el botón siga funcionando
+        const actionBtns = sidebar.querySelectorAll('.mobile-actions .btn');
+        actionBtns.forEach(function (btn) {
+            btn.addEventListener('click', closeMenu);
+        });
+
         // Cerrar con tecla Escape
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' && sidebar.classList.contains('open')) {
