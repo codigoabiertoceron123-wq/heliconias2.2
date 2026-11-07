@@ -49,6 +49,8 @@
     transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     display: flex;
     flex-direction: column;
+    /* Scroll general de TODO el menú (menos el header fijo) */
+    overflow-y: auto;
 }
 
 .mobile-sidebar.open {
@@ -62,6 +64,10 @@
     padding: 20px 24px;
     border-bottom: 1px solid rgba(46, 125, 50, 0.1);
     background: #f8fff8;
+    /* Se queda fijo arriba al hacer scroll del menú */
+    position: sticky;
+    top: 0;
+    z-index: 5;
 }
 
 .mobile-sidebar-header .logo h1 {
@@ -97,8 +103,7 @@
     list-style: none;
     margin: 0;
     padding: 0;
-    flex: 1;
-    overflow-y: auto;
+    /* Sin flex:1 ni scroll propio; el scroll es del menú completo */
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -108,11 +113,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
-    padding: 14px 20px;
+    gap: 8px;
+    padding: 16px 24px;
     color: #2e7d32;
     text-decoration: none;
-    font-size: 0.95rem;
+    font-size: 1rem;
     border-bottom: 1px solid rgba(46, 125, 50, 0.06);
     transition: all 0.2s ease;
     text-align: center;
@@ -121,15 +126,15 @@
 
 .mobile-nav-item:hover,
 .mobile-nav-item.active {
-    background: rgba(46, 125, 50, 0.08);
+    background: rgba(46, 125, 50, 0.1);
     color: #195b35;
     border-left: 4px solid #2e7d32;
 }
 
 .mobile-nav-item i {
-    width: 28px;
-    height: 28px;
-    font-size: 1.4rem;
+    width: 32px;
+    height: 32px;
+    font-size: 1.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -137,7 +142,7 @@
 }
 
 .nav-badge {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     color: #6c757d;
     margin-top: 2px;
     white-space: nowrap;
@@ -146,32 +151,34 @@
 
 /* Últimos tres botones (Soporte, Ayuda, Salir) - opciones destacadas centradas */
 .mobile-actions {
-    padding: 20px 24px;
+    padding: 24px 28px;
     border-top: 1px solid rgba(46, 125, 50, 0.1);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 14px;
     background: #f8fff8;
+    /* Centrar los botones dentro del menú */
+    align-items: center;
 }
 
 .mobile-actions .btn {
     width: auto;
-    min-width: 140px;
-    max-width: 200px;
+    min-width: 170px;
+    max-width: 230px;
     justify-content: center;
-    padding: 12px 18px;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 0.95rem;
+    padding: 14px 22px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 10px;
     text-align: center;
     text-decoration: none;
-    transition: all 0.25s ease;
+    transition: all 0.3s ease;
     margin: 0 auto;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
 }
 
 .mobile-actions .btn-primary {
