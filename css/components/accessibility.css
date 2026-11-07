@@ -75,10 +75,33 @@
     color: #ffffff;
 }
 
-/* El icono del menú hamburguesa mantiene su color verde original
-   incluso en modo alto contraste */
-.high-contrast .hamburger-btn span {
+/* El botón hamburguesa y sus iconos NO sufren ningún cambio en alto contraste */
+.high-contrast .hamburger-btn,
+.high-contrast .hamburger-btn span,
+.high-contrast .hamburger-btn.active span {
     background: #2e7d32 !important;
+    color: #2e7d32 !important;
+    border: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+}
+
+/* Los iconos de FontAwesome mantienen su apariencia normal en alto contraste */
+.high-contrast .fas,
+.high-contrast .far,
+.high-contrast .fal,
+.high-contrast .fab {
+    color: inherit !important;
+    -webkit-text-fill-color: inherit !important;
+    text-shadow: none !important;
+    filter: none !important;
+}
+
+/* Iconos del menú móvil mantienen el verde del proyecto */
+.high-contrast .mobile-nav-item i,
+.high-contrast .mobile-actions .btn i,
+.high-contrast .mobile-sidebar-header i {
+    color: #2e7d32 !important;
 }
 
 /* ===== Texto Grande ===== */
@@ -106,6 +129,15 @@
     padding: 10px !important;
 }
 
+/* Excluir iconos de FontAwesome del texto grande para que no se rompan */
+.large-text i.fas,
+.large-text i.far,
+.large-text i.fal,
+.large-text i.fab,
+.large-text [class*=" fa-"] {
+    font-size: inherit !important;
+}
+
 /* ===== Tipo de Letra (se aplica a TODA la página) ===== */
 .font-sans {
     --hc-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -131,6 +163,25 @@
 .font-serif *,
 .font-mono * {
     font-family: var(--hc-font-family) !important;
+}
+
+/* Excluir iconos de FontAwesome para que no se vean como cuadros */
+.font-sans i.fas,
+.font-serif i.fas,
+.font-mono i.fas,
+.font-sans i.far,
+.font-serif i.far,
+.font-mono i.far,
+.font-sans i.fal,
+.font-serif i.fal,
+.font-mono i.fal,
+.font-sans i.fab,
+.font-serif i.fab,
+.font-mono i.fab,
+.font-sans [class*=" fa-"],
+.font-serif [class*=" fa-"],
+.font-mono [class*=" fa-"] {
+    font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", FontAwesome !important;
 }
 
 /* Asegurar que inputs, selects, textareas y botones también tomen la fuente */
