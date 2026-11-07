@@ -2569,3 +2569,83 @@ select.tool-btn {
     color: white !important;
 }
 
+/* =========================================== */
+/* HAMBURGUESA SIEMPRE A LA DERECHA            */
+/* =========================================== */
+
+/* Forzar hamburguesa a la derecha en TODAS las páginas */
+.hamburger-btn {
+    margin-left: auto !important;
+    align-self: flex-end !important;
+}
+
+.top-section {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+/* Asegurar que en login, registro y contraseña también esté a la derecha */
+.login-page .hamburger-btn,
+.contrasena-page .hamburger-btn,
+.registrarce-page .hamburger-btn {
+    margin-left: auto !important;
+    margin-right: 0 !important;
+    order: 3 !important;
+}
+
+.login-page .logo,
+.contrasena-page .logo,
+.registrarce-page .logo {
+    order: 1 !important;
+    margin-right: auto !important;
+}
+
+.login-page .top-section,
+.contrasena-page .top-section,
+.registrarce-page .top-section {
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-direction: row !important;
+}
+
+/* En móvil, asegurar que el hamburguesa esté a la derecha */
+@media (max-width: 900px) {
+    .hamburger-btn {
+        margin-left: auto !important;
+    }
+    
+    .login-page .hamburger-btn,
+    .contrasena-page .hamburger-btn,
+    .registrarce-page .hamburger-btn {
+        margin-left: auto !important;
+        margin-right: 0 !important;
+    }
+    
+    .login-page .top-section,
+    .contrasena-page .top-section,
+    .registrarce-page .top-section {
+        justify-content: space-between !important;
+        flex-direction: row !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .hamburger-btn {
+        margin-left: auto !important;
+    }
+    
+    .login-page .hamburger-btn,
+    .contrasena-page .hamburger-btn,
+    .registrarce-page .hamburger-btn {
+        margin-left: auto !important;
+        margin-right: 0 !important;
+    }
+    
+    .login-page .top-section,
+    .contrasena-page .top-section,
+    .registrarce-page .top-section {
+        justify-content: space-between !important;
+        flex-direction: row !important;
+    }
+}
