@@ -161,11 +161,11 @@ body.menu-open {
 /* ===== Ajustes responsive del header ===== */
 @media (max-width: 900px) {
     .hamburger-btn {
-        display: flex;
+        display: flex !important;
     }
 
     .main-nav {
-        display: none;
+        display: none !important;
     }
 
     .top-section {
@@ -197,7 +197,7 @@ body.menu-open {
     .user-actions {
         /* En móvil los botones de acción viven en el sidebar del menú hamburguesa,
            así que no duplicamos aquí ni desbordamos el encabezado. */
-        display: none;
+        display: none !important;
     }
 
     .main-content {
