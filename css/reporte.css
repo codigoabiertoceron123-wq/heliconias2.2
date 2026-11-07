@@ -2097,7 +2097,7 @@ select.tool-btn {
 /* EDITOR: BOTONES SOLO ICONO (sin texto)      */
 /* =========================================== */
 
-/* Botón cerrar editor - SOLO la X, sin texto */
+/* Botï¿½n cerrar editor - SOLO la X, sin texto */
 .btn-close-editor {
     display: inline-flex !important;
     align-items: center !important;
@@ -2183,7 +2183,7 @@ select.tool-btn {
     max-width: none !important;
 }
 
-/* Títulos del editor sin desbordar */
+/* Tï¿½tulos del editor sin desbordar */
 #editor-panel h2,
 #editor-panel h3,
 #editor-panel .editor-title {
@@ -2232,10 +2232,10 @@ select.tool-btn {
 }
 
 /* =========================================== */
-/* EDITOR: BOTONES TODOS MISMO TAMAÑO          */
+/* EDITOR: BOTONES TODOS MISMO TAMAï¿½O          */
 /* =========================================== */
 
-/* Todos los botones del mismo tamaño en el editor */
+/* Todos los botones del mismo tamaï¿½o en el editor */
 #editor-panel .btn,
 #editor-panel .btn-primary-large,
 #editor-panel .btn-icon-only,
@@ -2273,7 +2273,7 @@ select.tool-btn {
     display: none !important;
 }
 
-/* Botones inferiores (tipo de letra, etc.) más pequeños y solo icono */
+/* Botones inferiores (tipo de letra, etc.) mï¿½s pequeï¿½os y solo icono */
 #editor-panel .tool-btn,
 #editor-panel .editor-tools button,
 #editor-panel .orientation-btn,
@@ -2316,7 +2316,7 @@ select.tool-btn {
     display: none !important;
 }
 
-/* El botón guardar puede ser un poco más grande pero solo icono */
+/* El botï¿½n guardar puede ser un poco mï¿½s grande pero solo icono */
 #editor-panel .btn-primary-large,
 #editor-panel button[id*="save"],
 #editor-panel button[class*="save"] {
@@ -2338,7 +2338,7 @@ select.tool-btn {
     background: #1e6b26 !important;
 }
 
-/* Botón cerrar editor también mismo tamaño uniforme */
+/* Botï¿½n cerrar editor tambiï¿½n mismo tamaï¿½o uniforme */
 #editor-panel .btn-close-editor {
     width: 40px !important;
     height: 40px !important;
@@ -2390,7 +2390,53 @@ select.tool-btn {
     max-width: 100% !important;
 }
 
-.element-container {
-    max-width: 95% !important;
-    overflow: hidden !important;
+/* Forzar fuente FontAwesome en todos los iconos del editor */
+#editor-panel i,
+#editor-panel [class*="fa-"],
+#editor-panel [class^="fa-"],
+#editor-panel .btn i,
+#editor-panel .btn-icon-only i,
+#editor-panel .tool-btn i,
+#editor-panel .orientation-btn i,
+#editor-panel .zoom-btn i,
+#editor-panel .btn-close-editor i,
+#editor-panel .btn-primary-large i,
+#editor-panel button i {
+    font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", FontAwesome, "fontawesome" !important;
+    font-weight: 900 !important;
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    font-style: normal !important;
+    text-rendering: auto !important;
+    line-height: 1 !important;
+}
+
+/* Asegurar que los iconos del editor se vean con el color correcto */
+#editor-panel .btn-close-editor i {
+    color: white !important;
+    font-size: 1.2rem !important;
+}
+
+#editor-panel .btn-primary-large i,
+#editor-panel button[id*="save"] i,
+#editor-panel button[class*="save"] i {
+    color: white !important;
+    font-size: 1.1rem !important;
+}
+
+#editor-panel .btn-icon-only i,
+#editor-panel .tool-btn i,
+#editor-panel .orientation-btn i,
+#editor-panel .zoom-btn i {
+    color: #2c3e50 !important;
+    font-size: 1rem !important;
+}
+
+#editor-panel .btn-icon-only.secondary i {
+    color: white !important;
+}
+
+#editor-panel .btn-icon-only.danger i {
+    color: white !important;
 }
