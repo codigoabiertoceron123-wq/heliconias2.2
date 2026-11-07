@@ -2210,3 +2210,23 @@ select.tool-btn {
     word-wrap: break-word !important;
     max-width: 100% !important;
 }
+
+/* Forzar texto directo a ocultarse en botones de solo icono */
+.btn-close-editor,
+.editor-container .btn-primary-large,
+.editor-container .btn-icon-only,
+.editor-container button[class*="save"],
+.editor-container button[class*="Guardar"],
+.editor-container button[id*="save"] {
+    font-size: 0 !important;
+}
+
+.btn-close-editor i,
+.editor-container .btn-primary-large i,
+.editor-container .btn-icon-only i,
+.editor-container button[class*="save"] i,
+.editor-container button[class*="Guardar"] i,
+.editor-container button[id*="save"] i {
+    font-size: 1.2rem !important;
+    visibility: visible !important;
+}
