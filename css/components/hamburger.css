@@ -97,8 +97,9 @@
     list-style: none;
     margin: 0;
     padding: 0;
-    /* Sin scroll general: el menú cabe completo en pantalla */
-    overflow-y: visible;
+    flex: 1;
+    /* Scroll general para ver todo el contenido del menú */
+    overflow-y: auto;
 }
 
 .mobile-nav-item {
