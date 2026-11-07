@@ -2568,10 +2568,14 @@ select.tool-btn {
 }
 
 /* =========================================== */
-/* SWEETALERT EDITOR: 3 BOTONES MISMO TAMA—O   */
+/* SWEETALERT EDITOR: 3 BOTONES MISMO TAMAÔøΩO   */
 /* =========================================== */
 
-/* Todos los botones del SweetAlert del mismo tamaÒo */
+/* =========================================== */
+/* SWEETALERT EDITOR: 3 BOTONES MISMO TAMA√ëO   */
+/* =========================================== */
+
+/* Todos los botones del SweetAlert del mismo tamaÔøΩo - M√ÅS GRANDES */
 .swal2-popup .swal2-actions .swal2-confirm,
 .swal2-popup .swal2-actions .swal2-deny,
 .swal2-popup .swal2-actions .swal2-cancel,
@@ -2581,24 +2585,24 @@ select.tool-btn {
 #editor-panel .swal2-actions .swal2-confirm,
 #editor-panel .swal2-actions .swal2-deny,
 #editor-panel .swal2-actions .swal2-cancel {
-    width: 110px !important;
-    height: 44px !important;
-    min-width: 110px !important;
-    max-width: 110px !important;
-    min-height: 44px !important;
-    max-height: 44px !important;
+    width: 150px !important;
+    height: 52px !important;
+    min-width: 150px !important;
+    max-width: 150px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
     padding: 0 !important;
-    border-radius: 8px !important;
-    font-size: 0.9rem !important;
+    border-radius: 10px !important;
+    font-size: 1rem !important;
     font-weight: 600 !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     flex-shrink: 0 !important;
-    gap: 6px !important;
+    gap: 10px !important;
 }
 
-/* Colores diferentes para cada botÛn */
+/* Colores diferentes para cada botÔøΩn */
 .swal2-popup .swal2-actions .swal2-confirm,
 #editor-panel .swal2-actions .swal2-confirm {
     background: #27ae60 !important; /* Verde - Guardar y salir */
@@ -2635,26 +2639,26 @@ select.tool-btn {
     background: #2980b9 !important;
 }
 
-/* Iconos dentro de los botones del SweetAlert */
+/* Iconos dentro de los botones del SweetAlert - M√ÅS ESPACIO */
 .swal2-popup .swal2-actions .swal2-confirm i,
 #editor-panel .swal2-actions .swal2-confirm i {
     color: white !important;
-    font-size: 1rem !important;
-    margin-right: 4px !important;
+    font-size: 1.2rem !important;
+    margin-right: 10px !important;
 }
 
 .swal2-popup .swal2-actions .swal2-deny i,
 #editor-panel .swal2-actions .swal2-deny i {
     color: white !important;
-    font-size: 1rem !important;
-    margin-right: 4px !important;
+    font-size: 1.2rem !important;
+    margin-right: 10px !important;
 }
 
 .swal2-popup .swal2-actions .swal2-cancel i,
 #editor-panel .swal2-actions .swal2-cancel i {
     color: white !important;
-    font-size: 1rem !important;
-    margin-right: 4px !important;
+    font-size: 1.2rem !important;
+    margin-right: 10px !important;
 }
 
 /* Ajustar el contenedor de acciones para que quepan los 3 botones */
@@ -2662,15 +2666,15 @@ select.tool-btn {
 #editor-panel .swal2-actions {
     display: flex !important;
     justify-content: center !important;
-    gap: 10px !important;
-    padding: 15px 20px !important;
-    margin-top: 10px !important;
+    gap: 15px !important;
+    padding: 20px 25px !important;
+    margin-top: 15px !important;
 }
 
 /* Ajustar el popup para que quepan los 3 botones */
 .swal2-popup,
 #editor-panel .swal2-popup {
     width: auto !important;
-    max-width: 450px !important;
-    padding: 25px !important;
+    max-width: 520px !important;
+    padding: 30px !important;
 }
