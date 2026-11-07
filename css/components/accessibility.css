@@ -75,7 +75,9 @@
     color: #ffffff;
 }
 
-/* El botón hamburguesa SIEMPRE verde oscuro, en modo normal y alto contraste */
+/* ===== PROTECCIONES: elementos que NUNCA cambian de color ===== */
+
+/* Botón hamburguesa SIEMPRE verde oscuro, en modo normal y alto contraste */
 .hamburger-btn,
 .hamburger-btn span,
 .hamburger-btn.active span {
@@ -86,46 +88,47 @@
     filter: none !important;
 }
 
-/* Contenedor del botón hamburguesa: mismo color que el encabezado (no verde) */
+/* Contenedor del botón hamburguesa: transparente (mismo color que el encabezado) */
 .hamburger-btn {
     background: transparent !important;
 }
 
-/* En alto contraste, iconos de FontAwesome pasan a blanco (excepto hamburguesa y menú) */
-.high-contrast .fas,
-.high-contrast .far,
-.high-contrast .fal,
-.high-contrast .fab {
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
-    text-shadow: none !important;
-    filter: none !important;
-}
-
-/* Protección: los iconos del menú SIEMPRE verdes, ni en alto contraste cambian */
-.high-contrast .mobile-nav-item i,
-.mobile-nav-item i {
+/* Iconos del menú SIEMPRE verdes, ni en alto contraste cambian */
+.mobile-nav-item i,
+.high-contrast .mobile-nav-item i {
     color: #2e7d32 !important;
 }
 
-/* Protección: los iconos dentro del hamburguesa nunca cambian de color */
+/* Iconos del botón hamburguesa nunca cambian */
+.hamburger-btn i,
 .high-contrast .hamburger-btn i,
-.high-contrast .hamburger-btn span,
-.high-contrast .hamburger-btn {
+.hamburger-btn span,
+.high-contrast .hamburger-btn span {
     background: #2e7d32 !important;
     color: #2e7d32 !important;
 }
 
-/* Iconos de acciones del menú móvil: siempre verdes */
-.high-contrast .mobile-actions .btn i,
-.mobile-actions .btn i {
+/* Iconos de acciones del menú móvil (Soporte, Ayuda, Salir): siempre verdes */
+.mobile-actions .btn i,
+.high-contrast .mobile-actions .btn i {
     color: #2e7d32 !important;
 }
 
 /* Icono del header del menú móvil: siempre verde */
-.high-contrast .mobile-sidebar-header i,
-.mobile-sidebar-header i {
+.mobile-sidebar-header i,
+.high-contrast .mobile-sidebar-header i {
     color: #2e7d32 !important;
+}
+
+/* En alto contraste, SOLO los iconos FontAwesome que NO están protegidos arriba pasan a blanco */
+.high-contrast .fas:not(.mobile-nav-item i):not(.mobile-actions .btn i):not(.mobile-sidebar-header i):not(.hamburger-btn i):not(.hamburger-btn span),
+.high-contrast .far:not(.mobile-nav-item i):not(.mobile-actions .btn i):not(.mobile-sidebar-header i):not(.hamburger-btn i):not(.hamburger-btn span),
+.high-contrast .fal:not(.mobile-nav-item i):not(.mobile-actions .btn i):not(.mobile-sidebar-header i):not(.hamburger-btn i):not(.hamburger-btn span),
+.high-contrast .fab:not(.mobile-nav-item i):not(.mobile-actions .btn i):not(.mobile-sidebar-header i):not(.hamburger-btn i):not(.hamburger-btn span) {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    text-shadow: none !important;
+    filter: none !important;
 }
 
 /* ===== Texto Grande ===== */
@@ -175,14 +178,12 @@
     --hc-font-family: 'Courier New', Courier, monospace;
 }
 
-/* Aplicar fuente a todos los elementos del body */
 .font-sans body,
 .font-serif body,
 .font-mono body {
     font-family: var(--hc-font-family) !important;
 }
 
-/* Forzar fuente en todos los elementos descendientes */
 .font-sans *,
 .font-serif *,
 .font-mono * {
