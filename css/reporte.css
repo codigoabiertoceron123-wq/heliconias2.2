@@ -2681,3 +2681,85 @@ select.tool-btn {
     max-width: 520px !important;
     padding: 30px !important;
 }
+
+/* =========================================== */
+/* SWEETALERT EDITOR: 2 BOTONES (Confirmar/Cancelar) */
+/* =========================================== */
+
+/* Cuando hay solo 2 botones en el SweetAlert */
+.swal2-popup .swal2-actions .swal2-confirm,
+.swal2-popup .swal2-actions .swal2-cancel,
+#editor-panel .swal2-actions .swal2-confirm,
+#editor-panel .swal2-actions .swal2-cancel {
+    width: 140px !important;
+    height: 50px !important;
+    min-width: 140px !important;
+    max-width: 140px !important;
+    min-height: 50px !important;
+    max-height: 50px !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    gap: 8px !important;
+}
+
+/* Colores para 2 botones */
+.swal2-popup .swal2-actions .swal2-confirm,
+#editor-panel .swal2-actions .swal2-confirm {
+    background: #27ae60 !important; /* Verde - Confirmar */
+    color: white !important;
+    border: none !important;
+}
+
+.swal2-popup .swal2-actions .swal2-confirm:hover,
+#editor-panel .swal2-actions .swal2-confirm:hover {
+    background: #219653 !important;
+}
+
+.swal2-popup .swal2-actions .swal2-cancel,
+#editor-panel .swal2-actions .swal2-cancel {
+    background: #e74c3c !important; /* Rojo - Cancelar */
+    color: white !important;
+    border: none !important;
+}
+
+.swal2-popup .swal2-actions .swal2-cancel:hover,
+#editor-panel .swal2-actions .swal2-cancel:hover {
+    background: #c0392b !important;
+}
+
+/* Iconos en los 2 botones del SweetAlert */
+.swal2-popup .swal2-actions .swal2-confirm i,
+#editor-panel .swal2-actions .swal2-confirm i {
+    color: white !important;
+    font-size: 1.2rem !important;
+    margin-left: 6px !important;
+    margin-right: 8px !important;
+}
+
+.swal2-popup .swal2-actions .swal2-cancel i,
+#editor-panel .swal2-actions .swal2-cancel i {
+    color: white !important;
+    font-size: 1.2rem !important;
+    margin-left: 6px !important;
+    margin-right: 8px !important;
+}
+
+/* Ajustar contenedor de acciones cuando hay solo 2 botones */
+.swal2-popup .swal2-actions:has(.swal2-confirm:not(.swal2-deny)),
+#editor-panel .swal2-actions:has(.swal2-confirm:not(.swal2-deny)) {
+    gap: 20px !important;
+}
+
+/* Ajustar el popup para 2 botones */
+.swal2-popup,
+#editor-panel .swal2-popup {
+    width: auto !important;
+    max-width: 420px !important;
+    padding: 25px !important;
+}
