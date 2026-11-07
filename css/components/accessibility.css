@@ -1,14 +1,24 @@
-/* components/accessibility - Estilos de accesibilidad (alto contraste y texto grande) */
-/* Se aplican en la raíz del documento cuando el usuario activa las opciones */
+/* components/accessibility - Estilos de accesibilidad con paleta verde del proyecto */
+/* Se aplican en la raíz del documento cuando el usuario activa las opciones.
+   Afectan a TODA la página, incluido el menú hamburguesa. */
 
-/* ===== Alto Contraste ===== */
+/* Paleta del proyecto:
+   Verde principal: #2e7d32
+   Verde oscuro: #195b35
+   Verde claro: #4caf50
+   Fondo claro: #f8f9fa
+*/
+
+/* ===== Alto Contraste (paleta verde del proyecto) ===== */
 .high-contrast {
-    --hc-bg: #000000;
-    --hc-text: #ffff00;
-    --hc-link: #00ffff;
-    --hc-border: #ffff00;
-    --hc-button-bg: #ffff00;
-    --hc-button-text: #000000;
+    --hc-bg: #ffffff;
+    --hc-surface: #f1f8f1;
+    --hc-text: #195b35;
+    --hc-link: #2e7d32;
+    --hc-border: #2e7d32;
+    --hc-button-bg: #2e7d32;
+    --hc-button-text: #ffffff;
+    --hc-focus: #4caf50;
 }
 
 .high-contrast body {
@@ -19,16 +29,23 @@
 .high-contrast .header,
 .high-contrast .top-bar,
 .high-contrast .main-nav,
-.high-contrast .mobile-sidebar {
-    background: var(--hc-bg) !important;
+.high-contrast .mobile-sidebar,
+.high-contrast .mobile-sidebar-header {
+    background: var(--hc-surface) !important;
     color: var(--hc-text) !important;
     border-color: var(--hc-border) !important;
 }
 
 .high-contrast a,
-.high-contrast .nav-item {
+.high-contrast .nav-item,
+.high-contrast .mobile-nav-item {
     color: var(--hc-link) !important;
-    text-decoration: underline;
+    font-weight: 600;
+}
+
+.high-contrast .nav-item:hover,
+.high-contrast .mobile-nav-item:hover {
+    background: rgba(46, 125, 50, 0.15) !important;
 }
 
 .high-contrast .btn,
@@ -38,18 +55,24 @@
     border: 2px solid var(--hc-border) !important;
 }
 
+.high-contrast .btn:hover,
+.high-contrast button:hover {
+    background: var(--hc-focus) !important;
+}
+
 .high-contrast .card,
 .high-contrast .profile-card,
 .high-contrast .content-section,
-.high-contrast .stat-card {
-    background: #1a1a1a !important;
+.high-contrast .stat-card,
+.high-contrast .mobile-actions {
+    background: var(--hc-surface) !important;
     color: var(--hc-text) !important;
     border: 2px solid var(--hc-border) !important;
 }
 
 .high-contrast ::selection {
     background: var(--hc-link);
-    color: #000;
+    color: #ffffff;
 }
 
 /* ===== Texto Grande ===== */
@@ -64,6 +87,7 @@
 .large-text h1 { font-size: 2rem !important; }
 .large-text h2 { font-size: 1.75rem !important; }
 .large-text h3 { font-size: 1.5rem !important; }
+.large-text h4 { font-size: 1.25rem !important; }
 .large-text p, .large-text span, .large-text li, .large-text label {
     font-size: 1.1rem !important;
 }
@@ -74,6 +98,34 @@
 .large-text input, .large-text select, .large-text textarea {
     font-size: 1.1rem !important;
     padding: 10px !important;
+}
+
+/* ===== Tipo de Letra ===== */
+.font-sans {
+    --hc-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.font-serif {
+    --hc-font-family: 'Georgia', 'Times New Roman', Times, serif;
+}
+
+.font-mono {
+    --hc-font-family: 'Courier New', Courier, monospace;
+}
+
+.font-sans body,
+.font-serif body,
+.font-mono body {
+    font-family: var(--hc-font-family) !important;
+}
+
+.font-sans .header h1,
+.font-serif .header h1,
+.font-mono .header h1,
+.font-sans .mobile-sidebar-header,
+.font-serif .mobile-sidebar-header,
+.font-mono .mobile-sidebar-header {
+    font-family: var(--hc-font-family) !important;
 }
 
 /* ===== Controles de accesibilidad (panel) ===== */
@@ -118,6 +170,26 @@
     flex-wrap: wrap;
 }
 
+.accessibility-select,
+.accessibility-font-select {
+    width: 100%;
+    max-width: 260px;
+    padding: 10px 14px;
+    border: 2px solid #2e7d32;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: #ffffff;
+    color: #195b35;
+    cursor: pointer;
+}
+
+.accessibility-select:focus,
+.accessibility-font-select:focus {
+    outline: none;
+    border-color: #195b35;
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.2);
+}
+
 .accessibility-btn {
     flex: 1;
     min-width: 140px;
@@ -147,23 +219,6 @@
     box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
 }
 
-.accessibility-select {
-    width: 100%;
-    padding: 10px 14px;
-    border: 2px solid #2e7d32;
-    border-radius: 8px;
-    font-size: 1rem;
-    background: #ffffff;
-    color: #195b35;
-    cursor: pointer;
-}
-
-.accessibility-select:focus {
-    outline: none;
-    border-color: #195b35;
-    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.2);
-}
-
 .accessibility-hint {
     font-size: 0.85rem;
     color: #6c757d;
@@ -171,38 +226,38 @@
     font-style: italic;
 }
 
-/* Alto contraste para los controles */
+/* Alto contraste para los controles del panel */
 .high-contrast .accessibility-panel {
-    background: #000000 !important;
-    border: 2px solid #ffff00 !important;
-    color: #ffff00 !important;
+    background: #f1f8f1 !important;
+    border: 2px solid #2e7d32 !important;
+    color: #195b35 !important;
 }
 
 .high-contrast .accessibility-panel h3 {
-    color: #ffff00 !important;
+    color: #195b35 !important;
 }
 
 .high-contrast .accessibility-panel h3 i {
-    color: #00ffff !important;
+    color: #2e7d32 !important;
 }
 
 .high-contrast .accessibility-group label {
-    color: #ffff00 !important;
+    color: #195b35 !important;
 }
 
 .high-contrast .accessibility-btn {
-    background: #ffff00 !important;
-    color: #000000 !important;
-    border: 2px solid #ffff00 !important;
+    background: #2e7d32 !important;
+    color: #ffffff !important;
+    border: 2px solid #2e7d32 !important;
 }
 
 .high-contrast .accessibility-btn.active {
-    background: #00ffff !important;
-    color: #000000 !important;
+    background: #195b35 !important;
 }
 
-.high-contrast .accessibility-select {
-    background: #ffff00 !important;
-    color: #000000 !important;
-    border: 2px solid #ffff00 !important;
+.high-contrast .accessibility-select,
+.high-contrast .accessibility-font-select {
+    background: #ffffff !important;
+    color: #195b35 !important;
+    border: 2px solid #2e7d32 !important;
 }
