@@ -75,33 +75,33 @@
     color: #ffffff;
 }
 
-/* El botón hamburguesa y sus iconos NO sufren ningún cambio en alto contraste */
+/* El botón hamburguesa y sus iconos en alto contraste: color blanco */
 .high-contrast .hamburger-btn,
 .high-contrast .hamburger-btn span,
 .high-contrast .hamburger-btn.active span {
-    background: #2e7d32 !important;
-    color: #2e7d32 !important;
+    background: #ffffff !important;
+    color: #ffffff !important;
     border: none !important;
     box-shadow: none !important;
     filter: none !important;
 }
 
-/* Los iconos de FontAwesome mantienen su apariencia normal en alto contraste */
+/* Los iconos de FontAwesome en alto contraste: color blanco */
 .high-contrast .fas,
 .high-contrast .far,
 .high-contrast .fal,
 .high-contrast .fab {
-    color: inherit !important;
-    -webkit-text-fill-color: inherit !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
     text-shadow: none !important;
     filter: none !important;
 }
 
-/* Iconos del menú móvil mantienen el verde del proyecto */
+/* Iconos del menú móvil en alto contraste: blanco */
 .high-contrast .mobile-nav-item i,
 .high-contrast .mobile-actions .btn i,
 .high-contrast .mobile-sidebar-header i {
-    color: #2e7d32 !important;
+    color: #ffffff !important;
 }
 
 /* ===== Texto Grande ===== */
