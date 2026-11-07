@@ -2566,3 +2566,111 @@ select.tool-btn {
 #editor-panel .btn-icon-only.danger i {
     color: white !important;
 }
+
+/* =========================================== */
+/* SWEETALERT EDITOR: 3 BOTONES MISMO TAMAÑO   */
+/* =========================================== */
+
+/* Todos los botones del SweetAlert del mismo tamaño */
+.swal2-popup .swal2-actions .swal2-confirm,
+.swal2-popup .swal2-actions .swal2-deny,
+.swal2-popup .swal2-actions .swal2-cancel,
+.swal2-popup .swal2-actions button.swal2-confirm,
+.swal2-popup .swal2-actions button.swal2-deny,
+.swal2-popup .swal2-actions button.swal2-cancel,
+#editor-panel .swal2-actions .swal2-confirm,
+#editor-panel .swal2-actions .swal2-deny,
+#editor-panel .swal2-actions .swal2-cancel {
+    width: 110px !important;
+    height: 44px !important;
+    min-width: 110px !important;
+    max-width: 110px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    gap: 6px !important;
+}
+
+/* Colores diferentes para cada botón */
+.swal2-popup .swal2-actions .swal2-confirm,
+#editor-panel .swal2-actions .swal2-confirm {
+    background: #27ae60 !important; /* Verde - Guardar y salir */
+    color: white !important;
+    border: none !important;
+}
+
+.swal2-popup .swal2-actions .swal2-confirm:hover,
+#editor-panel .swal2-actions .swal2-confirm:hover {
+    background: #219653 !important;
+}
+
+.swal2-popup .swal2-actions .swal2-deny,
+#editor-panel .swal2-actions .swal2-deny {
+    background: #e74c3c !important; /* Rojo - Salir sin guardar */
+    color: white !important;
+    border: none !important;
+}
+
+.swal2-popup .swal2-actions .swal2-deny:hover,
+#editor-panel .swal2-actions .swal2-deny:hover {
+    background: #c0392b !important;
+}
+
+.swal2-popup .swal2-actions .swal2-cancel,
+#editor-panel .swal2-actions .swal2-cancel {
+    background: #3498db !important; /* Azul - Seguir editando */
+    color: white !important;
+    border: none !important;
+}
+
+.swal2-popup .swal2-actions .swal2-cancel:hover,
+#editor-panel .swal2-actions .swal2-cancel:hover {
+    background: #2980b9 !important;
+}
+
+/* Iconos dentro de los botones del SweetAlert */
+.swal2-popup .swal2-actions .swal2-confirm i,
+#editor-panel .swal2-actions .swal2-confirm i {
+    color: white !important;
+    font-size: 1rem !important;
+    margin-right: 4px !important;
+}
+
+.swal2-popup .swal2-actions .swal2-deny i,
+#editor-panel .swal2-actions .swal2-deny i {
+    color: white !important;
+    font-size: 1rem !important;
+    margin-right: 4px !important;
+}
+
+.swal2-popup .swal2-actions .swal2-cancel i,
+#editor-panel .swal2-actions .swal2-cancel i {
+    color: white !important;
+    font-size: 1rem !important;
+    margin-right: 4px !important;
+}
+
+/* Ajustar el contenedor de acciones para que quepan los 3 botones */
+.swal2-popup .swal2-actions,
+#editor-panel .swal2-actions {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    padding: 15px 20px !important;
+    margin-top: 10px !important;
+}
+
+/* Ajustar el popup para que quepan los 3 botones */
+.swal2-popup,
+#editor-panel .swal2-popup {
+    width: auto !important;
+    max-width: 450px !important;
+    padding: 25px !important;
+}
