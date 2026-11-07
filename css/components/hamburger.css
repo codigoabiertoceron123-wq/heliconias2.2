@@ -195,10 +195,9 @@ body.menu-open {
     }
 
     .user-actions {
-        justify-content: center;
-        gap: 8px;
-        order: 2;
-        flex-wrap: wrap;
+        /* En móvil los botones de acción viven en el sidebar del menú hamburguesa,
+           así que no duplicamos aquí ni desbordamos el encabezado. */
+        display: none;
     }
 
     .main-content {
