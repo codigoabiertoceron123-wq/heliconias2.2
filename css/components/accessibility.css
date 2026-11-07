@@ -9,6 +9,32 @@
    Fondo claro: #f8f9fa
 */
 
+/* ===== Botones de estadísticas: SIEMPRE texto blanco (modo normal y alto contraste) ===== */
+.btn-details,
+.ver-estadisticas,
+.ver-detalles,
+.btn-ver,
+.stat-card button,
+.card button,
+.chart-card button,
+.download-btn,
+.btn {
+    color: #ffffff !important;
+}
+
+/* Iconos de botones de estadísticas: blanco en modo normal */
+.btn-details i,
+.ver-estadisticas i,
+.ver-detalles i,
+.btn-ver i,
+.stat-card button i,
+.card button i,
+.chart-card button i,
+.download-btn i,
+.btn i {
+    color: #ffffff !important;
+}
+
 /* ===== Alto Contraste (paleta verde del proyecto) ===== */
 .high-contrast {
     --hc-bg: #ffffff;
@@ -56,9 +82,26 @@
     color: var(--hc-button-text) !important; /* blanco */
 }
 
+/* Botones específicos de estadísticas: "Ver Estadísticas", "Ver Detalles", etc. */
+.high-contrast .btn-details,
+.high-contrast .ver-estadisticas,
+.high-contrast .ver-detalles,
+.high-contrast .btn-ver,
+.high-contrast .stat-card button,
+.high-contrast .card button,
+.high-contrast .chart-card button,
+.high-contrast .download-btn {
+    color: #ffffff !important;
+    background: var(--hc-button-bg) !important;
+    border: 2px solid var(--hc-border) !important;
+}
+
 /* Iconos de botones mantienen blanco en alto contraste */
 .high-contrast .btn i,
-.high-contrast button i {
+.high-contrast button i,
+.high-contrast .btn-details i,
+.high-contrast .ver-estadisticas i,
+.high-contrast .ver-detalles i {
     color: #ffffff !important;
 }
 
