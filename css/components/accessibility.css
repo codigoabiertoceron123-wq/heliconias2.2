@@ -148,20 +148,17 @@
 #login-redirect-btn i,
 .high-contrast #login-redirect-btn i,
 #refresh-session-btn i,
-.high-contrast #refresh-session-btn i {
+.high-contrast #refresh-session-btn i,
+/* Icono de accesibilidad y toggle del contenedor desplegable: siempre verde */
+.accessibility-header i,
+.high-contrast .accessibility-header i,
+.accessibility-toggle,
+.high-contrast .accessibility-toggle {
     color: #2e7d32 !important;
 }
 
-/* En alto contraste, SOLO los iconos FontAwesome que NO están protegidos arriba pasan a blanco */
-.high-contrast .fas:not(.mobile-nav-item i):not(.mobile-actions .btn i):not(.mobile-sidebar-header i):not(.hamburger-btn i):not(.hamburger-btn span):not(.profile-card i):not(.info-item i):not(.action-buttons i):not(#edit-profile-btn i):not(#cancel-edit-btn i):not(#save-changes-btn i):not(#retry-connection-btn i):not(#login-redirect-btn i):not(#refresh-session-btn i),
-.high-contrast .far:not(.mobile-nav-item i):not(.mobile-actions .btn i):not(.mobile-sidebar-header i):not(.hamburger-btn i):not(.hamburger-btn span):not(.profile-card i):not(.info-item i):not(.action-buttons i):not(#edit-profile-btn i):not(#cancel-edit-btn i):not(#save-changes-btn i):not(#retry-connection-btn i):not(#login-redirect-btn i):not(#refresh-session-btn i),
-.high-contrast .fal:not(.mobile-nav-item i):not(.mobile-actions .btn i):not(.mobile-sidebar-header i):not(.hamburger-btn i):not(.hamburger-btn span):not(.profile-card i):not(.info-item i):not(.action-buttons i):not(#edit-profile-btn i):not(#cancel-edit-btn i):not(#save-changes-btn i):not(#retry-connection-btn i):not(#login-redirect-btn i):not(#refresh-session-btn i),
-.high-contrast .fab:not(.mobile-nav-item i):not(.mobile-actions .btn i):not(.mobile-sidebar-header i):not(.hamburger-btn i):not(.hamburger-btn span):not(.profile-card i):not(.info-item i):not(.action-buttons i):not(#edit-profile-btn i):not(#cancel-edit-btn i):not(#save-changes-btn i):not(#retry-connection-btn i):not(#login-redirect-btn i):not(#refresh-session-btn i) {
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
-    text-shadow: none !important;
-    filter: none !important;
-}
+/* En alto contraste, los iconos FontAwesome mantienen su color original (no cambian a blanco)
+   Esto permite que el alto contraste funcione en todas las páginas sin alterar los iconos */
 
 /* ===== Texto Grande ===== */
 .large-text {
