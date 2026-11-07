@@ -2230,3 +2230,167 @@ select.tool-btn {
     font-size: 1.2rem !important;
     visibility: visible !important;
 }
+
+/* =========================================== */
+/* EDITOR: BOTONES TODOS MISMO TAMAÑO          */
+/* =========================================== */
+
+/* Todos los botones del mismo tamaño en el editor */
+#editor-panel .btn,
+#editor-panel .btn-primary-large,
+#editor-panel .btn-icon-only,
+#editor-container button,
+#editor-panel button,
+#editor-panel .tool-btn,
+#editor-panel .btn-action {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    border-radius: 8px !important;
+    font-size: 1.1rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+}
+
+/* Ocultar texto en todos los botones del editor - solo iconos */
+#editor-panel .btn span,
+#editor-panel .btn-primary-large span,
+#editor-panel .btn-icon-only span,
+#editor-panel .tool-btn span,
+#editor-panel .btn-action span,
+#editor-panel button span,
+#editor-panel .btn-text,
+#editor-panel button .btn-text,
+#editor-panel button > span {
+    display: none !important;
+}
+
+/* Botones inferiores (tipo de letra, etc.) más pequeños y solo icono */
+#editor-panel .tool-btn,
+#editor-panel .editor-tools button,
+#editor-panel .orientation-btn,
+#editor-panel .zoom-btn,
+#editor-panel .tool-group button {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
+    padding: 0 !important;
+    font-size: 1rem !important;
+    border-radius: 6px !important;
+    border: 1px solid #ddd !important;
+    background: white !important;
+    color: #2c3e50 !important;
+}
+
+#editor-panel .tool-btn:hover,
+#editor-panel .editor-tools button:hover,
+#editor-panel .orientation-btn:hover,
+#editor-panel .zoom-btn:hover {
+    background: #2e7d32 !important;
+    color: white !important;
+    border-color: #2e7d32 !important;
+}
+
+/* Ocultar texto en tool-btn y botones inferiores */
+#editor-panel .tool-btn > span,
+#editor-panel .editor-tools button > span,
+#editor-panel .orientation-btn > span,
+#editor-panel .zoom-btn > span,
+#editor-panel .tool-group button > span,
+#editor-panel .tool-btn .btn-text,
+#editor-panel .editor-tools button .btn-text,
+#editor-panel .orientation-btn .btn-text,
+#editor-panel .zoom-btn .btn-text,
+#editor-panel .tool-group button .btn-text {
+    display: none !important;
+}
+
+/* El botón guardar puede ser un poco más grande pero solo icono */
+#editor-panel .btn-primary-large,
+#editor-panel button[id*="save"],
+#editor-panel button[class*="save"] {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    max-width: 48px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
+    background: #2e7d32 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 10px !important;
+}
+
+#editor-panel .btn-primary-large:hover,
+#editor-panel button[id*="save"]:hover,
+#editor-panel button[class*="save"]:hover {
+    background: #1e6b26 !important;
+}
+
+/* Botón cerrar editor también mismo tamaño uniforme */
+#editor-panel .btn-close-editor {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    background: #e74c3c !important;
+    color: white !important;
+    border: none !important;
+}
+
+#editor-panel .btn-close-editor:hover {
+    background: #c0392b !important;
+}
+
+/* Botones inferiores en una fila centrada y compacta */
+#editor-panel .editor-actions,
+#editor-panel .editor-controls-bottom,
+#editor-panel .actions,
+#editor-panel .button-group,
+#editor-panel .toolbar-bottom {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    justify-content: center !important;
+    align-items: center !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    padding: 8px 0 !important;
+}
+
+/* Asegurar que los contenedores del editor no se desborden */
+#editor-panel {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+}
+
+#editor-panel .page {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+}
+
+#editor-panel .page-content {
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
+    max-width: 100% !important;
+}
+
+.element-container {
+    max-width: 95% !important;
+    overflow: hidden !important;
+}
