@@ -75,18 +75,18 @@
     color: #ffffff;
 }
 
-/* El botón hamburguesa y sus iconos en alto contraste: color blanco */
-.high-contrast .hamburger-btn,
-.high-contrast .hamburger-btn span,
-.high-contrast .hamburger-btn.active span {
-    background: #ffffff !important;
-    color: #ffffff !important;
+/* El botón hamburguesa SIEMPRE verde oscuro, en modo normal y alto contraste */
+.hamburger-btn,
+.hamburger-btn span,
+.hamburger-btn.active span {
+    background: #2e7d32 !important;
+    color: #2e7d32 !important;
     border: none !important;
     box-shadow: none !important;
     filter: none !important;
 }
 
-/* Los iconos de FontAwesome en alto contraste: color blanco */
+/* En alto contraste, iconos de FontAwesome pasan a blanco (excepto hamburguesa) */
 .high-contrast .fas,
 .high-contrast .far,
 .high-contrast .fal,
@@ -97,7 +97,15 @@
     filter: none !important;
 }
 
-/* Iconos del menú móvil en alto contraste: blanco */
+/* Protección específica: los iconos dentro del hamburguesa nunca cambian */
+.high-contrast .hamburger-btn i,
+.high-contrast .hamburger-btn span,
+.high-contrast .hamburger-btn {
+    background: #2e7d32 !important;
+    color: #2e7d32 !important;
+}
+
+/* Iconos del menú móvil en alto contraste: blanco (menos el hamburguesa que ya está protegido arriba) */
 .high-contrast .mobile-nav-item i,
 .high-contrast .mobile-actions .btn i,
 .high-contrast .mobile-sidebar-header i {
