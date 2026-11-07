@@ -1,0 +1,208 @@
+/* components/accessibility - Estilos de accesibilidad (alto contraste y texto grande) */
+/* Se aplican en la raíz del documento cuando el usuario activa las opciones */
+
+/* ===== Alto Contraste ===== */
+.high-contrast {
+    --hc-bg: #000000;
+    --hc-text: #ffff00;
+    --hc-link: #00ffff;
+    --hc-border: #ffff00;
+    --hc-button-bg: #ffff00;
+    --hc-button-text: #000000;
+}
+
+.high-contrast body {
+    background: var(--hc-bg) !important;
+    color: var(--hc-text) !important;
+}
+
+.high-contrast .header,
+.high-contrast .top-bar,
+.high-contrast .main-nav,
+.high-contrast .mobile-sidebar {
+    background: var(--hc-bg) !important;
+    color: var(--hc-text) !important;
+    border-color: var(--hc-border) !important;
+}
+
+.high-contrast a,
+.high-contrast .nav-item {
+    color: var(--hc-link) !important;
+    text-decoration: underline;
+}
+
+.high-contrast .btn,
+.high-contrast button {
+    background: var(--hc-button-bg) !important;
+    color: var(--hc-button-text) !important;
+    border: 2px solid var(--hc-border) !important;
+}
+
+.high-contrast .card,
+.high-contrast .profile-card,
+.high-contrast .content-section,
+.high-contrast .stat-card {
+    background: #1a1a1a !important;
+    color: var(--hc-text) !important;
+    border: 2px solid var(--hc-border) !important;
+}
+
+.high-contrast ::selection {
+    background: var(--hc-link);
+    color: #000;
+}
+
+/* ===== Texto Grande ===== */
+.large-text {
+    --hc-font-size-base: 1.25rem;
+}
+
+.large-text html {
+    font-size: var(--hc-font-size-base);
+}
+
+.large-text h1 { font-size: 2rem !important; }
+.large-text h2 { font-size: 1.75rem !important; }
+.large-text h3 { font-size: 1.5rem !important; }
+.large-text p, .large-text span, .large-text li, .large-text label {
+    font-size: 1.1rem !important;
+}
+.large-text .btn, .large-text button {
+    font-size: 1.1rem !important;
+    padding: 12px 20px !important;
+}
+.large-text input, .large-text select, .large-text textarea {
+    font-size: 1.1rem !important;
+    padding: 10px !important;
+}
+
+/* ===== Controles de accesibilidad (panel) ===== */
+.accessibility-panel {
+    background: #ffffff;
+    border: 2px solid #2e7d32;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.accessibility-panel h3 {
+    color: #195b35;
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.accessibility-panel h3 i {
+    color: #2e7d32;
+}
+
+.accessibility-group {
+    margin-bottom: 16px;
+}
+
+.accessibility-group label {
+    display: block;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    font-size: 1rem;
+}
+
+.accessibility-btn-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.accessibility-btn {
+    flex: 1;
+    min-width: 140px;
+    padding: 12px 16px;
+    border: 2px solid #2e7d32;
+    background: #ffffff;
+    color: #195b35;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.accessibility-btn:hover {
+    background: #f8fff8;
+    transform: translateY(-1px);
+}
+
+.accessibility-btn.active {
+    background: #2e7d32;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
+}
+
+.accessibility-select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #2e7d32;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: #ffffff;
+    color: #195b35;
+    cursor: pointer;
+}
+
+.accessibility-select:focus {
+    outline: none;
+    border-color: #195b35;
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.2);
+}
+
+.accessibility-hint {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 6px;
+    font-style: italic;
+}
+
+/* Alto contraste para los controles */
+.high-contrast .accessibility-panel {
+    background: #000000 !important;
+    border: 2px solid #ffff00 !important;
+    color: #ffff00 !important;
+}
+
+.high-contrast .accessibility-panel h3 {
+    color: #ffff00 !important;
+}
+
+.high-contrast .accessibility-panel h3 i {
+    color: #00ffff !important;
+}
+
+.high-contrast .accessibility-group label {
+    color: #ffff00 !important;
+}
+
+.high-contrast .accessibility-btn {
+    background: #ffff00 !important;
+    color: #000000 !important;
+    border: 2px solid #ffff00 !important;
+}
+
+.high-contrast .accessibility-btn.active {
+    background: #00ffff !important;
+    color: #000000 !important;
+}
+
+.high-contrast .accessibility-select {
+    background: #ffff00 !important;
+    color: #000000 !important;
+    border: 2px solid #ffff00 !important;
+}
