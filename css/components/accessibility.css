@@ -77,20 +77,30 @@
 
 /* ===== PROTECCIONES: elementos que NUNCA cambian de color ===== */
 
-/* Botón hamburguesa SIEMPRE verde oscuro, en modo normal y alto contraste */
-.hamburger-btn,
-.hamburger-btn span,
-.hamburger-btn.active span {
+/* Botón hamburguesa SIEMPRE verde oscuro con líneas BLANCAS (no se ve como cuadro sólido) */
+.hamburger-btn {
     background: #2e7d32 !important;
-    color: #2e7d32 !important;
     border: none !important;
     box-shadow: none !important;
     filter: none !important;
 }
 
+.hamburger-btn span {
+    background: #ffffff !important;  /* líneas blancas para que se vea el botón */
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+}
+
+.hamburger-btn.active span {
+    background: #ffffff !important;
+    color: #ffffff !important;
+}
+
 /* Contenedor del botón hamburguesa: transparente (mismo color que el encabezado) */
 .hamburger-btn {
-    background: transparent !important;
+    background: #2e7d32 !important;
 }
 
 /* Iconos del menú SIEMPRE verdes, ni en alto contraste cambian */
@@ -99,19 +109,19 @@
     color: #2e7d32 !important;
 }
 
-/* Iconos del botón hamburguesa nunca cambian */
+/* Iconos del botón hamburguesa nunca cambian (son las líneas, no íconos de FontAwesome) */
 .hamburger-btn i,
 .high-contrast .hamburger-btn i,
 .hamburger-btn span,
 .high-contrast .hamburger-btn span {
-    background: #2e7d32 !important;
-    color: #2e7d32 !important;
+    background: #ffffff !important;
+    color: #ffffff !important;
 }
 
-/* Iconos de acciones del menú móvil (Soporte, Ayuda, Salir): siempre verdes */
+/* Iconos de acciones del menú móvil (Soporte, Ayuda, Salir): BLANCOS */
 .mobile-actions .btn i,
 .high-contrast .mobile-actions .btn i {
-    color: #2e7d32 !important;
+    color: #ffffff !important;
 }
 
 /* Icono del header del menú móvil: siempre verde */
@@ -242,28 +252,76 @@
     font-family: var(--hc-font-family) !important;
 }
 
-/* ===== Controles de accesibilidad (panel) ===== */
-.accessibility-panel {
-    background: #ffffff;
+/* ===== Contenedor de Accesibilidad Desplegable ===== */
+.accessibility-container {
     border: 2px solid #2e7d32;
     border-radius: 12px;
-    padding: 20px;
     margin: 20px 0;
+    overflow: hidden;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    background: #ffffff;
 }
 
-.accessibility-panel h3 {
+.accessibility-header {
+    background: #f8fff8;
+    padding: 16px 20px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s ease;
+}
+
+.accessibility-header:hover {
+    background: #f0fff0;
+}
+
+.accessibility-header h3 {
     color: #195b35;
-    margin-top: 0;
-    margin-bottom: 16px;
-    font-size: 1.3rem;
+    margin: 0;
+    font-size: 1.2rem;
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.accessibility-panel h3 i {
+.accessibility-header h3 i {
     color: #2e7d32;
+}
+
+.accessibility-toggle {
+    font-size: 1.2rem;
+    color: #2e7d32;
+    transition: transform 0.3s ease;
+}
+
+.accessibility-toggle.open {
+    transform: rotate(180deg);
+}
+
+.accessibility-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+    padding: 0 20px;
+}
+
+.accessibility-content.open {
+    max-height: 500px;
+    padding: 16px 20px;
+}
+
+.accessibility-panel {
+    background: #ffffff;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+.accessibility-panel h3 {
+    display: none; /* Se usa el accessibility-header en su lugar */
 }
 
 .accessibility-group {
@@ -341,17 +399,24 @@
 }
 
 /* Alto contraste para los controles del panel */
-.high-contrast .accessibility-panel {
-    background: #f1f8f1 !important;
+.high-contrast .accessibility-container {
     border: 2px solid #2e7d32 !important;
+    background: #f1f8f1 !important;
+}
+
+.high-contrast .accessibility-header {
+    background: #f1f8f1 !important;
+}
+
+.high-contrast .accessibility-header h3 {
     color: #195b35 !important;
 }
 
-.high-contrast .accessibility-panel h3 {
-    color: #195b35 !important;
+.high-contrast .accessibility-header h3 i {
+    color: #2e7d32 !important;
 }
 
-.high-contrast .accessibility-panel h3 i {
+.high-contrast .accessibility-toggle {
     color: #2e7d32 !important;
 }
 

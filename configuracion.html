@@ -107,33 +107,41 @@
         </div>
 
         <!-- Panel de Accesibilidad -->
-        <div class="accessibility-panel">
-            <h3><i class="fas fa-universal-access"></i> Accesibilidad</h3>
-            <div class="accessibility-group">
-                <label>Tamaño de letra</label>
-                <select class="accessibility-select" data-hc-select="font-size">
-                    <option value="normal">Normal</option>
-                    <option value="large">Grande</option>
-                    <option value="extraLarge">Extra grande</option>
-                </select>
-                <p class="accessibility-hint">Aumenta el tamaño del texto en toda la página.</p>
+        <!-- Panel de Accesibilidad Desplegable -->
+        <div class="accessibility-container">
+            <div class="accessibility-header" onclick="window.HAccessibility.toggleAccessibility()">
+                <h3><i class="fas fa-universal-access"></i> Accesibilidad</h3>
+                <i class="fas fa-chevron-down accessibility-toggle"></i>
             </div>
-            <div class="accessibility-group">
-                <label>Tipo de letra</label>
-                <select class="accessibility-font-select" data-hc-select="font-family">
-                    <option value="sans">Sans Serif (moderna)</option>
-                    <option value="serif">Serif (clásica)</option>
-                    <option value="mono">Monoespaciada</option>
-                </select>
-                <p class="accessibility-hint">Cambia la fuente de texto en toda la página, incluido el menú.</p>
-            </div>
-            <div class="accessibility-btn-group">
-                <button type="button" class="accessibility-btn" data-hc-toggle="contrast" aria-label="Activar alto contraste">
-                    <i class="fas fa-adjust"></i> Alto Contraste
-                </button>
-                <button type="button" class="accessibility-btn" data-hc-toggle="text-size" aria-label="Activar texto grande">
-                    <i class="fas fa-font"></i> Texto Grande
-                </button>
+            <div class="accessibility-content">
+                <div class="accessibility-panel">
+                    <div class="accessibility-group">
+                        <label>Tamaño de letra</label>
+                        <select class="accessibility-select" data-hc-select="font-size">
+                            <option value="normal">Normal</option>
+                            <option value="large">Grande</option>
+                            <option value="extraLarge">Extra grande</option>
+                        </select>
+                        <p class="accessibility-hint">Aumenta el tamaño del texto en toda la página.</p>
+                    </div>
+                    <div class="accessibility-group">
+                        <label>Tipo de letra</label>
+                        <select class="accessibility-font-select" data-hc-select="font-family">
+                            <option value="sans">Sans Serif (moderna)</option>
+                            <option value="serif">Serif (clásica)</option>
+                            <option value="mono">Monoespaciada</option>
+                        </select>
+                        <p class="accessibility-hint">Cambia la fuente de texto en toda la página, incluido el menú.</p>
+                    </div>
+                    <div class="accessibility-btn-group">
+                        <button type="button" class="accessibility-btn" data-hc-toggle="contrast" aria-label="Activar alto contraste">
+                            <i class="fas fa-adjust"></i> Alto Contraste
+                        </button>
+                        <button type="button" class="accessibility-btn" data-hc-toggle="text-size" aria-label="Activar texto grande">
+                            <i class="fas fa-font"></i> Texto Grande
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 

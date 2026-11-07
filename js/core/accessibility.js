@@ -177,6 +177,20 @@
         syncUI(getStored(LS_HIGH_CONTRAST, false), getStored(LS_LARGE_TEXT, false), getStored(LS_FONT_SIZE, 'normal'), key);
     }
 
+    // Alternar contenedor de accesibilidad (abrir/cerrar)
+    function toggleAccessibility() {
+        const content = document.querySelector('.accessibility-content');
+        const toggle = document.querySelector('.accessibility-toggle');
+        const isOpen = content.classList.contains('open');
+        if (isOpen) {
+            content.classList.remove('open');
+            toggle.classList.remove('open');
+        } else {
+            content.classList.add('open');
+            toggle.classList.add('open');
+        }
+    }
+
     // Exponer API global
     window.HAccessibility = {
         init: initAccessibility,
@@ -184,6 +198,7 @@
         toggleLargeText: toggleLargeText,
         setFontSize: setFontSize,
         setFontFamily: setFontFamily,
+        toggleAccessibility: toggleAccessibility,
         getStored: getStored
     };
 
