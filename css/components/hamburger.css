@@ -59,7 +59,7 @@
 
 .mobile-sidebar-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;   /* Logo centrado, ya no hay botón X a la derecha */
     align-items: center;
     padding: 20px 24px;
     border-bottom: 1px solid rgba(46, 125, 50, 0.1);
@@ -77,18 +77,14 @@
 }
 
 .mobile-sidebar-header .sidebar-logo img {
-    width: 42px !important;
-    height: 42px !important;
+    width: 56px !important;
+    height: 56px !important;
     object-fit: contain !important;
 }
 
 .mobile-sidebar-close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: #2e7d32;
-    cursor: pointer;
-    line-height: 1;
+    /* El menú se cierra al hacer clic fuera (overlay) o en un ítem; no hace falta botón X */
+    display: none !important;
 }
 
 .mobile-nav-list {
