@@ -1,0 +1,5 @@
+/* components/buttons - estilos compartidos generados por el refactor */
+.btn-accent {
+    background: linear-gradient(135deg, #e74c3c, #fe5926);
+    color: white;
+}

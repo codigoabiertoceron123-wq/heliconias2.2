@@ -61,7 +61,7 @@ function insertAtEnd(html) {
     
     // Agregar al final del contenido
     while (tempDiv.firstChild) {
-        activeContent.appendChild(tempTemp.firstChild);
+        activeContent.appendChild(tempDiv.firstChild);
     }
     
     // Mover el cursor al final
