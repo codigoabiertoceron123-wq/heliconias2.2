@@ -75,6 +75,12 @@
     color: #ffffff;
 }
 
+/* El icono del menú hamburguesa mantiene su color verde original
+   incluso en modo alto contraste */
+.high-contrast .hamburger-btn span {
+    background: #2e7d32 !important;
+}
+
 /* ===== Texto Grande ===== */
 .large-text {
     --hc-font-size-base: 1.25rem;
@@ -100,7 +106,7 @@
     padding: 10px !important;
 }
 
-/* ===== Tipo de Letra ===== */
+/* ===== Tipo de Letra (se aplica a TODA la página) ===== */
 .font-sans {
     --hc-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -113,18 +119,50 @@
     --hc-font-family: 'Courier New', Courier, monospace;
 }
 
+/* Aplicar fuente a todos los elementos del body */
 .font-sans body,
 .font-serif body,
 .font-mono body {
     font-family: var(--hc-font-family) !important;
 }
 
+/* Forzar fuente en todos los elementos descendientes */
+.font-sans *,
+.font-serif *,
+.font-mono * {
+    font-family: var(--hc-font-family) !important;
+}
+
+/* Asegurar que inputs, selects, textareas y botones también tomen la fuente */
+.font-sans input, .font-sans select, .font-sans textarea, .font-sans button,
+.font-serif input, .font-serif select, .font-serif textarea, .font-serif button,
+.font-mono input, .font-mono select, .font-mono textarea, .font-mono button {
+    font-family: var(--hc-font-family) !important;
+}
+
+/* Encabezados y logo */
 .font-sans .header h1,
 .font-serif .header h1,
 .font-mono .header h1,
 .font-sans .mobile-sidebar-header,
 .font-serif .mobile-sidebar-header,
 .font-mono .mobile-sidebar-header {
+    font-family: var(--hc-font-family) !important;
+}
+
+/* Elementos del menú hamburguesa */
+.font-sans .nav-item,
+.font-serif .nav-item,
+.font-mono .nav-item,
+.font-sans .mobile-nav-item,
+.font-serif .mobile-nav-item,
+.font-mono .mobile-nav-item,
+.font-sans .nav-badge,
+.font-serif .nav-badge,
+.font-mono .nav-badge,
+.font-sans .nav-text,
+.font-serif .nav-text,
+.font-mono .nav-text {
     font-family: var(--hc-font-family) !important;
 }
 
