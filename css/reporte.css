@@ -2093,3 +2093,120 @@ select.tool-btn {
         width: 5px;
     }
 }
+/* =========================================== */
+/* EDITOR: BOTONES SOLO ICONO (sin texto)      */
+/* =========================================== */
+
+/* Botón cerrar editor - SOLO la X, sin texto */
+.btn-close-editor {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    padding: 0 !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+}
+
+.btn-close-editor > span,
+.btn-close-editor .btn-text,
+.btn-close-editor > .text,
+.btn-close-editor > label {
+    display: none !important;
+}
+
+.btn-close-editor i {
+    display: block !important;
+    visibility: visible !important;
+    font-size: 1.2rem !important;
+}
+
+/* Botones de guardar y otros botones de solo icono */
+.editor-container .btn-primary-large,
+.editor-container .btn-icon-only,
+.editor-container button[class*="save"],
+.editor-container button[class*="Guardar"],
+.editor-container button[id*="save"] {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    min-width: 44px !important;
+    padding: 8px 16px !important;
+    gap: 6px !important;
+}
+
+.editor-container .btn-primary-large > span,
+.editor-container .btn-icon-only > span,
+.editor-container .btn-primary-large .btn-text,
+.editor-container .btn-icon-only .btn-text,
+.editor-container button[class*="save"] > span,
+.editor-container button[class*="Guardar"] > span,
+.editor-container button[id*="save"] > span {
+    display: none !important;
+}
+
+.editor-container .btn-primary-large i,
+.editor-container .btn-icon-only i,
+.editor-container button[class*="save"] i,
+.editor-container button[class*="Guardar"] i,
+.editor-container button[id*="save"] i {
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* Botones inferiores del editor - sin desbordamiento */
+.editor-actions,
+.editor-controls-bottom,
+#editor-panel .actions,
+#editor-panel .button-group,
+#editor-panel .toolbar-bottom {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    justify-content: center !important;
+    align-items: center !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    padding: 10px 0 !important;
+}
+
+#editor-panel .btn-action,
+#editor-panel button.btn-action,
+#editor-panel .btn-icon-only,
+#editor-panel .btn-primary-large {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    max-width: none !important;
+}
+
+/* Títulos del editor sin desbordar */
+#editor-panel h2,
+#editor-panel h3,
+#editor-panel .editor-title {
+    font-size: 1.2rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+}
+
+/* Contenedor del editor sin desbordamiento */
+#editor-panel {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+}
+
+#editor-panel .page {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+}
+
+#editor-panel .page-content {
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
+    max-width: 100% !important;
+}
