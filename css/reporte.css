@@ -2258,6 +2258,26 @@ select.tool-btn {
         width: 5px;
     }
 }
+
+/* ===== Login/Registro: hamburguesa a la izquierda ===== */
+.login-page .hamburger-btn {
+    margin-left: 0 !important;
+    margin-right: auto !important;
+    order: 1 !important;
+}
+
+.login-page .logo {
+    order: 2 !important;
+}
+
+.login-page .main-nav {
+    order: 3 !important;
+}
+
+.login-page .top-section {
+    justify-content: space-between !important;
+    flex-direction: row !important;
+}
 /* =========================================== */
 /* EDITOR: BOTONES SOLO ICONO (sin texto)      */
 /* =========================================== */
