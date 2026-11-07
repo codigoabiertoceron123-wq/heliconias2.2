@@ -145,8 +145,7 @@
     flex-direction: column;
     gap: 14px;
     background: #f8fff8;
-    /* Centrar los botones dentro del menú */
-    align-items: center;
+    /* Sin align-items center para que margin-left de los btn los desplace a la derecha */
 }
 
 .mobile-actions .btn {
@@ -165,7 +164,9 @@
     text-align: center;
     text-decoration: none;
     transition: all 0.3s ease;
-    margin: 0 auto;
+    /* Desplazar un poco hacia la derecha desde el centro */
+    margin-left: 22px;
+    margin-right: 0;
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
 }
 
