@@ -162,6 +162,7 @@ body.menu-open {
 @media (max-width: 900px) {
     .hamburger-btn {
         display: flex !important;
+        margin-left: auto;      /* empuja el botón al borde derecho */
         align-self: center;
     }
 
@@ -175,6 +176,7 @@ body.menu-open {
         align-items: center;
         flex-wrap: wrap;
         gap: 10px;
+        padding: 0 10px;
     }
 
     .logo {
@@ -182,6 +184,7 @@ body.menu-open {
         align-items: center;
         gap: 8px;
         margin: 0;
+        flex-shrink: 1;
     }
 
     .logo h1 {
@@ -191,6 +194,7 @@ body.menu-open {
         font-weight: 700;
         align-self: center;
         white-space: nowrap;
+        flex-shrink: 1;
     }
 
     .top-bar {
