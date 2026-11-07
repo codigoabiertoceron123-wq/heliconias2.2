@@ -189,8 +189,13 @@ body::before {
 main {
     padding: 20px;
     min-height: calc(100vh - 140px);
-    margin-left: 380px;
+    margin-left: 0;
     transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Cuando el historial está abierto, desplazar el main */
+.history-sidebar.open ~ main {
+    margin-left: 380px;
 }
 
 /* Botones principales */
@@ -1540,4 +1545,418 @@ select.tool-btn {
     border-radius: 6px !important;
     padding: 10px 20px !important;
     font-weight: 600 !important;
+}
+
+/* =========================================== */
+/* RESPONSIVE PARA REPORTES - MÓVIL            */
+/* =========================================== */
+
+@media (max-width: 900px) {
+    .main-nav {
+        display: none;
+    }
+
+    .top-section {
+        justify-content: space-between;
+        padding: 0 15px;
+    }
+
+    .logo h1 {
+        font-size: 1.2rem;
+    }
+
+    .hamburger-btn {
+        display: flex !important;
+    }
+
+    main {
+        padding: 15px;
+        margin-left: 0 !important;
+    }
+
+    .history-sidebar {
+        width: 280px;
+    }
+
+    .buttons-container {
+        padding: 25px;
+        min-width: auto;
+        width: 100%;
+    }
+
+    .primary-buttons {
+        flex-direction: column;
+        gap: 15px;
+        width: 100%;
+    }
+
+    .btn-primary-large {
+        width: 100%;
+        justify-content: center;
+        padding: 15px 20px;
+        font-size: 1.1rem;
+    }
+
+    .editor-container {
+        padding: 10px;
+        margin-top: 10px;
+    }
+
+    .page {
+        width: 100%;
+        max-width: 100%;
+        padding: 15px;
+    }
+
+    .history-sidebar {
+        width: 300px;
+    }
+
+    .history-sidebar.open ~ main {
+        margin-left: 300px !important;
+    }
+
+    .history-header {
+        padding: 20px;
+    }
+
+    .history-header h3 {
+        font-size: 1.2rem;
+    }
+
+    .history-content {
+        height: calc(100vh - 90px);
+    }
+
+    .search-box {
+        width: 100%;
+    }
+
+    #search-reports {
+        width: 100%;
+        padding: 10px 15px 10px 35px;
+    }
+
+    .history-tabs {
+        flex-wrap: wrap;
+    }
+
+    .history-tab {
+        flex: 1 1 calc(50% - 4px);
+        padding: 12px 8px;
+        font-size: 13px;
+    }
+
+    .history-tab i {
+        margin-right: 4px;
+    }
+
+    .history-tab span {
+        display: none;
+    }
+
+    .stat-item {
+        padding: 10px;
+    }
+
+    .stat-item i {
+        width: 35px;
+        height: 35px;
+        font-size: 18px;
+    }
+
+    .stat-number {
+        font-size: 1.4rem;
+    }
+
+    .stat-label {
+        font-size: 10px;
+    }
+
+    .report-item {
+        padding: 15px;
+        margin-bottom: 12px;
+    }
+
+    .report-title h4 {
+        font-size: 1.1rem;
+    }
+
+    .report-actions {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .btn-action {
+        width: 100%;
+        justify-content: center;
+        padding: 10px;
+        font-size: 13px;
+    }
+
+    .editor-tools {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .tool-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    select.tool-btn {
+        width: 100%;
+        min-width: auto;
+    }
+
+    .zoom-controls {
+        margin-left: 0;
+        margin-top: 8px;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .orientation-controls {
+        margin-left: 0;
+        margin-top: 8px;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .content-section,
+    .content-section:hover {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: hidden;
+    }
+
+    .element-container {
+        max-width: 90% !important;
+    }
+
+    /* Scrollbar para móvil */
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #2e7d32, #4caf50);
+        border-radius: 3px;
+    }
+}
+
+@media (max-width: 600px) {
+    .header {
+        padding: 10px 15px;
+    }
+
+    .top-section {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .logo {
+        flex-direction: row;
+        gap: 8px;
+    }
+
+    .logo h1 {
+        font-size: 1.1rem;
+    }
+
+    .logo-img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .hamburger-btn {
+        align-self: flex-end;
+        margin-top: -5px;
+    }
+
+    .top-bar {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+        padding: 12px 15px;
+    }
+
+    .system-date {
+        justify-content: center;
+        order: 1;
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .user-actions {
+        justify-content: center;
+        gap: 8px;
+        order: 2;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .user-actions .btn,
+    .user-actions .btn-primary,
+    .user-actions .btn-accent {
+        width: auto;
+        padding: 8px 14px;
+        font-size: 0.9rem;
+    }
+
+    main {
+        padding: 12px;
+    }
+
+    .buttons-container {
+        padding: 20px;
+    }
+
+    .buttons-container h2 {
+        font-size: 1.5rem;
+    }
+
+    .buttons-container p {
+        font-size: 0.9rem;
+    }
+
+    .primary-buttons {
+        gap: 12px;
+    }
+
+    .btn-primary-large {
+        padding: 14px 20px;
+        font-size: 1rem;
+    }
+
+    .history-sidebar {
+        width: 260px;
+    }
+
+    .history-sidebar.open ~ main {
+        margin-left: 260px !important;
+    }
+
+    .history-header {
+        padding: 15px 20px;
+    }
+
+    .history-header h3 {
+        font-size: 1.15rem;
+    }
+
+    .history-content {
+        height: calc(100vh - 90px);
+    }
+
+    .search-box {
+        width: 100%;
+    }
+
+    #search-reports {
+        width: 100%;
+        font-size: 14px;
+    }
+
+    .history-tab {
+        flex: 1 1 calc(50% - 2px);
+        padding: 10px 6px;
+        font-size: 12px;
+    }
+
+    .stat-item {
+        padding: 10px;
+        gap: 8px;
+    }
+
+    .stat-item i {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+
+    .stat-number {
+        font-size: 1.3rem;
+    }
+
+    .stat-label {
+        font-size: 9px;
+    }
+
+    .report-item {
+        padding: 12px;
+    }
+
+    .report-title h4 {
+        font-size: 1rem;
+    }
+
+    .report-dates {
+        min-width: auto;
+    }
+
+    .report-dates small {
+        font-size: 10px;
+        white-space: normal;
+    }
+
+    .report-actions {
+        flex-direction: column;
+    }
+
+    .btn-action {
+        width: 100%;
+        padding: 10px;
+        font-size: 12px;
+    }
+
+    .page {
+        padding: 12px;
+    }
+
+    .page-content {
+        padding: 6px;
+    }
+
+    .editor-container {
+        padding: 8px;
+        margin-top: 10px;
+    }
+
+    .editor-tools {
+        padding: 10px;
+    }
+
+    .tool-btn {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+
+    select.tool-btn {
+        width: 100%;
+    }
+
+    .chart-container {
+        padding: 8px;
+    }
+
+    .content-section {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: hidden;
+    }
+
+    .element-container {
+        max-width: 85% !important;
+    }
+
+    /* Scrollbar móvil */
+    ::-webkit-scrollbar {
+        width: 5px;
+    }
 }
