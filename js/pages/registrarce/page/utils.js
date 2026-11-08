@@ -24,9 +24,8 @@
 
 // Función para mostrar SweetAlert de ayuda con el nuevo estilo
     function setupHelpButton() {
-        const helpBtn = document.getElementById('help-btn');
-        if (helpBtn) {
-            helpBtn.addEventListener('click', function(e) {
+        document.querySelectorAll('#help-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
                 e.preventDefault();
                 Swal.fire({
                     title: '<div style="display: flex; align-items: center; gap: 10px; color: #2c3e50;"><i class="fas fa-life-ring" style="color: #3498db; font-size: 1.5rem;"></i><span>Centro de Ayuda - Registro</span></div>',
@@ -137,7 +136,7 @@
                     }
                 });
             });
-        }
+        });
     }
 
 // Función para manejar el registro (mantener igual que antes)

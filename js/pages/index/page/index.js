@@ -24,7 +24,7 @@ document.getElementById('nav-login').addEventListener('click', function(e) {
       });
 
 // Botón de ayuda del header con SweetAlert
-      document.getElementById('help-btn').addEventListener('click', function(e) {
+      document.querySelectorAll('#help-btn').forEach(btn => btn.addEventListener('click', function(e) {
         e.preventDefault();
         Swal.fire({
           title: 'Heliconias Reports - Ayuda',
@@ -91,7 +91,7 @@ document.getElementById('nav-login').addEventListener('click', function(e) {
             popup: 'animate__animated animate__fadeOutUp'
           }
         });
-      });
+    }));
 
 // Código de login FINAL con Supabase Auth
       document.getElementById('loginForm').addEventListener('submit', async function(e) {

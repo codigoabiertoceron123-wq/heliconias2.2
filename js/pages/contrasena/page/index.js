@@ -24,7 +24,7 @@ document.getElementById('nav-login').addEventListener('click', function(e) {
       });
 
 // Botón de ayuda
-      document.getElementById('help-btn').addEventListener('click', function(e) {
+      document.querySelectorAll('#help-btn').forEach(btn => btn.addEventListener('click', function(e) {
         e.preventDefault();
         Swal.fire({
           title: 'Ayuda - Cambiar Contraseña',
@@ -93,7 +93,7 @@ document.getElementById('nav-login').addEventListener('click', function(e) {
             confirmButton: 'help-swal-confirm-btn'
           }
         });
-      });
+    }));
 
 // Step 1: Validar Usuario
       document.getElementById('step1Form').addEventListener('submit', async function(e) {
