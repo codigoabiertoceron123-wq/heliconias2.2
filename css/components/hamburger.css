@@ -281,6 +281,11 @@ body.menu-open {
         order: 2 !important;
     }
 
+    /* La nav-container (con la hamburguesa) debe ir a la DERECHA del logo */
+    .top-section .nav-container {
+        order: 2 !important;
+    }
+
     .main-nav,
     .login-page .main-nav,
     .contrasena-page .main-nav,
