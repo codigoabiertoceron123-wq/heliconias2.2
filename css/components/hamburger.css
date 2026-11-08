@@ -251,6 +251,26 @@ body.menu-open {
     .hamburger-btn {
         display: none !important;
     }
+
+    /* Login: mostrar los botones del menú (Inicio, Reservas, Soporte, Ayuda) */
+    .login-page .main-nav,
+    .contrasena-page .main-nav,
+    .registrarce-page .main-nav {
+        display: flex !important;
+    }
+
+    /* En login no se muestra el botón "Login" (el usuario ya está en esa página) */
+    .login-page #nav-login,
+    .contrasena-page #nav-login,
+    .registrarce-page #nav-login {
+        display: none !important;
+    }
+
+    .login-page .user-actions,
+    .contrasena-page .user-actions,
+    .registrarce-page .user-actions {
+        display: flex !important;
+    }
 }
 
 /* Móvil (max-width: 900px): hamburguesa a la derecha, menú oculto */
@@ -261,7 +281,10 @@ body.menu-open {
         order: 2 !important;
     }
 
-    .main-nav {
+    .main-nav,
+    .login-page .main-nav,
+    .contrasena-page .main-nav,
+    .registrarce-page .main-nav {
         display: none !important;
     }
 
@@ -325,7 +348,10 @@ body.menu-open {
         margin-left: 0 !important;
     }
 
-    .user-actions {
+    .user-actions,
+    .login-page .user-actions,
+    .contrasena-page .user-actions,
+    .registrarce-page .user-actions {
         display: none !important;
     }
 
@@ -379,20 +405,7 @@ body.menu-open {
 /* LOGIN / REGISTRO / CONTRASEÑA: Solo ítems específicos en menú móvil */
 /* =========================================== */
 
-/* En escritorio: ocultar menú y acciones en páginas de login */
-.login-page .main-nav,
-.contrasena-page .main-nav,
-.registrarce-page .main-nav {
-    display: none !important;
-}
-
-.login-page .user-actions,
-.contrasena-page .user-actions,
-.registrarce-page .user-actions {
-    display: none !important;
-}
-
-/* En móvil: mostrar SOLO Inicio, Reservas, Login, Soporte, Ayuda */
+/* En móvil: mostrar SOLO Inicio, Reservas, Soporte, Ayuda */
 /* Ocultar ítems que NO deben estar en login */
 .login-page .mobile-nav-item[href="eventos.html"],
 .login-page .mobile-nav-item[href="actividad.html"],
