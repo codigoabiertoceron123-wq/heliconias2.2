@@ -3,7 +3,7 @@
 
 /* ===== Botón hamburguesa (solo móvil) ===== */
 .hamburger-btn {
-    display: none;
+    display: flex !important;
     flex-direction: column;
     gap: 5px;
     background: transparent;
@@ -12,6 +12,8 @@
     padding: 8px;
     z-index: 1100;
     align-self: center;
+    order: 2 !important;
+    margin-left: auto !important;
 }
 
 .hamburger-btn span {
@@ -352,5 +354,97 @@ body.menu-open {
     .content {
         grid-template-columns: 1fr;
         gap: 15px;
+    }
+}
+
+/* =========================================== */
+/* HAMBURGUESA SIEMPRE A LA DERECHA - TODAS LAS PÁGINAS */
+/* =========================================== */
+
+/* Botón hamburguesa: mostrado y a la derecha en escritorio */
+.hamburger-btn {
+    display: flex !important;
+    margin-left: auto !important;
+    order: 2 !important;
+}
+
+/* Menú principal va a la izquierda del botón hamburguesa */
+.main-nav {
+    order: 1 !important;
+}
+
+.top-section {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+/* Login, registro y contraseña: hamburguesa a la derecha */
+.login-page .hamburger-btn,
+.contrasena-page .hamburger-btn,
+.registrarce-page .hamburger-btn {
+    margin-left: auto !important;
+    margin-right: 0 !important;
+    order: 2 !important;
+}
+
+.login-page .logo,
+.contrasena-page .logo,
+.registrarce-page .logo {
+    order: 1 !important;
+    margin-right: auto !important;
+}
+
+.login-page .top-section,
+.contrasena-page .top-section,
+.registrarce-page .top-section {
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-direction: row !important;
+}
+
+/* En móvil (max-width: 900px) */
+@media (max-width: 900px) {
+    .hamburger-btn {
+        margin-left: auto !important;
+        order: 2 !important;
+    }
+    
+    .login-page .hamburger-btn,
+    .contrasena-page .hamburger-btn,
+    .registrarce-page .hamburger-btn {
+        margin-left: auto !important;
+        margin-right: 0 !important;
+        order: 2 !important;
+    }
+    
+    .login-page .top-section,
+    .contrasena-page .top-section,
+    .registrarce-page .top-section {
+        justify-content: space-between !important;
+        flex-direction: row !important;
+    }
+}
+
+/* En móvil pequeño (max-width: 600px) */
+@media (max-width: 600px) {
+    .hamburger-btn {
+        margin-left: auto !important;
+        order: 2 !important;
+    }
+    
+    .login-page .hamburger-btn,
+    .contrasena-page .hamburger-btn,
+    .registrarce-page .hamburger-btn {
+        margin-left: auto !important;
+        margin-right: 0 !important;
+        order: 2 !important;
+    }
+    
+    .login-page .top-section,
+    .contrasena-page .top-section,
+    .registrarce-page .top-section {
+        justify-content: space-between !important;
+        flex-direction: row !important;
     }
 }
