@@ -2,9 +2,11 @@
 /* HAMBURGUESA - MENÚ LATERAL Y BOTÓN           */
 /* =========================================== */
 
-/* ===== Botón hamburguesa (SOLO móvil) ===== */
+/* Paleta: verde #2e7d32, verde oscuro #195b35, verde claro #4caf50 */
+
+/* ===== Botón hamburguesa (solo móvil) ===== */
 .hamburger-btn {
-    display: none; /* Oculto en escritorio */
+    display: none;
     flex-direction: column;
     gap: 5px;
     background: transparent;
@@ -82,7 +84,7 @@
     object-fit: contain !important;
 }
 
-.mobile-sidebar-header .logo h1 {
+.mobile-sidebar-header .sidebar-logo h1 {
     font-size: 1.15rem !important;
     color: #195b35 !important;
     font-weight: 700 !important;
@@ -238,33 +240,20 @@ body.menu-open {
 }
 
 /* =========================================== */
-/* RESPONSIVE - MENÚ HAMBURGUESA               */
+/* RESPONSIVE DEL HEADER (MÓVIL)               */
 /* =========================================== */
 
-/* Escritorio (900px y más): hamburguesa OCULTA, menú visible */
+/* Escritorio (min-width: 901px): menú visible, hamburguesa oculta */
 @media (min-width: 901px) {
-    .hamburger-btn {
-        display: none !important;
-    }
-    
     .main-nav {
         display: flex !important;
     }
-    
-    .login-page .main-nav,
-    .contrasena-page .main-nav,
-    .registrarce-page .main-nav {
-        display: flex !important;
-    }
-    
-    .login-page .user-actions,
-    .contrasena-page .user-actions,
-    .registrarce-page .user-actions {
-        display: flex !important;
+    .hamburger-btn {
+        display: none !important;
     }
 }
 
-/* Móvil (max-width: 900px): hamburguesa VISIBLE, menú oculto */
+/* Móvil (max-width: 900px): hamburguesa a la derecha, menú oculto */
 @media (max-width: 900px) {
     .hamburger-btn {
         display: flex !important;
@@ -387,10 +376,10 @@ body.menu-open {
 }
 
 /* =========================================== */
-/* LOGIN/REGISTRO/CONTRASEÑA: Menú solo con ítems específicos */
+/* LOGIN / REGISTRO / CONTRASEÑA: Solo ítems específicos en menú móvil */
 /* =========================================== */
 
-/* En escritorio, ocultar menú y user-actions en páginas de login */
+/* En escritorio: ocultar menú y acciones en páginas de login */
 .login-page .main-nav,
 .contrasena-page .main-nav,
 .registrarce-page .main-nav {
@@ -403,8 +392,8 @@ body.menu-open {
     display: none !important;
 }
 
-/* En móvil, el menú móvil solo muestra: Inicio, Reservas, Login, Soporte, Ayuda */
-/* Ocultar items que no deben estar en login */
+/* En móvil: mostrar SOLO Inicio, Reservas, Login, Soporte, Ayuda */
+/* Ocultar ítems que NO deben estar en login */
 .login-page .mobile-nav-item[href="eventos.html"],
 .login-page .mobile-nav-item[href="actividad.html"],
 .login-page .mobile-nav-item[href="reportes.html"],
