@@ -1,4 +1,4 @@
-* {
+﻿* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -199,7 +199,7 @@ main {
     transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Cuando el historial está abierto, desplazar el main */
+/* Cuando el historial estÃ¡ abierto, desplazar el main */
 .history-sidebar.open ~ main {
     margin-left: 380px;
 }
@@ -309,7 +309,7 @@ main {
     max-width: 100%;
 }
 
-/* Botón cerrar editor - SOLO la X */
+/* BotÃ³n cerrar editor - SOLO la X */
 .btn-close-editor {
     background: #e74c3c;
     color: white;
@@ -408,19 +408,19 @@ main {
     overflow: hidden;
 }
 
-/* Forzar botón cerrar a mostrar solo la X */
+/* Forzar botÃ³n cerrar a mostrar solo la X */
 .btn-close-editor span,
 .btn-close-editor .btn-text {
     display: none !important;
 }
 
-/* Cualquier botón dentro del editor que sea solo icono */
+/* Cualquier botÃ³n dentro del editor que sea solo icono */
 .editor-container .btn-icon-only i,
 .editor-container .btn-close-editor i {
     font-size: 1.1rem;
 }
 
-/* Títulos de página del editor sin desbordamiento */
+/* TÃ­tulos de pÃ¡gina del editor sin desbordamiento */
 .page-title,
 .page .page-title {
     font-size: 1.2rem;
@@ -510,7 +510,7 @@ select.tool-btn {
     transition: transform 0.3s ease;
 }
 
-/* ESTILOS PARA PÁGINAS MEJORADOS */
+/* ESTILOS PARA PÃGINAS MEJORADOS */
 .page {
     background: white;
     border: 2px solid #e8f5e8;
@@ -528,13 +528,13 @@ select.tool-btn {
 
 .page.vertical {
     min-height: 320px;
-    aspect-ratio: 1 / 1.414; /* Proporción A4 vertical */
+    aspect-ratio: 1 / 1.414; /* ProporciÃ³n A4 vertical */
 }
 
 .page.horizontal {
     min-height: 220px;
     max-width: 1000px;
-    aspect-ratio: 1.414 / 1; /* Proporción A4 horizontal */
+    aspect-ratio: 1.414 / 1; /* ProporciÃ³n A4 horizontal */
 }
 
 .page-header {
@@ -561,7 +561,7 @@ select.tool-btn {
     font-size: 0.8rem;
 }
 
-/* BOTÓN ELIMINAR PÁGINA - ARRIBA A LA DERECHA DE CADA HOJA */
+/* BOTÃ“N ELIMINAR PÃGINA - ARRIBA A LA DERECHA DE CADA HOJA */
 .delete-page-btn {
     position: absolute;
     top: 15px;
@@ -595,7 +595,7 @@ select.tool-btn {
     background: linear-gradient(135deg, #f0fff0, #e0f5e0);
 }
 
-/* SISTEMA DE ARRASTRE MEJORADO - ¡ESTO ES CLAVE! */
+/* SISTEMA DE ARRASTRE MEJORADO - Â¡ESTO ES CLAVE! */
 .element-container {
     position: absolute !important; /* Cambiado de relative a absolute */
     cursor: move;
@@ -690,7 +690,7 @@ select.tool-btn {
     font-weight: 600;
 }
 
-/* Estilos para imágenes - MEJORADO PARA ARRASTRE */
+/* Estilos para imÃ¡genes - MEJORADO PARA ARRASTRE */
 .image-element {
     max-width: 100%;
     height: auto;
@@ -699,7 +699,7 @@ select.tool-btn {
     display: block;
 }
 
-/* Estilos para gráficos */
+/* Estilos para grÃ¡ficos */
 .chart-container {
     margin: 10px 0;
     padding: 10px;
@@ -709,7 +709,7 @@ select.tool-btn {
     position: relative;
 }
 
-/* Botón cerrar editor */
+/* BotÃ³n cerrar editor */
 .btn-close-editor {
     background: #e74c3c;
     color: white;
@@ -733,7 +733,7 @@ select.tool-btn {
 /* HISTORIAL DE REPORTES - MEJORADO           */
 /* =========================================== */
 
-/* Sidebar de historial - COMPLETAMENTE REDISEÑADO */
+/* Sidebar de historial - COMPLETAMENTE REDISEÃ‘ADO */
 .history-sidebar {
     position: fixed;
     left: 0;
@@ -811,7 +811,7 @@ select.tool-btn {
     height: calc(100vh - 90px);
 }
 
-/* Filtros y búsqueda */
+/* Filtros y bÃºsqueda */
 .history-filters {
     padding: 15px 20px;
     background: #f8fafc;
@@ -1198,7 +1198,7 @@ select.tool-btn {
     transform: translateY(-1px);
 }
 
-/* Estados vacíos y de carga */
+/* Estados vacÃ­os y de carga */
 .empty-state {
     text-align: center;
     padding: 40px 20px;
@@ -1365,7 +1365,7 @@ select.tool-btn {
     color: #2e7d32;
 }
 
-/* Ajustar el main content cuando el sidebar está visible */
+/* Ajustar el main content cuando el sidebar estÃ¡ visible */
 .history-sidebar.open ~ main {
     margin-left: 380px;
 }
@@ -1405,7 +1405,7 @@ select.tool-btn {
     animation: fadeIn 0.3s ease-out;
 }
 
-/* CLASES DE POSICIÓN PARA ARRASTRE */
+/* CLASES DE POSICIÃ“N PARA ARRASTRE */
 .pos-top-left { top: 20px; left: 20px; }
 .pos-top-center { top: 20px; left: 50%; transform: translateX(-50%); }
 .pos-top-right { top: 20px; right: 20px; }
@@ -1533,7 +1533,7 @@ select.tool-btn {
         flex-wrap: wrap;
     }
     
-    /* Ajustes para arrastre en móviles */
+    /* Ajustes para arrastre en mÃ³viles */
     .element-container {
         position: relative !important;
         margin: 10px 0 !important;
@@ -1574,7 +1574,7 @@ select.tool-btn {
         font-size: 1rem;
     }
 
-    /* === EDITOR: En móvil, botones solo icono (ocultar texto) === */
+    /* === EDITOR: En mÃ³vil, botones solo icono (ocultar texto) === */
     #editor-panel .btn,
     #editor-panel .btn-primary-large,
     #editor-panel .btn-icon-only,
@@ -1604,7 +1604,7 @@ select.tool-btn {
         font-weight: 900 !important;
     }
 
-    /* Botones del editor - solo icono en móvil (tamaño pequeño) */
+    /* Botones del editor - solo icono en mÃ³vil (tamaÃ±o pequeÃ±o) */
     #editor-panel .btn,
     #editor-panel .btn-primary-large,
     #editor-panel .btn-icon-only,
@@ -1717,7 +1717,7 @@ select.tool-btn {
     display: block;
 }
 
-/* INDICADOR DE ÁREA DE ARRASTRE */
+/* INDICADOR DE ÃREA DE ARRASTRE */
 .drag-helper {
     position: absolute;
     top: 10px;
@@ -1770,7 +1770,7 @@ select.tool-btn {
 }
 
 /* =========================================== */
-/* RESPONSIVE PARA REPORTES - MÓVIL            */
+/* RESPONSIVE PARA REPORTES - MÃ“VIL            */
 /* =========================================== */
 
 @media (max-width: 900px) {
@@ -1832,7 +1832,7 @@ select.tool-btn {
         padding: 15px;
     }
 
-    /* Editor: botones solo icono en móvil */
+    /* Editor: botones solo icono en mÃ³vil */
     #editor-panel .btn,
     #editor-panel .btn-primary-large,
     #editor-panel .btn-icon-only,
@@ -2040,7 +2040,7 @@ select.tool-btn {
         max-width: 90% !important;
     }
 
-    /* Scrollbar para móvil */
+    /* Scrollbar para mÃ³vil */
     ::-webkit-scrollbar {
         width: 6px;
     }
@@ -2263,7 +2263,7 @@ select.tool-btn {
         max-width: 85% !important;
     }
 
-    /* Scrollbar móvil */
+    /* Scrollbar mÃ³vil */
     ::-webkit-scrollbar {
         width: 5px;
     }
@@ -2272,7 +2272,7 @@ select.tool-btn {
 /* ===== SWEETALERT EDITOR: BOTONES SOLO ICONO (sin texto)      */
 /* =========================================== */
 
-/* Bot�n cerrar editor - SOLO la X, sin texto */
+/* Botï¿½n cerrar editor - SOLO la X, sin texto */
 .btn-close-editor {
     display: inline-flex !important;
     align-items: center !important;
@@ -2358,7 +2358,7 @@ select.tool-btn {
     max-width: none !important;
 }
 
-/* T�tulos del editor sin desbordar */
+/* Tï¿½tulos del editor sin desbordar */
 #editor-panel h2,
 #editor-panel h3,
 #editor-panel .editor-title {
@@ -2409,10 +2409,10 @@ select.tool-btn {
 }
 
 /* =========================================== */
-/* EDITOR: BOTONES TODOS MISMO TAMA�O          */
+/* EDITOR: BOTONES TODOS MISMO TAMAï¿½O          */
 /* =========================================== */
 
-/* Todos los botones del mismo tama�o en el editor - ESCRITORIO (mostrar texto) */
+/* Todos los botones del mismo tamaï¿½o en el editor - ESCRITORIO (mostrar texto) */
 #editor-panel .btn,
 #editor-panel .btn-primary-large,
 #editor-panel .btn-icon-only,
@@ -2456,7 +2456,7 @@ select.tool-btn {
     color: #2c3e50 !important;
 }
 
-/* El bot�n guardar en escritorio - texto + icono */
+/* El botï¿½n guardar en escritorio - texto + icono */
 #editor-panel .btn-primary-large,
 #editor-panel button[id*="save"],
 #editor-panel button[class*="save"] {
@@ -2474,7 +2474,7 @@ select.tool-btn {
     font-size: 1rem !important;
 }
 
-/* Bot�n cerrar editor tambi�n mismo tama�o uniforme */
+/* Botï¿½n cerrar editor tambiï¿½n mismo tamaï¿½o uniforme */
 #editor-panel .btn-close-editor {
     width: 40px !important;
     height: 40px !important;
@@ -2567,24 +2567,14 @@ select.tool-btn {
 #editor-panel .zoom-btn i {
     color: #2c3e50 !important;
     font-size: 1rem !important;
-}
-
-#editor-panel .btn-icon-only.secondary i {
-    color: white !important;
-}
-
-#editor-panel .btn-icon-only.danger i {
-    color: white !important;
-}
-
 /* =========================================== */
-/* HAMBURGUESA SIEMPRE A LA DERECHA            */
+/* HAMBURGUESA - SIEMPRE A LA DERECHA           */
 /* =========================================== */
 
-/* Forzar hamburguesa a la derecha en TODAS las p�ginas */
+/* Forzar hamburguesa a la derecha en TODAS las pÃ¡ginas */
 .hamburger-btn {
+    display: flex !important;
     margin-left: auto !important;
-    align-self: flex-end !important;
     order: 2 !important;
 }
 
@@ -2594,13 +2584,13 @@ select.tool-btn {
     align-items: center !important;
 }
 
-/* Asegurar que en login, registro y contrase�a tambi�n est� a la derecha */
+/* Asegurar que en login, registro y contraseÃ±a tambiÃ©n estÃ© a la derecha */
 .login-page .hamburger-btn,
 .contrasena-page .hamburger-btn,
 .registrarce-page .hamburger-btn {
     margin-left: auto !important;
     margin-right: 0 !important;
-    order: 3 !important;
+    order: 2 !important;
 }
 
 .login-page .logo,
@@ -2618,10 +2608,11 @@ select.tool-btn {
     flex-direction: row !important;
 }
 
-/* En m�vil, asegurar que el hamburguesa est� a la derecha */
+/* En mÃ³vil, asegurar que el hamburguesa estÃ© a la derecha */
 @media (max-width: 900px) {
     .hamburger-btn {
         margin-left: auto !important;
+        order: 2 !important;
     }
     
     .login-page .hamburger-btn,
@@ -2629,6 +2620,7 @@ select.tool-btn {
     .registrarce-page .hamburger-btn {
         margin-left: auto !important;
         margin-right: 0 !important;
+        order: 2 !important;
     }
     
     .login-page .top-section,
@@ -2642,6 +2634,7 @@ select.tool-btn {
 @media (max-width: 600px) {
     .hamburger-btn {
         margin-left: auto !important;
+        order: 2 !important;
     }
     
     .login-page .hamburger-btn,
@@ -2649,6 +2642,7 @@ select.tool-btn {
     .registrarce-page .hamburger-btn {
         margin-left: auto !important;
         margin-right: 0 !important;
+        order: 2 !important;
     }
     
     .login-page .top-section,
