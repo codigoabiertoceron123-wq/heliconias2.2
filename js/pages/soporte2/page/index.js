@@ -44,8 +44,13 @@ document.getElementById('nav-login').addEventListener('click', function(e) {
         mostrarOpcionesNavegacion('Login - Parque Heliconias', 'https://codigoabiertoceron123-wq.github.io/heliconias2.2/');
       });
 
+      document.getElementById('nav-soporte').addEventListener('click', function(e) {
+        e.preventDefault();
+        mostrarOpcionesNavegacion('Soporte - Heliconias Reports', 'soporte2.html');
+      });
+
 // Botón de ayuda del header
-      document.getElementById('help-btn').addEventListener('click', function(e) {
+      document.querySelectorAll('#help-btn').forEach(btn => btn.addEventListener('click', function(e) {
         e.preventDefault();
         
         const screenWidth = window.innerWidth;
@@ -119,7 +124,7 @@ document.getElementById('nav-login').addEventListener('click', function(e) {
             popup: 'animate__animated animate__fadeOutUp'
           }
         });
-      });
+      }));
 
 sweetAlertStyle.textContent = `
         .gmail-swal-popup, .nav-swal-popup {
