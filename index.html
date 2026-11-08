@@ -74,13 +74,12 @@
                 <button class="mobile-sidebar-close" aria-label="Cerrar menú">&times;</button>
             </div>
             <ul class="mobile-nav-list">
-                <li><a href="principal.html" class="mobile-nav-item"><i class="fas fa-home"></i> <span class="nav-text">Inicio</span><span class="nav-badge">Panel principal</span></a></li>
-                <li><a href="eventos.html" class="mobile-nav-item"><i class="fas fa-calendar-check"></i> <span class="nav-text">Reservas</span><span class="nav-badge">Reservas y eventos</span></a></li>
+                <li><a href="#" class="mobile-nav-item" onclick="event.preventDefault(); mostrarOpcionesNavegacion('Inicio - Parque Heliconias', 'https://parque-heliconias-khaki.vercel.app/index.html');"><i class="fas fa-home"></i> <span class="nav-text">Inicio</span><span class="nav-badge">Panel principal</span></a></li>
+                <li><a href="#" class="mobile-nav-item" onclick="event.preventDefault(); mostrarOpcionesNavegacion('Reservas - Parque Heliconias', 'https://parqueheliconias-app.onrender.com/');"><i class="fas fa-calendar-check"></i> <span class="nav-text">Reservas</span><span class="nav-badge">Reservas y eventos</span></a></li>
             </ul>
             <div class="mobile-actions">
                 <a href="soporte.html" class="btn btn-primary"><i class="fas fa-headset"></i> Soporte</a>
                 <button class="btn btn-info" id="help-btn"><i class="fas fa-question-circle"></i> Ayuda</button>
-                <button class="btn btn-accent" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Salir</button>
             </div>
         </aside>
 

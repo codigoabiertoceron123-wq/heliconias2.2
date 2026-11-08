@@ -421,3 +421,21 @@ body.menu-open {
 .registrarce-page .mobile-nav-item[href="configuracion.html"] {
     display: none !important;
 }
+
+/* =========================================== */
+/* BOTÓN AYUDA - VERDE (misma paleta que Soporte) */
+/* =========================================== */
+
+.user-actions .btn-info,
+.mobile-actions .btn-info {
+    background: linear-gradient(135deg, #2e7d32, #4caf50) !important;
+    color: #ffffff !important;
+}
+
+.user-actions .btn-info:hover,
+.mobile-actions .btn-info:hover {
+    background: linear-gradient(135deg, #195b35, #2e7d32) !important;
+    color: #ffffff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(46, 125, 50, 0.35);
+}
