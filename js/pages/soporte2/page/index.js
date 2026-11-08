@@ -55,49 +55,69 @@ document.getElementById('nav-login').addEventListener('click', function(e) {
         if (screenWidth <= 480) modalWidth = '98%';
         
         Swal.fire({
-          title: '<div style="display: flex; align-items: center; justify-content: center; gap: 10px; color: #2c3e50;"><i class="fas fa-life-ring" style="color: #3498db; font-size: 1.5rem;"></i><span style="font-size: 1.5rem;">Centro de Ayuda</span></div>',
+          title: 'Heliconias Reports - Ayuda',
           html: `
-            <div style="text-align: center;">
-              <div style="background: linear-gradient(135deg, #2e7d32, #4caf50); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                <h4 style="margin: 0; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1.1rem;">
-                  <i class="fas fa-hand-point-up"></i>
-                  Contacta nuestro soporte técnico
+            <div style="text-align: left;">
+              <div style="background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                <h4 style="margin: 0;">
+                  Bienvenido a Heliconias Reports
                 </h4>
               </div>
               
-              <div style="display: flex; flex-direction: column; gap: 20px; margin: 25px 0;">
-                <div style="display: flex; align-items: start; gap: 15px; padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #ea4335;">
-                  <i class="fab fa-google" style="color: #ea4335; font-size: 1.5rem; margin-top: 2px;"></i>
-                  <div style="text-align: left;">
-                    <h5 style="margin: 0 0 8px 0; color: #2c3e50;">Gmail</h5>
-                    <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">Pasa el mouse sobre el botón rojo para ver la información</p>
+              <p style="margin-bottom: 20px; color: #2c3e50; line-height: 1.6;">
+                Nuestra plataforma esta disenada para ofrecerte informes detallados y analisis completos sobre el cultivo y produccion de heliconias.
+              </p>
+
+              <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #27ae60;">
+                <h5 style="margin: 0 0 15px 0; color: #2c3e50;">
+                  Caracteristicas principales
+                </h5>
+                <div style="display: grid; gap: 10px;">
+                  <div style="display: flex; align-items: start; gap: 10px;">
+                    <i class="fas fa-check-circle" style="color: #27ae60; margin-top: 2px;"></i>
+                    <span style="color: #2c3e50;">Gestion de inventarios de heliconias</span>
                   </div>
-                </div>
-                
-                <div style="display: flex; align-items: start; gap: 15px; padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #25d366;">
-                  <i class="fab fa-whatsapp" style="color: #25d366; font-size: 1.5rem; margin-top: 2px;"></i>
-                  <div style="text-align: left;">
-                    <h5 style="margin: 0 0 8px 0; color: #2c3e50;">WhatsApp</h5>
-                    <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">Pasa el mouse sobre el botón verde para ver la información</p>
+                  <div style="display: flex; align-items: start; gap: 10px;">
+                    <i class="fas fa-check-circle" style="color: #27ae60; margin-top: 2px;"></i>
+                    <span style="color: #2c3e50;">Seguimiento de produccion y cosechas</span>
+                  </div>
+                  <div style="display: flex; align-items: start; gap: 10px;">
+                    <i class="fas fa-check-circle" style="color: #27ae60; margin-top: 2px;"></i>
+                    <span style="color: #2c3e50;">Analisis de rendimiento por variedad</span>
+                  </div>
+                  <div style="display: flex; align-items: start; gap: 10px;">
+                    <i class="fas fa-check-circle" style="color: #27ae60; margin-top: 2px;"></i>
+                    <span style="color: #2c3e50;">Reportes personalizados para toma de decisiones</span>
                   </div>
                 </div>
               </div>
-              
-              <div style="background: #e8f5e8; padding: 15px; border-radius: 10px; margin-top: 20px;">
-                <p style="margin: 0; color: #2e7d32; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                  <i class="fas fa-clock"></i>
-                  <strong>Respuesta rápida: Menos de 24 horas hábiles</strong>
+
+              <div style="background: linear-gradient(135deg, #ffeaa7, #fab1a0); padding: 15px; border-radius: 10px; border-left: 4px solid #e17055;">
+                <h5 style="margin: 0 0 10px 0; color: #2d3436;">
+                  Necesitas ayuda?
+                </h5>
+                
+                <p style="margin: 0; color: #2d3436; line-height: 1.5;">
+                  Tambien puedes contactar a nuestro equipo de soporte a traves de la seccion de contacto en la parte superior de la pagina.
                 </p>
               </div>
             </div>
           `,
           showCloseButton: true,
-          showCancelButton: false,
-          confirmButtonColor: '#3498db',
-          confirmButtonText: '<i class="fas fa-check-circle"></i> ¡Entendido!',
-          width: modalWidth,
-          padding: '2rem',
+          confirmButtonColor: '#27ae60',
+          confirmButtonText: '<i class="fas fa-check-circle"></i> Entendido',
+          width: 600,
           background: '#ffffff',
+          customClass: {
+            popup: 'swal2-popup',
+            confirmButton: 'help-swal-confirm-btn'
+          },
+          showClass: {
+            popup: 'animate__animated animate__fadeInDown'
+          },
+          hideClass: {
+            popup: 'animate__animated animate__fadeOutUp'
+          }
         });
       });
 
