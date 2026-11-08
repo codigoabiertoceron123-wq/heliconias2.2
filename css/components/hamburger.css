@@ -448,3 +448,49 @@ body.menu-open {
         flex-direction: row !important;
     }
 }
+
+/* =========================================== */
+/* LOGIN/REGISTRO/CONTRASEÑA: Menú solo con ítems específicos */
+/* =========================================== */
+
+/* En escritorio, ocultar menú y user-actions en páginas de login */
+.login-page .main-nav,
+.login-page .user-actions,
+.contrasena-page .main-nav,
+.contrasena-page .user-actions,
+.registrarce-page .main-nav,
+.registrarce-page .user-actions {
+    display: none !important;
+}
+
+/* En móvil, el menú móvil solo muestra: Inicio, Reservas, Login, Soporte, Ayuda */
+/* Ocultar items que no deben estar en login */
+.login-page .mobile-nav-item[href="eventos.html"],
+.login-page .mobile-nav-item[href="actividad.html"],
+.login-page .mobile-nav-item[href="reportes.html"],
+.login-page .mobile-nav-item[href="configuracion.html"],
+.contrasena-page .mobile-nav-item[href="eventos.html"],
+.contrasena-page .mobile-nav-item[href="actividad.html"],
+.contrasena-page .mobile-nav-item[href="reportes.html"],
+.contrasena-page .mobile-nav-item[href="configuracion.html"],
+.registrarce-page .mobile-nav-item[href="eventos.html"],
+.registrarce-page .mobile-nav-item[href="actividad.html"],
+.registrarce-page .mobile-nav-item[href="reportes.html"],
+.registrarce-page .mobile-nav-item[href="configuracion.html"] {
+    display: none !important;
+}
+
+/* En escritorio de login, ocultar todo el nav y user-actions para que solo quede hamburguesa */
+@media (min-width: 901px) {
+    .login-page .main-nav,
+    .contrasena-page .main-nav,
+    .registrarce-page .main-nav {
+        display: none !important;
+    }
+    
+    .login-page .user-actions,
+    .contrasena-page .user-actions,
+    .registrarce-page .user-actions {
+        display: none !important;
+    }
+}
