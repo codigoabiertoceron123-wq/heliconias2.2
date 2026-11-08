@@ -1,7 +1,8 @@
-/* components/hamburger - Menú hamburguesa lateral (desliza de derecha a izquierda) y estilos responsive unificados */
-/* Paleta: verde #2e7d32, verde oscuro #195b35, verde claro #4caf50 */
+/* =========================================== */
+/* HAMBURGUESA - MENÚ LATERAL Y BOTÓN           */
+/* =========================================== */
 
-/* ===== Botón hamburguesa (solo móvil) ===== */
+/* Botón hamburguesa - SIEMPRE visible y a la derecha */
 .hamburger-btn {
     display: flex !important;
     flex-direction: column;
@@ -9,22 +10,24 @@
     background: transparent;
     border: none;
     cursor: pointer;
-    padding: 8px;
+    padding: 10px;
     z-index: 1100;
-    align-self: center;
-    order: 2 !important;
+    background: #2e7d32 !important;
+    border-radius: 8px !important;
     margin-left: auto !important;
+    order: 2 !important;
 }
 
 .hamburger-btn span {
     display: block;
     width: 28px;
     height: 3px;
-    background: #2e7d32;
+    background: #ffffff !important;
     border-radius: 2px;
     transition: all 0.3s ease;
 }
 
+/* Animación del botón hamburguesa al abrir */
 .hamburger-btn.active span:nth-child(1) {
     transform: rotate(45deg) translate(5px, 5px);
 }
@@ -35,7 +38,7 @@
     transform: rotate(-45deg) translate(6px, -6px);
 }
 
-/* ===== Sidebar lateral (oculto por defecto, se abre derecha→izquierda) ===== */
+/* Sidebar lateral (oculto por defecto) */
 .mobile-sidebar {
     position: fixed;
     top: 0;
@@ -51,7 +54,6 @@
     transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     display: flex;
     flex-direction: column;
-    /* Scroll general de TODO el menú (menos el header fijo) */
     overflow-y: auto;
 }
 
@@ -59,14 +61,14 @@
     transform: translateX(0);
 }
 
+/* Header del menú móvil */
 .mobile-sidebar-header {
     display: flex;
-    justify-content: center;   /* Logo centrado, ya no hay botón X a la derecha */
+    justify-content: center;
     align-items: center;
     padding: 20px 24px;
     border-bottom: 1px solid rgba(46, 125, 50, 0.1);
     background: #f8fff8;
-    /* Se queda fijo arriba al hacer scroll del menú */
     position: sticky;
     top: 0;
     z-index: 5;
@@ -74,8 +76,8 @@
 
 .mobile-sidebar-header .sidebar-logo {
     display: flex;
-    justify-content: center;
     align-items: center;
+    gap: 8px;
 }
 
 .mobile-sidebar-header .sidebar-logo img {
@@ -84,16 +86,25 @@
     object-fit: contain !important;
 }
 
+.mobile-sidebar-header .logo h1 {
+    font-size: 1.15rem !important;
+    color: #195b35 !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
 .mobile-sidebar-close {
-    /* El menú se cierra al hacer clic fuera (overlay) o en un ítem; no hace falta botón X */
+    /* El menú se cierra al hacer clic fuera o en un ítem */
     display: none !important;
 }
 
+/* Lista del menú móvil */
 .mobile-nav-list {
     list-style: none;
     margin: 0;
     padding: 0;
-    /* Sin flex:1 ni scroll propio; el scroll es del menú completo */
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -129,6 +140,7 @@
     align-items: center;
     justify-content: center;
     margin-bottom: 4px;
+    color: #2e7d32 !important;
 }
 
 .nav-badge {
@@ -139,7 +151,7 @@
     opacity: 0.8;
 }
 
-/* Últimos tres botones (Soporte, Ayuda, Salir) - opciones destacadas centradas */
+/* Botones finales del menú (Soporte, Ayuda, Salir) */
 .mobile-actions {
     padding: 24px 28px;
     border-top: 1px solid rgba(46, 125, 50, 0.1);
@@ -147,7 +159,6 @@
     flex-direction: column;
     gap: 14px;
     background: #f8fff8;
-    /* Sin align-items center para que margin-left de los btn los desplace a la derecha */
 }
 
 .mobile-actions .btn {
@@ -166,9 +177,7 @@
     text-align: center;
     text-decoration: none;
     transition: all 0.3s ease;
-    /* Desplazar un poco hacia la derecha desde el centro */
     margin-left: 22px;
-    margin-right: 0;
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -182,7 +191,6 @@
     background: linear-gradient(135deg, #195b35, #2e7d32);
     transform: translateY(-2px);
     box-shadow: 0 4px 14px rgba(46, 125, 50, 0.35);
-    color: white;
 }
 
 .mobile-actions .btn-info {
@@ -195,7 +203,6 @@
     background: linear-gradient(135deg, #2980b9, #3498db);
     transform: translateY(-2px);
     box-shadow: 0 4px 14px rgba(52, 152, 219, 0.35);
-    color: white;
 }
 
 .mobile-actions .btn-accent {
@@ -208,10 +215,9 @@
     background: linear-gradient(135deg, #c0392b, #e74c3c);
     transform: translateY(-2px);
     box-shadow: 0 4px 14px rgba(231, 76, 60, 0.35);
-    color: white;
 }
 
-/* ===== Overlay del menú móvil ===== */
+/* Overlay del menú móvil */
 .mobile-overlay {
     position: fixed;
     inset: 0;
@@ -228,21 +234,24 @@
     visibility: visible;
 }
 
-/* Bloquear scroll del body cuando el menú está abierto */
+/* Bloquear scroll del body */
 body.menu-open {
     overflow: hidden;
 }
 
-/* ===== Ajustes responsive del header (móvil) ===== */
+/* =========================================== */
+/* RESPONSIVE - MENÚ HAMBURGUESA              */
+/* =========================================== */
+
 @media (max-width: 900px) {
     .hamburger-btn {
         display: flex !important;
         margin-left: auto !important;
-        order: 3;
+        order: 2 !important;
     }
 
     .main-nav {
-        display: none !important;
+        order: 1 !important;
     }
 
     .top-section {
@@ -261,9 +270,9 @@ body.menu-open {
         align-items: center !important;
         gap: 8px !important;
         margin: 0 !important;
-        order: 1;
-        flex-shrink: 1;
-        min-width: 0;
+        order: 1 !important;
+        flex-shrink: 1 !important;
+        min-width: 0 !important;
     }
 
     .logo-img {
@@ -287,38 +296,37 @@ body.menu-open {
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
-        order: 2;
-        flex-shrink: 1;
-        min-width: 0;
+        order: 2 !important;
+        flex-shrink: 1 !important;
+        min-width: 0 !important;
     }
 
     .top-bar {
-        flex-direction: column;
-        gap: 12px;
-        align-items: stretch;
-        padding: 12px 15px;
+        flex-direction: column !important;
+        gap: 12px !important;
+        align-items: stretch !important;
+        padding: 12px 15px !important;
     }
 
     .system-date {
-        justify-content: center;
-        order: 1;
-        margin-left: 0;
+        justify-content: center !important;
+        order: 1 !important;
+        margin-left: 0 !important;
     }
 
     .user-actions {
-        /* En móvil los botones de acción viven en el sidebar del menú hamburguesa,
-           así que no duplicamos aquí ni desbordamos el encabezado. */
+        /* En móvil los botones viven en el sidebar */
         display: none !important;
     }
 
     .main-content {
-        padding: 15px;
+        padding: 15px !important;
     }
 
     .titulo {
-        font-size: 1.35rem;
-        padding: 20px 24px;
-        margin-bottom: 20px;
+        font-size: 1.35rem !important;
+        padding: 20px 24px !important;
+        margin-bottom: 20px !important;
     }
 }
 
@@ -338,133 +346,44 @@ body.menu-open {
     }
 
     .btn {
-        padding: 10px 14px;
-        font-size: 0.9rem;
+        padding: 10px 14px !important;
+        font-size: 0.9rem !important;
     }
 
     .system-date {
-        font-size: 0.85rem;
-        padding: 8px 14px;
+        font-size: 0.85rem !important;
+        padding: 8px 14px !important;
     }
 
     .main-content {
-        padding: 12px;
+        padding: 12px !important;
     }
 
     .content {
-        grid-template-columns: 1fr;
-        gap: 15px;
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
     }
 }
 
 /* =========================================== */
-/* HAMBURGUESA SIEMPRE A LA DERECHA - TODAS LAS PÁGINAS */
+/* LOGIN / REGISTRO / CONTRASEÑA               */
+/* Solo muestran: Inicio, Reservas, Login, Soporte, Ayuda */
 /* =========================================== */
 
-/* Botón hamburguesa: mostrado y a la derecha en escritorio */
-.hamburger-btn {
-    display: flex !important;
-    margin-left: auto !important;
-    order: 2 !important;
-}
-
-/* Menú principal va a la izquierda del botón hamburguesa */
-.main-nav {
-    order: 1 !important;
-}
-
-.top-section {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-}
-
-/* Login, registro y contraseña: hamburguesa a la derecha */
-.login-page .hamburger-btn,
-.contrasena-page .hamburger-btn,
-.registrarce-page .hamburger-btn {
-    margin-left: auto !important;
-    margin-right: 0 !important;
-    order: 2 !important;
-}
-
-.login-page .logo,
-.contrasena-page .logo,
-.registrarce-page .logo {
-    order: 1 !important;
-    margin-right: auto !important;
-}
-
-.login-page .top-section,
-.contrasena-page .top-section,
-.registrarce-page .top-section {
-    justify-content: space-between !important;
-    align-items: center !important;
-    flex-direction: row !important;
-}
-
-/* En móvil (max-width: 900px) */
-@media (max-width: 900px) {
-    .hamburger-btn {
-        margin-left: auto !important;
-        order: 2 !important;
-    }
-    
-    .login-page .hamburger-btn,
-    .contrasena-page .hamburger-btn,
-    .registrarce-page .hamburger-btn {
-        margin-left: auto !important;
-        margin-right: 0 !important;
-        order: 2 !important;
-    }
-    
-    .login-page .top-section,
-    .contrasena-page .top-section,
-    .registrarce-page .top-section {
-        justify-content: space-between !important;
-        flex-direction: row !important;
-    }
-}
-
-/* En móvil pequeño (max-width: 600px) */
-@media (max-width: 600px) {
-    .hamburger-btn {
-        margin-left: auto !important;
-        order: 2 !important;
-    }
-    
-    .login-page .hamburger-btn,
-    .contrasena-page .hamburger-btn,
-    .registrarce-page .hamburger-btn {
-        margin-left: auto !important;
-        margin-right: 0 !important;
-        order: 2 !important;
-    }
-    
-    .login-page .top-section,
-    .contrasena-page .top-section,
-    .registrarce-page .top-section {
-        justify-content: space-between !important;
-        flex-direction: row !important;
-    }
-}
-
-/* =========================================== */
-/* LOGIN/REGISTRO/CONTRASEÑA: Menú solo con ítems específicos */
-/* =========================================== */
-
-/* En escritorio, ocultar menú y user-actions en páginas de login */
+/* En escritorio: ocultar menú y user-actions */
 .login-page .main-nav,
-.login-page .user-actions,
 .contrasena-page .main-nav,
+.registrarce-page .main-nav {
+    display: none !important;
+}
+
+.login-page .user-actions,
 .contrasena-page .user-actions,
-.registrarce-page .main-nav,
 .registrarce-page .user-actions {
     display: none !important;
 }
 
-/* En móvil, el menú móvil solo muestra: Inicio, Reservas, Login, Soporte, Ayuda */
-/* Ocultar items que no deben estar en login */
+/* En móvil: ocultar ítems que no deben estar en login */
 .login-page .mobile-nav-item[href="eventos.html"],
 .login-page .mobile-nav-item[href="actividad.html"],
 .login-page .mobile-nav-item[href="reportes.html"],
@@ -480,7 +399,7 @@ body.menu-open {
     display: none !important;
 }
 
-/* En escritorio de login, ocultar todo el nav y user-actions para que solo quede hamburguesa */
+/* En escritorio de login: ocultar todo el nav y user-actions */
 @media (min-width: 901px) {
     .login-page .main-nav,
     .contrasena-page .main-nav,
