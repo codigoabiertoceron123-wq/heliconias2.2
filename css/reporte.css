@@ -117,6 +117,12 @@ body::before {
     display: flex;
     gap: 5px;
     left: 50px;
+    order: 1 !important;
+}
+
+.hamburger-btn {
+    order: 2 !important;
+    margin-left: auto !important;
 }
 
 .nav-item {
@@ -1784,6 +1790,7 @@ select.tool-btn {
     .hamburger-btn {
         display: flex !important;
         margin-left: auto !important;
+        order: 2 !important;
     }
 
     main {
@@ -2077,6 +2084,7 @@ select.tool-btn {
         align-self: flex-end;
         margin-top: -5px;
         margin-left: auto !important;
+        order: 2 !important;
     }
 
     .top-bar {
@@ -2573,10 +2581,11 @@ select.tool-btn {
 /* HAMBURGUESA SIEMPRE A LA DERECHA            */
 /* =========================================== */
 
-/* Forzar hamburguesa a la derecha en TODAS las páginas */
+/* Forzar hamburguesa a la derecha en TODAS las pï¿½ginas */
 .hamburger-btn {
     margin-left: auto !important;
     align-self: flex-end !important;
+    order: 2 !important;
 }
 
 .top-section {
@@ -2585,7 +2594,7 @@ select.tool-btn {
     align-items: center !important;
 }
 
-/* Asegurar que en login, registro y contraseña también esté a la derecha */
+/* Asegurar que en login, registro y contraseï¿½a tambiï¿½n estï¿½ a la derecha */
 .login-page .hamburger-btn,
 .contrasena-page .hamburger-btn,
 .registrarce-page .hamburger-btn {
@@ -2609,7 +2618,7 @@ select.tool-btn {
     flex-direction: row !important;
 }
 
-/* En móvil, asegurar que el hamburguesa esté a la derecha */
+/* En mï¿½vil, asegurar que el hamburguesa estï¿½ a la derecha */
 @media (max-width: 900px) {
     .hamburger-btn {
         margin-left: auto !important;
