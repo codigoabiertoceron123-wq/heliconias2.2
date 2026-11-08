@@ -2,32 +2,28 @@
 /* HAMBURGUESA - MENÚ LATERAL Y BOTÓN           */
 /* =========================================== */
 
-/* Botón hamburguesa - SIEMPRE visible y a la derecha */
+/* ===== Botón hamburguesa (SOLO móvil) ===== */
 .hamburger-btn {
-    display: flex !important;
+    display: none; /* Oculto en escritorio */
     flex-direction: column;
     gap: 5px;
     background: transparent;
     border: none;
     cursor: pointer;
-    padding: 10px;
+    padding: 8px;
     z-index: 1100;
-    background: #2e7d32 !important;
-    border-radius: 8px !important;
-    margin-left: auto !important;
-    order: 2 !important;
+    align-self: center;
 }
 
 .hamburger-btn span {
     display: block;
     width: 28px;
     height: 3px;
-    background: #ffffff !important;
+    background: #2e7d32;
     border-radius: 2px;
     transition: all 0.3s ease;
 }
 
-/* Animación del botón hamburguesa al abrir */
 .hamburger-btn.active span:nth-child(1) {
     transform: rotate(45deg) translate(5px, 5px);
 }
@@ -38,7 +34,7 @@
     transform: rotate(-45deg) translate(6px, -6px);
 }
 
-/* Sidebar lateral (oculto por defecto) */
+/* ===== Sidebar lateral (oculto por defecto, se abre derecha→izquierda) ===== */
 .mobile-sidebar {
     position: fixed;
     top: 0;
@@ -96,7 +92,6 @@
 }
 
 .mobile-sidebar-close {
-    /* El menú se cierra al hacer clic fuera o en un ítem */
     display: none !important;
 }
 
@@ -191,6 +186,7 @@
     background: linear-gradient(135deg, #195b35, #2e7d32);
     transform: translateY(-2px);
     box-shadow: 0 4px 14px rgba(46, 125, 50, 0.35);
+    color: white;
 }
 
 .mobile-actions .btn-info {
@@ -203,6 +199,7 @@
     background: linear-gradient(135deg, #2980b9, #3498db);
     transform: translateY(-2px);
     box-shadow: 0 4px 14px rgba(52, 152, 219, 0.35);
+    color: white;
 }
 
 .mobile-actions .btn-accent {
@@ -215,9 +212,10 @@
     background: linear-gradient(135deg, #c0392b, #e74c3c);
     transform: translateY(-2px);
     box-shadow: 0 4px 14px rgba(231, 76, 60, 0.35);
+    color: white;
 }
 
-/* Overlay del menú móvil */
+/* ===== Overlay del menú móvil ===== */
 .mobile-overlay {
     position: fixed;
     inset: 0;
@@ -234,15 +232,39 @@
     visibility: visible;
 }
 
-/* Bloquear scroll del body */
+/* Bloquear scroll del body cuando el menú está abierto */
 body.menu-open {
     overflow: hidden;
 }
 
 /* =========================================== */
-/* RESPONSIVE - MENÚ HAMBURGUESA              */
+/* RESPONSIVE - MENÚ HAMBURGUESA               */
 /* =========================================== */
 
+/* Escritorio (900px y más): hamburguesa OCULTA, menú visible */
+@media (min-width: 901px) {
+    .hamburger-btn {
+        display: none !important;
+    }
+    
+    .main-nav {
+        display: flex !important;
+    }
+    
+    .login-page .main-nav,
+    .contrasena-page .main-nav,
+    .registrarce-page .main-nav {
+        display: flex !important;
+    }
+    
+    .login-page .user-actions,
+    .contrasena-page .user-actions,
+    .registrarce-page .user-actions {
+        display: flex !important;
+    }
+}
+
+/* Móvil (max-width: 900px): hamburguesa VISIBLE, menú oculto */
 @media (max-width: 900px) {
     .hamburger-btn {
         display: flex !important;
@@ -251,7 +273,7 @@ body.menu-open {
     }
 
     .main-nav {
-        order: 1 !important;
+        display: none !important;
     }
 
     .top-section {
@@ -296,7 +318,7 @@ body.menu-open {
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
-        order: 2 !important;
+        order: 1 !important;
         flex-shrink: 1 !important;
         min-width: 0 !important;
     }
@@ -315,7 +337,6 @@ body.menu-open {
     }
 
     .user-actions {
-        /* En móvil los botones viven en el sidebar */
         display: none !important;
     }
 
@@ -366,11 +387,10 @@ body.menu-open {
 }
 
 /* =========================================== */
-/* LOGIN / REGISTRO / CONTRASEÑA               */
-/* Solo muestran: Inicio, Reservas, Login, Soporte, Ayuda */
+/* LOGIN/REGISTRO/CONTRASEÑA: Menú solo con ítems específicos */
 /* =========================================== */
 
-/* En escritorio: ocultar menú y user-actions */
+/* En escritorio, ocultar menú y user-actions en páginas de login */
 .login-page .main-nav,
 .contrasena-page .main-nav,
 .registrarce-page .main-nav {
@@ -383,7 +403,8 @@ body.menu-open {
     display: none !important;
 }
 
-/* En móvil: ocultar ítems que no deben estar en login */
+/* En móvil, el menú móvil solo muestra: Inicio, Reservas, Login, Soporte, Ayuda */
+/* Ocultar items que no deben estar en login */
 .login-page .mobile-nav-item[href="eventos.html"],
 .login-page .mobile-nav-item[href="actividad.html"],
 .login-page .mobile-nav-item[href="reportes.html"],
@@ -397,19 +418,4 @@ body.menu-open {
 .registrarce-page .mobile-nav-item[href="reportes.html"],
 .registrarce-page .mobile-nav-item[href="configuracion.html"] {
     display: none !important;
-}
-
-/* En escritorio de login: ocultar todo el nav y user-actions */
-@media (min-width: 901px) {
-    .login-page .main-nav,
-    .contrasena-page .main-nav,
-    .registrarce-page .main-nav {
-        display: none !important;
-    }
-    
-    .login-page .user-actions,
-    .contrasena-page .user-actions,
-    .registrarce-page .user-actions {
-        display: none !important;
-    }
 }
